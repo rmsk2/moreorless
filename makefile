@@ -29,7 +29,7 @@ upload: $(BINARY).pgz
 
 
 $(BINARY).pgz: $(BINARY)
-	python make_pgz.py $(BINARY)
+	python3 make_pgz.py $(BINARY)
 
 test:
 	6502profiler verifyall -c config.json -trapaddr 0x07FF
