@@ -1,0 +1,16 @@
+{
+    "Model": "65C02",
+    "MemSpec": "F256_512K",
+    "IoMask": 45,
+    "IoAddrConfig": {
+    },
+    "PreLoad": {
+    },
+    "F256MCoprocFlags": 5,
+    "F256MCoprocBase": 56832,
+    "AsmType": "64tass",
+    "AcmeBinary": "64tass",
+    "AcmeSrcDir": "./",
+    "AcmeBinDir": "./tests/bin",
+    "AcmeTestDir": "./tests"
+}
