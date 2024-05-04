@@ -2,8 +2,9 @@ NUM_PAGES_SIMPLE = 48
 NUM_PAGES_RAM_EXP = NUM_PAGES_SIMPLE + 32
 ; block sizes of 32, 64 and 128 bytes are supported
 BLOCK_SIZE = 32
+; Change for different block size, 64 = 16, 128 = 8
+BYTES_IN_MAP_PER_BLOCK = 32
 BLOCK_MASK = $FF
-BLOCK_SHIFTS = 5
 PAGE_SIZE = 8192
 BLOCKS_PER_PAGE = PAGE_SIZE / BLOCK_SIZE
 PAGE_MAP_LEN = NUM_PAGES_RAM_EXP * BLOCKS_PER_PAGE / 8
@@ -16,6 +17,11 @@ FarPtr_t .struct
     page .byte 0
 .endstruct
 
+MapBit_t .struct 
+    address .word 0
+    mask    .byte 0
+.endstruct
+
 MainMem_t .struct
     addrPageMap   .word PAGE_WINDOW
     numPages      .byte NUM_PAGES_RAM_EXP
@@ -24,12 +30,14 @@ MainMem_t .struct
     maxBlockPos   .byte 0, NUM_PAGES_RAM_EXP
     blockPos      .word 0
     ramExpFound   .byte 0
+    mapPos        .dstruct MapBit_t
     pages         .fill NUM_PAGES_RAM_EXP
     pageMap       .fill PAGE_MAP_LEN
 .endstruct
 
 memory .namespace
 
+BIT_MASKS .byte 1, 2, 4, 8, 16, 32, 64, 128
 MEM_STATE .dstruct MainMem_t
 
 MemSet_t .struct 
@@ -141,7 +149,7 @@ _loop2
 
     rts
 
-blockShifts5 .macro
+blockShiftLeft5 .macro
     #double16Bit BLOCK_POS_TEMP
     #double16Bit BLOCK_POS_TEMP
     #double16Bit BLOCK_POS_TEMP
@@ -149,7 +157,15 @@ blockShifts5 .macro
     #double16Bit BLOCK_POS_TEMP
 .endmacro
 
-blockShifts6 .macro
+blockShiftRight5 .macro
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+.endmacro
+
+blockShiftLeft6 .macro
     #double16Bit BLOCK_POS_TEMP
     #double16Bit BLOCK_POS_TEMP
     #double16Bit BLOCK_POS_TEMP
@@ -158,7 +174,16 @@ blockShifts6 .macro
     #double16Bit BLOCK_POS_TEMP
 .endmacro
 
-blockShifts7 .macro
+blockShiftRight6 .macro
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+.endmacro
+
+blockShiftLeft7 .macro
     #double16Bit BLOCK_POS_TEMP
     #double16Bit BLOCK_POS_TEMP
     #double16Bit BLOCK_POS_TEMP
@@ -166,6 +191,16 @@ blockShifts7 .macro
     #double16Bit BLOCK_POS_TEMP
     #double16Bit BLOCK_POS_TEMP
     #double16Bit BLOCK_POS_TEMP
+.endmacro
+
+blockShiftRight7 .macro
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
+    #halve16Bit ADDR_HELP
 .endmacro
 
 
@@ -181,7 +216,7 @@ blockPosToFarPtr
     sta BLOCK_POS_TEMP
     ; Do more shifts for bigger blocks. 
     ; Change here when block size increases
-    #blockShifts5
+    #blockShiftLeft5
     lda BLOCK_POS_TEMP
     ldy #FarPtr_t.lo
     sta (MEM_PTR3), y
@@ -193,21 +228,84 @@ blockPosToFarPtr
     rts
 
 
-farPtrToBlockPos
+ADDR_HELP .word ?
+; MEM_PTR3 has to point to far pointer
+; After calling this routine FREE_POS is filled
+; with the information to identify the bit in the
+; block map which is rsponsible for the far pointer
+; carry is clear if FREE_POS was filled.
+farPtrToMapBit
+    ldy #FarPtr_t.page
+    lda (MEM_PTR3), y
+    ldx #0
+_loop
+    cmp MEM_STATE.pages, x
+    beq _found
+    inx
+    cpx MEM_STATE.numPages
+    bne _loop
+    ; do nothing if page was not found
+    sec
     rts
-
-
-blockPosToMapBit
+_found
+    stx BLOCK_POS_TEMP
+    stz BLOCK_POS_TEMP+1
+    ; Do more shifts for bigger blocks. 
+    ; Change here when block size increases
+    #blockShiftLeft5
+    ; now BLOCK_POS_TEMP contains the offset of the first byte in the
+    ; block map that belongs to the page determined above
+    ldy #FarPtr_t.lo
+    lda (MEM_PTR3), y
+    sta ADDR_HELP
+    iny
+    lda (MEM_PTR3), y
+    sta ADDR_HELP+1
+    ; determine address in page
+    #sub16Bit PAGE_WINDOW, ADDR_HELP
+    ; Do more shifts for bigger blocks. 
+    ; Change here when block size increases
+    #blockShiftRight5
+    ; Now ADDR_HELP contains the number of the block in the page
+    ; ADDR_HELP + 1 must be zero
+    lda ADDR_HELP
+    and #%00000111
+    ; bit in page map
+    sta FREE_POS.mask
+    lda ADDR_HELP
+    ; adapt when block size changes
+    lsr
+    lsr
+    lsr
+    ; now the accu contains the offset of the byte in
+    ; the block map
+    clc
+    adc BLOCK_POS_TEMP
+    sta BLOCK_POS_TEMP
+    lda #0
+    adc BLOCK_POS_TEMP+1
+    ; now BLOCK_POS contains the offset of the byte in 
+    ; block map
+    #load16BitImmediate MEM_STATE.pageMap, FREE_POS.address
+    #add16Bit BLOCK_POS_TEMP, FREE_POS.address
+    clc
     rts
 
 
 incBlockPosCtr
+    ; increment map bit position
+    lda MEM_STATE.mapPos.mask
+    ina
+    and #%00000111
+    sta MEM_STATE.mapPos.mask
+    bne _incPos
+    #inc16Bit MEM_STATE.mapPos.address
+    ; calculate block counter
+_incPos
     lda MEM_STATE.blockPos
     ina
     and #BLOCK_MASK
-    beq _carryOccured
-    bra _noCarry
-_carryOccured
+    bne _noCarry
     inc MEM_STATE.blockPos + 1
 _noCarry
     sta MEM_STATE.blockPos
@@ -215,13 +313,98 @@ _noCarry
     bne _done
     ; wrap around. Max block was reached.
     #load16BitImmediate 0, MEM_STATE.blockPos
+    ; reset map bit position
+    stz MEM_STATE.mapPos.mask
+    #load16BitImmediate MEM_STATE.pageMap, MEM_STATE.mapPos.address    
 _done
     rts
 
 
-; block_pos => FarPtr
-; block_pos => map bit
-; FarPtr => map bit
+; carry is set if curent block is free
+isCurrentBlockFree
+    #move16Bit MEM_STATE.mapPos.address, MEM_PTR4
+    lda (MEM_PTR4)
+    ldx MEM_STATE.mapPos.mask
+    and BIT_MASKS, x
+    beq _free
+    clc
+    rts
+_free
+    sec
+    rts
+
+
+markCurrentBlockUsed
+    ; check if block is already used
+    ldx MEM_STATE.mapPos.mask    
+    #move16Bit MEM_STATE.mapPos.address, MEM_PTR4
+    lda (MEM_PTR4)
+    and BIT_MASKS, x
+    bne _done
+
+    lda (MEM_PTR4)
+    ora BIT_MASKS, x
+    sta (MEM_PTR4)
+    #dec16Bit MEM_STATE.numFreeBlocks
+    ; jump here to prevent the number of free blocks
+    ; becoming incorrect
+_done
+    rts
+
+
+FREE_POS .dstruct MapBit_t
+INVERSE_MASK .byte 0
+markBlockFree
+    ; check if block is already free
+    ldx FREE_POS.mask
+    #move16Bit FREE_POS.address, MEM_PTR4
+    lda (MEM_PTR4)
+    and BIT_MASKS, x
+    beq _done 
+    ; block is currently marked as allocated
+    ; => free it and increase number of free blocks
+    lda BIT_MASKS, x
+    eor #$FF
+    sta INVERSE_MASK    
+    lda (MEM_PTR4)
+    and INVERSE_MASK
+    sta (MEM_PTR4)
+    #inc16Bit MEM_STATE.numFreeBlocks
+    ; jump here to prevent the number of free blocks
+    ; becoming incorrect
+_done
+    rts
+
+
+; MEM_PTR3 has to point to the far pointer
+freePtr
+    jsr farPtrToMapBit
+    bcs _done
+    jsr markBlockFree
+_done
+    rts
+
+
+; MEM_PTR3 has to point to a far pointer
+; carry is set if alloc failed
+allocPtr
+    #cmp16BitImmediate 0, MEM_STATE.numFreeBlocks
+    beq _outOfMemory
+_checkFree
+    jsr isCurrentBlockFree
+    bcs _isFree
+    jsr incBlockPosCtr
+    bra _checkFree
+_isFree
+    jsr markCurrentBlockUsed
+    jsr blockPosToFarPtr
+    jsr incBlockPosCtr
+    clc
+    rts
+_outOfMemory
+    sec
+    rts
+
 
 init
     ; assume no RAM expansion
@@ -259,6 +442,10 @@ _noRamExp
     ; reset current block position
     stz MEM_STATE.blockPos
     stz MEM_STATE.blockPos+1
+
+    ; reset map bit position
+    stz MEM_STATE.mapPos.mask
+    #load16BitImmediate MEM_STATE.pageMap, MEM_STATE.mapPos.address
 
     ; list all page identifiers which are available to this module
     jsr initPageBytes
