@@ -49,13 +49,12 @@ main
     jsr keyrepeat.init
     jsr initEvents
 
+    jsr memory.init
     jsr editor.init
 
     lda editor.STATE.col
     sta CURSOR_STATE.col 
-    jsr txtio.clear   
-
-    jsr memory.init
+    jsr txtio.clear       
 
     lda memory.MEM_STATE.ramExpFound
     bne _withRamExp

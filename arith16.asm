@@ -24,29 +24,17 @@ move16Bit .macro  memAddr1, memAddr2
 ; --------------------------------------------------
 ; double16Bit multiplies the 16 bit value stored at .memAddr by 2
 ; --------------------------------------------------
-double16Bit .macro  memAddr 
-    asl \memAddr+1
+double16Bit .macro  memAddr     
     asl \memAddr                     
-    bcc _noCarry                     ; no carry set => we are already done
-    ; carry set => set least significant bit in hi byte. No add or inc is required as bit 0 
-    ; of .memAddr+1 has to be zero due to previous left shift
-    lda #$01
-    ora \memAddr+1                   
-    sta \memAddr+1
-_noCarry    
+    rol \memAddr+1
 .endmacro
 
 ; --------------------------------------------------
 ; halve16Bit divides the 16 bit value stored at .memAddr by 2
 ; --------------------------------------------------
 halve16Bit .macro  memAddr 
-    clc
-    lda \memAddr+1
-    ror
-    sta \memAddr+1
-    lda \memAddr
-    ror
-    sta \memAddr
+    lsr \memAddr+1
+    ror \memAddr
 .endmacro
 
 
