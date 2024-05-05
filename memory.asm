@@ -355,11 +355,16 @@ _loop
     iny
     cpy SEARCH_LEN
     bne _loop
-_notFound    
+_notFound
+    ; due to the precondition that a free block must exust we should never
+    ; end up here    
     rts
     ; we have found a block. Now set MEM_STATE.mapPos and 
     ; MEM_STATE.blockPos to the position of the found block.
 _blockFound
+    ;
+    ; calculate MEM_STATE.mapPos
+    ;
     tya
     clc
     adc MEM_PTR1
