@@ -1,15 +1,20 @@
 require("math")
 require("table")
 
-MAX_PAGES = 80
 PAGE_SIZE = 8192
 BLOCK_SIZE = 32
 BLOCKS_PER_PAGE = PAGE_SIZE / BLOCK_SIZE
 BYTES_PER_PAGE_IN_MAP = BLOCKS_PER_PAGE / 8
 
-MAX_BLOCK_POS = MAX_PAGES * 256
+reference_pages = {
+    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 
+    38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 
+    60, 61, 62, 63, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 
+    142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159
+}
 
-reference_pages = {}
+MAX_PAGES = #reference_pages
+MAX_BLOCK_POS = MAX_PAGES * 256
 
 function de_ref(ptr_addr)
     local hi_addr = read_byte(ptr_addr + 1)
@@ -51,7 +56,7 @@ function get_mem_state(addr)
     local page_list = {}
 
     for i = addr, addr + MAX_PAGES - 1, 1 do
-        table.insert(page_list, read_byte(addr))
+        table.insert(page_list, read_byte(i))
     end
 
     addr = addr + MAX_PAGES

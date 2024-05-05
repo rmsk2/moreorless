@@ -140,12 +140,11 @@ _loop1
     ; page bytes (128-159) for memory from $100000 - $13FFFF
     ; i.e. the RAM expansion cartridge
     lda #128
-    ldy #0
 _loop2
     sta MEM_STATE.pages, y
     ina
     iny
-    cpy #32
+    cpy #NUM_PAGES_RAM_EXP
     bne _loop2
 
     rts
