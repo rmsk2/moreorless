@@ -229,13 +229,16 @@ _found
     #move16Bit ADDR_HELP, $DE06
     #load16BitImmediate BLOCK_SIZE, $DE04
 
+    ; Only $DE14 is relevant as the minimum block size is 32 byte,
+    ; which in turn means that the block number fits in one byte
+    ; as 8192 / 32 = 256
     lda $DE14
-    ; calculate ADDR_HELP mod 8 (bits per byte)
+    ; calculate block number mod 8 (bits per byte)
     and #%00000111
     ; bit in page map
     sta FREE_POS.mask
     lda $DE14
-    ; divide by 8 (bits per byte)
+    ; divide block number by 8 (bits per byte)
     lsr
     lsr
     lsr
