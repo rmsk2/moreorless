@@ -7,7 +7,8 @@ BYTES_IN_MAP_PER_BLOCK = 32
 BLOCK_MASK = $FF
 PAGE_SIZE = 8192
 BLOCKS_PER_PAGE = PAGE_SIZE / BLOCK_SIZE
-PAGE_MAP_LEN = NUM_PAGES_RAM_EXP * BLOCKS_PER_PAGE / 8
+BYTES_PER_PAGE = BLOCKS_PER_PAGE / 8
+PAGE_MAP_LEN = NUM_PAGES_RAM_EXP * BYTES_PER_PAGE
 
 PAGE_WINDOW = $A000
 
@@ -25,6 +26,7 @@ MapBit_t .struct
 MainMem_t .struct
     addrPageMap   .word PAGE_WINDOW
     numPages      .byte NUM_PAGES_RAM_EXP
+    pageMapLen    .word 0
     numFreeBlocks .word NUM_PAGES_RAM_EXP * BLOCKS_PER_PAGE
     numBlocks     .word NUM_PAGES_RAM_EXP * BLOCKS_PER_PAGE
     maxBlockPos   .byte 0, NUM_PAGES_RAM_EXP
@@ -235,6 +237,7 @@ ADDR_HELP .word ?
 ; block map which is rsponsible for the far pointer
 ; carry is clear if FREE_POS was filled.
 farPtrToMapBit
+    ; search for page number in MEM_STATE.pages
     ldy #FarPtr_t.page
     lda (MEM_PTR3), y
     ldx #0
@@ -248,10 +251,13 @@ _loop
     sec
     rts
 _found
+    ; page was found. Index is in X register
     stx BLOCK_POS_TEMP
-    stz BLOCK_POS_TEMP+1
+    stz BLOCK_POS_TEMP + 1
     ; Do more shifts for bigger blocks. 
     ; Change here when block size increases
+    ;
+    ; multiply BLOCK_POS_TEMP by BYTES_PER_PAGE
     #blockShiftLeft5
     ; now BLOCK_POS_TEMP contains the offset of the first byte in the
     ; block map that belongs to the page determined above
@@ -260,20 +266,23 @@ _found
     sta ADDR_HELP
     iny
     lda (MEM_PTR3), y
-    sta ADDR_HELP+1
-    ; determine address in page
+    sta ADDR_HELP + 1
+    ; determine offset in page
     #sub16Bit PAGE_WINDOW, ADDR_HELP
     ; Do more shifts for bigger blocks. 
     ; Change here when block size increases
+    ;
+    ; divide by BLOCK_SIZE
     #blockShiftRight5
     ; Now ADDR_HELP contains the number of the block in the page
     ; ADDR_HELP + 1 must be zero
     lda ADDR_HELP
+    ; calculate ADDR_HELP mod 8 (bits per byte)
     and #%00000111
     ; bit in page map
     sta FREE_POS.mask
     lda ADDR_HELP
-    ; adapt when block size changes
+    ; divide by 8 (bits per byte)
     lsr
     lsr
     lsr
@@ -290,6 +299,104 @@ _found
     #add16Bit BLOCK_POS_TEMP, FREE_POS.address
     clc
     rts
+
+
+; input byte to search in accu
+; after return the accu contains the position (0...7) of the
+; first zero bit. 
+;
+; There has to be at least one zero bit for
+; this routine to work correctly.
+findFirstZeroBit
+    ldx #0
+_loop
+    lsr
+    bcc _done
+    inx
+    bra _loop
+_done    
+    txa
+    rts
+
+
+; this routine moves MEM_STATE.blockPos and MEM_STATE.mapPos to
+; a position which contains a free block, which is known to exist.
+SEARCH_LEN .word 0
+searchFreeBlock
+    #move16Bit MEM_STATE.pageMapLen, SEARCH_LEN
+    #load16BitImmediate MEM_STATE.pageMap, MEM_PTR1
+    ldy #0
+_search
+    ; SEARCH_LEN + 1 contains the number of full blocks the
+    ; pageMap uses
+    lda SEARCH_LEN + 1
+    beq _lastBlockOnly
+_searchBlock
+    lda (MEM_PTR1), y
+    cmp #$FF
+    bne _blockFound
+    iny
+    bne _searchBlock
+    dec SEARCH_LEN + 1
+    inc MEM_PTR1 + 1
+    bra _search
+    ; Y register is zero here
+_lastBlockOnly
+    ; SEARCH_LEN contains the number of bytes in last block
+    lda SEARCH_LEN
+    beq _notFound
+_loop
+    lda (MEM_PTR1), y
+    cmp #$FF
+    bne _blockFound
+    iny
+    cpy SEARCH_LEN
+    bne _loop
+_notFound    
+    rts
+    ; we have found a block. Now set MEM_STATE.mapPos and 
+    ; MEM_STATE.blockPos to the position of the found block.
+_blockFound
+    tya
+    clc
+    adc MEM_PTR1
+    sta MEM_PTR1
+    lda #0
+    adc MEM_PTR1 + 1
+    sta MEM_PTR1 + 1
+    ; MEM_PTR1 now contains the address of the byte which contains the
+    ; bit for the free block
+    lda (MEM_PTR1)
+    jsr findFirstZeroBit
+    sta MEM_STATE.mapPos.mask    
+    #move16Bit MEM_PTR1, MEM_STATE.mapPos.address
+    ;
+    ; calculate MEM_STATE.blockPos
+    ;
+    #sub16BitImmediate MEM_STATE.pageMap, MEM_PTR1
+    ; Now MEM_PTR1 contains the offset into the block map to 
+    ; the byte which represents the found free block
+    ; 
+    ; calculate (OFFSET_INTO_MAP div BYTES_PER_PAGE) and (OFFSET_INTO_MAP mod BYTES_PER_PAGE)
+    #load16BitImmediate BYTES_PER_PAGE, $DE04
+    #move16Bit MEM_PTR1, $DE06
+    ; contains lo byte of division result, i.e. the number of the
+    ; page
+    lda $DE14
+    sta MEM_STATE.blockPos
+    ; contains lo byte of remainder, i.e. the number of the byte representing the block in the 
+    ; page
+    lda $DE16
+    ; calculate position of block in the page
+    ; multiply by 8
+    asl
+    asl
+    asl
+    ; add bit pos
+    clc
+    adc MEM_STATE.mapPos.mask
+    sta MEM_STATE.blockPos + 1
+    rts    
 
 
 incBlockPosCtr
@@ -341,7 +448,7 @@ markCurrentBlockUsed
     lda (MEM_PTR4)
     and BIT_MASKS, x
     bne _done
-
+    ; not used
     lda (MEM_PTR4)
     ora BIT_MASKS, x
     sta (MEM_PTR4)
@@ -390,10 +497,19 @@ _done
 allocPtr
     #cmp16BitImmediate 0, MEM_STATE.numFreeBlocks
     beq _outOfMemory
+    ; initialize trial counter
+    stz TRY_CTR
 _checkFree
     jsr isCurrentBlockFree
     bcs _isFree
     jsr incBlockPosCtr
+    inc TRY_CTR
+    ; we have still tries left
+    bne _checkFree
+    ; we have tried 256 times to find a free block which did not work.
+    ; we now speed things up a bit. There has to be at least one free block
+    ; otherwise we would not be here.
+    jsr searchFreeBlock
     bra _checkFree
 _isFree
     jsr markCurrentBlockUsed
@@ -449,6 +565,13 @@ _noRamExp
 
     ; list all page identifiers which are available to this module
     jsr initPageBytes
+
+    ; calculate length of pageMap
+    #move16Bit MEM_STATE.numBlocks, MEM_STATE.pageMapLen
+    ; divide by 8
+    #halve16Bit MEM_STATE.pageMapLen
+    #halve16Bit MEM_STATE.pageMapLen
+    #halve16Bit MEM_STATE.pageMapLen
 
     rts
 
