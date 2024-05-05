@@ -2,11 +2,10 @@ NUM_PAGES_SIMPLE = 48
 NUM_PAGES_RAM_EXP = NUM_PAGES_SIMPLE + 32
 ; block sizes of 32, 64 and 128 bytes are supported
 BLOCK_SIZE = 32
-; Change for different block size, 64 = 16, 128 = 8
-BYTES_IN_MAP_PER_BLOCK = 32
 BLOCK_MASK = $FF
 PAGE_SIZE = 8192
 BLOCKS_PER_PAGE = PAGE_SIZE / BLOCK_SIZE
+; number of bytes needed to represent a page in the pageMap
 BYTES_PER_PAGE = BLOCKS_PER_PAGE / 8
 PAGE_MAP_LEN = NUM_PAGES_RAM_EXP * BYTES_PER_PAGE
 
@@ -50,7 +49,7 @@ MemSet_t .struct
 
 MEM_SET .dstruct MemSet_t
 
-
+; parameters in MEM_SET
 memSet
     #move16Bit MEM_SET.startAddress, MEM_PTR1
 memSetInt
@@ -91,7 +90,7 @@ MemCpy_t .struct
 
 MEM_CPY .dstruct MemCpy_t
 
-
+; parameters in MEM_CPY
 ; works only for non overlapping slices of memory
 memCpy
     #move16Bit MEM_CPY.startAddress, MEM_PTR1
@@ -288,6 +287,8 @@ _found
     lsr
     ; now the accu contains the offset of the byte in
     ; the block map
+    ;
+    ; Add base address that represents the whole page in pageMap
     clc
     adc BLOCK_POS_TEMP
     sta BLOCK_POS_TEMP
@@ -295,6 +296,8 @@ _found
     adc BLOCK_POS_TEMP+1
     ; now BLOCK_POS contains the offset of the byte in 
     ; block map
+    ;
+    ; finally add base address of pageMap
     #load16BitImmediate MEM_STATE.pageMap, FREE_POS.address
     #add16Bit BLOCK_POS_TEMP, FREE_POS.address
     clc
@@ -568,7 +571,7 @@ _noRamExp
 
     ; calculate length of pageMap
     #move16Bit MEM_STATE.numBlocks, MEM_STATE.pageMapLen
-    ; divide by 8
+    ; divide by 8 (bits per byte)
     #halve16Bit MEM_STATE.pageMapLen
     #halve16Bit MEM_STATE.pageMapLen
     #halve16Bit MEM_STATE.pageMapLen
