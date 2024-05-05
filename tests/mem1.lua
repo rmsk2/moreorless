@@ -20,6 +20,7 @@ end
 function arrange()
     iterations = iterations + 1
     set_pc(load_address)
+    
     local val = test_table[iterations][1]
     local start = test_table[iterations][2]
     local length = test_table[iterations][3]
