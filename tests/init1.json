@@ -1,0 +1,5 @@
+{
+    "Name": "Test init",
+    "TestDriverSource": "init1.asm",
+    "TestScript": "init1.lua"
+}
