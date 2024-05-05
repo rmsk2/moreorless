@@ -288,7 +288,7 @@ _found
     ; now the accu contains the offset of the byte in
     ; the block map
     ;
-    ; Add base address that represents the whole page in pageMap
+    ; Add base offset that represents the whole page in pageMap
     clc
     adc BLOCK_POS_TEMP
     sta BLOCK_POS_TEMP
