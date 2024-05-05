@@ -149,22 +149,6 @@ _loop2
 
     rts
 
-; blockShiftLeft5 .macro
-;     #double16Bit BLOCK_POS_TEMP
-;     #double16Bit BLOCK_POS_TEMP
-;     #double16Bit BLOCK_POS_TEMP
-;     #double16Bit BLOCK_POS_TEMP
-;     #double16Bit BLOCK_POS_TEMP
-; .endmacro
-
-; blockShiftRight5 .macro
-;     #halve16Bit ADDR_HELP
-;     #halve16Bit ADDR_HELP
-;     #halve16Bit ADDR_HELP
-;     #halve16Bit ADDR_HELP
-;     #halve16Bit ADDR_HELP
-; .endmacro
-
 
 BLOCK_POS_TEMP .word 0
 ; MEM_PTR3 points to target far ptr.
