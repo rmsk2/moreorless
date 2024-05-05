@@ -208,16 +208,25 @@ blockShiftRight7 .macro
 BLOCK_POS_TEMP .word 0
 ; MEM_PTR3 points to target far ptr.
 blockPosToFarPtr
+    ;
+    ; determine page number
+    ;
     ldx MEM_STATE.blockPos + 1
     lda MEM_STATE.pages, x
     ldy #FarPtr_t.page
     sta (MEM_PTR3), y
+    ;
+    ; determine physical address in PAGE_WINDOW
+    ;
     stz BLOCK_POS_TEMP + 1
     lda MEM_STATE.blockPos
     sta BLOCK_POS_TEMP
-    ; Do more shifts for bigger blocks. 
-    ; Change here when block size increases
+    ; Mutliply by BLOCK_SIZE
     #blockShiftLeft5
+    ; BLOCK_POS_TEMP now contains the offset into the PAGE_WINDOW
+    ; which represents the first byte of the block
+    ;
+    ; Now add address of PAGE_WINDOW to complete the calculation
     lda BLOCK_POS_TEMP
     ldy #FarPtr_t.lo
     sta (MEM_PTR3), y
