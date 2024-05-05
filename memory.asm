@@ -169,13 +169,15 @@ blockPosToFarPtr
     #load16BitImmediate BLOCK_SIZE, $DE02
     ; Mutliply by BLOCK_SIZE
     
-    ; BLOCK_POS_TEMP now contains the offset into the PAGE_WINDOW
+    ; $DE10/$DE11 now contains the offset into the PAGE_WINDOW
     ; which represents the first byte of the block
     ;
     ; Now add address of PAGE_WINDOW to complete the calculation
     lda $DE10
     ldy #FarPtr_t.lo
     sta (MEM_PTR3), y
+    ; Adding hi byte is enough as lo byte is expected
+    ; to be zero
     clc
     lda $DE11
     adc #>PAGE_WINDOW
@@ -252,7 +254,7 @@ _found
     lda #0
     adc BLOCK_POS_TEMP+1
     ; now BLOCK_POS contains the offset of the byte in 
-    ; block map
+    ; the page/block map
     ;
     ; finally add base address of pageMap
     #load16BitImmediate MEM_STATE.pageMap, FREE_POS.address
