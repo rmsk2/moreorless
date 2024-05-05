@@ -149,21 +149,21 @@ _loop2
 
     rts
 
-blockShiftLeft5 .macro
-    #double16Bit BLOCK_POS_TEMP
-    #double16Bit BLOCK_POS_TEMP
-    #double16Bit BLOCK_POS_TEMP
-    #double16Bit BLOCK_POS_TEMP
-    #double16Bit BLOCK_POS_TEMP
-.endmacro
+; blockShiftLeft5 .macro
+;     #double16Bit BLOCK_POS_TEMP
+;     #double16Bit BLOCK_POS_TEMP
+;     #double16Bit BLOCK_POS_TEMP
+;     #double16Bit BLOCK_POS_TEMP
+;     #double16Bit BLOCK_POS_TEMP
+; .endmacro
 
-blockShiftRight5 .macro
-    #halve16Bit ADDR_HELP
-    #halve16Bit ADDR_HELP
-    #halve16Bit ADDR_HELP
-    #halve16Bit ADDR_HELP
-    #halve16Bit ADDR_HELP
-.endmacro
+; blockShiftRight5 .macro
+;     #halve16Bit ADDR_HELP
+;     #halve16Bit ADDR_HELP
+;     #halve16Bit ADDR_HELP
+;     #halve16Bit ADDR_HELP
+;     #halve16Bit ADDR_HELP
+; .endmacro
 
 
 BLOCK_POS_TEMP .word 0
@@ -179,20 +179,21 @@ blockPosToFarPtr
     ;
     ; determine physical address in PAGE_WINDOW
     ;
-    stz BLOCK_POS_TEMP + 1
+    stz $DE01
     lda MEM_STATE.blockPos
-    sta BLOCK_POS_TEMP
+    sta $DE00
+    #load16BitImmediate BLOCK_SIZE, $DE02
     ; Mutliply by BLOCK_SIZE
-    #blockShiftLeft5
+    
     ; BLOCK_POS_TEMP now contains the offset into the PAGE_WINDOW
     ; which represents the first byte of the block
     ;
     ; Now add address of PAGE_WINDOW to complete the calculation
-    lda BLOCK_POS_TEMP
+    lda $DE10
     ldy #FarPtr_t.lo
     sta (MEM_PTR3), y
     clc
-    lda BLOCK_POS_TEMP + 1
+    lda $DE11
     adc #>PAGE_WINDOW
     iny
     sta (MEM_PTR3), y
@@ -221,36 +222,35 @@ _loop
     rts
 _found
     ; page was found. Index is in X register
-    stx BLOCK_POS_TEMP
-    stz BLOCK_POS_TEMP + 1
-    ; Do more shifts for bigger blocks. 
-    ; Change here when block size increases
-    ;
-    ; multiply BLOCK_POS_TEMP by BYTES_PER_PAGE
-    #blockShiftLeft5
+    stx $DE00
+    stz $DE01
+    #load16BitImmediate BYTES_PER_PAGE, $DE02
+    #move16Bit $DE10, BLOCK_POS_TEMP
     ; now BLOCK_POS_TEMP contains the offset of the first byte in the
     ; block map that belongs to the page determined above
+    ;
+    ; load address of far pointer to which MEM_PTR3 points to ADDR_HELP
     ldy #FarPtr_t.lo
     lda (MEM_PTR3), y
     sta ADDR_HELP
     iny
     lda (MEM_PTR3), y
     sta ADDR_HELP + 1
-    ; determine offset in page
-    #sub16Bit PAGE_WINDOW, ADDR_HELP
-    ; Do more shifts for bigger blocks. 
-    ; Change here when block size increases
     ;
-    ; divide by BLOCK_SIZE
-    #blockShiftRight5
-    ; Now ADDR_HELP contains the number of the block in the page
-    ; ADDR_HELP + 1 must be zero
-    lda ADDR_HELP
+    ; determine offset in page
+    ;
+    #sub16Bit PAGE_WINDOW, ADDR_HELP
+    ;
+    ; divide offset by BLOCK_SIZE => $DE14 contains number of block in page
+    #move16Bit ADDR_HELP, $DE06
+    #load16BitImmediate BLOCK_SIZE, $DE04
+
+    lda $DE14
     ; calculate ADDR_HELP mod 8 (bits per byte)
     and #%00000111
     ; bit in page map
     sta FREE_POS.mask
-    lda ADDR_HELP
+    lda $DE14
     ; divide by 8 (bits per byte)
     lsr
     lsr
@@ -326,7 +326,7 @@ _loop
     cpy SEARCH_LEN
     bne _loop
 _notFound
-    ; due to the precondition that a free block must exust we should never
+    ; due to the precondition that a free block must exist we should never
     ; end up here    
     rts
     ; we have found a block. Now set MEM_STATE.mapPos and 
