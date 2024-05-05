@@ -1,0 +1,5 @@
+{
+    "Name": "Test determining first zero bit",
+    "TestDriverSource": "zero1.asm",
+    "TestScript": "zero1.lua"
+}

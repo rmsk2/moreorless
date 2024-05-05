@@ -32,4 +32,4 @@ $(BINARY).pgz: $(BINARY)
 	python3 make_pgz.py $(BINARY)
 
 test:
-	6502profiler verifyall -c config.json -trapaddr 0x07FF
+	6502profiler verifyall -c config_768.json -trapaddr 0x07FF
