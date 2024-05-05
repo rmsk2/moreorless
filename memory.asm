@@ -361,7 +361,7 @@ _blockFound
     ; contains lo byte of division result, i.e. the number of the
     ; page
     lda $DE14
-    sta MEM_STATE.blockPos
+    sta MEM_STATE.blockPos + 1
     ; contains lo byte of remainder, i.e. the number of the byte representing the block in the 
     ; page
     lda $DE16
@@ -373,7 +373,7 @@ _blockFound
     ; add bit pos
     clc
     adc MEM_STATE.mapPos.mask
-    sta MEM_STATE.blockPos + 1
+    sta MEM_STATE.blockPos
     rts    
 
 

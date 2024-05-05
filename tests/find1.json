@@ -1,0 +1,5 @@
+{
+    "Name": "Test find block",
+    "TestDriverSource": "find1.asm",
+    "TestScript": "find1.lua"
+}
