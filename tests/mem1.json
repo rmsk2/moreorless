@@ -1,0 +1,5 @@
+{
+    "Name": "Test memory helper functions",
+    "TestDriverSource": "mem1.asm",
+    "TestScript": "mem1.lua"
+}
