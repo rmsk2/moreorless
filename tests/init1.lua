@@ -63,7 +63,6 @@ function assert()
         end
     end
 
-
     if #state["pageMap"] ~= MAX_PAGES * BYTES_PER_PAGE_IN_MAP then
         return false, string.format("Wrong length for page map: %d", #state["pageMap"])
     end
