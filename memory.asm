@@ -24,11 +24,11 @@ MapBit_t .struct
 
 MainMem_t .struct
     addrPageMap   .word PAGE_WINDOW
-    numPages      .byte NUM_PAGES_RAM_EXP
+    numPages      .byte NUM_PAGES_SIMPLE
     pageMapLen    .word 0
-    numFreeBlocks .word NUM_PAGES_RAM_EXP * BLOCKS_PER_PAGE
-    numBlocks     .word NUM_PAGES_RAM_EXP * BLOCKS_PER_PAGE
-    maxBlockPos   .byte 0, NUM_PAGES_RAM_EXP
+    numFreeBlocks .word NUM_PAGES_SIMPLE * BLOCKS_PER_PAGE
+    numBlocks     .word NUM_PAGES_SIMPLE * BLOCKS_PER_PAGE
+    maxBlockPos   .byte 0, NUM_PAGES_SIMPLE
     blockPos      .word 0
     ramExpFound   .byte 0
     mapPos        .dstruct MapBit_t
