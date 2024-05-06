@@ -1,0 +1,5 @@
+{
+    "Name": "Check ptr generation",
+    "TestDriverSource": "ptrgen1.asm",
+    "TestScript": "ptrgen1.lua"
+}
