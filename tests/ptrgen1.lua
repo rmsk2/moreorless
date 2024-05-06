@@ -4,9 +4,9 @@ require (test_dir.."tools")
 
 iterations = 0
 test_table = {
-    -- block nr, page nr
-    {15, 3},
+    -- block nr, page nr    
     {0 , 0},
+    {15, 3},
     {255,79},
     {123, 54}
 }
@@ -36,6 +36,8 @@ function assert()
         if read_byte_long(i) ~= counter then
             return false, string.format("Wrong value. Expected %d got %d at %x", counter, read_byte_long(i), i)
         end
+
+        counter = counter + 1
     end
 
     return true, ""

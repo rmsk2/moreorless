@@ -226,7 +226,7 @@ _found
     ;
     ; determine offset in page
     ;
-    #sub16Bit PAGE_WINDOW, ADDR_HELP
+    #sub16BitImmediate PAGE_WINDOW, ADDR_HELP
     ;
     ; divide offset by BLOCK_SIZE => $DE14 contains number of block in page
     #move16Bit ADDR_HELP, $DE06

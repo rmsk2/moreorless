@@ -7,13 +7,15 @@ jmp main
 
 BLOCK_NR   .byte 0
 PAGE_NR    .byte 0
+FREE_POS   .word memory.FREE_POS
+PAGE_MAP   .word memory.MEM_STATE.pageMap
 
 .include "zeropage.asm"
 .include "setup.asm"
 .include "arith16.asm"
 .include "memory.asm"
 
-TEST_PTR .dstruct FarPtr_t
+TEST_PTR  .dstruct FarPtr_t
 
 main
     jsr setup.mmu
@@ -26,17 +28,5 @@ main
     
     #load16BitImmediate TEST_PTR, MEM_PTR3
     jsr memory.blockPosToFarPtr
-
-    lda TEST_PTR.page
-    sta MMU_REG
-    #move16Bit TEST_PTR, DATA_PTR
-
-    ldy #0
-_loop
-    tya
-    sta (DATA_PTR), y
-    iny
-    cpy #BLOCK_SIZE
-    bne _loop
-
+    jsr memory.farPtrToMapBit
     brk

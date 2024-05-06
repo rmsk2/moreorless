@@ -1,0 +1,5 @@
+{
+    "Name": "Check ptr to block map",
+    "TestDriverSource": "calcmap1.asm",
+    "TestScript": "calcmap1.lua"
+}
