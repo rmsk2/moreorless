@@ -29,7 +29,7 @@ main
     jsr memory.blockPosToFarPtr
 
     lda TEST_PTR.page
-    sta 13
+    sta MMU_REG
     #move16Bit TEST_PTR, DATA_PTR
 
     ldy #0
