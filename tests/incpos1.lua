@@ -7,8 +7,8 @@ test_table = {
     -- block nr, page nr, incr block nr, inc page nr    
     {0 , 0, 1, 0},
     {15, 3, 16, 3},
-    {255,79, 0, 0},
-    {255, 14, 0, 15},
+    {255,79, 0, 0},   -- adapt when block size increases
+    {255, 14, 0, 15}, -- adapt when block size increases
     {123, 54, 124, 54}
 }
 
@@ -31,7 +31,7 @@ function arrange()
     write_byte(load_address + 8, block_nr)
     write_byte(load_address + 9, page_nr)
     set_word_at(load_address + 10, ref_map_addr)
-    write_byte(load_address+ 12, ref_mask)
+    write_byte(load_address + 12, ref_mask)
 end
 
 
@@ -53,7 +53,7 @@ function assert()
     end
 
     if state["mapPos.mask"] ~= ref_mask then
-        return false, string.format("Wrong map bit maske: %x", state["mapPos.mask"])
+        return false, string.format("Wrong map bit mask: %x", state["mapPos.mask"])
     end    
 
     return true, ""

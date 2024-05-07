@@ -7,7 +7,7 @@ test_table = {
     -- block nr, page nr
     {15, 3},
     {0 , 0},
-    {255,79},
+    {255,79}, -- adapt when block size increases
     {123, 54}
 }
 

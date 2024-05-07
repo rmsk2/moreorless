@@ -13,6 +13,10 @@ reference_pages = {
     142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159
 }
 
+mask_bits = {
+    1, 2, 4, 8, 16, 32, 64, 128
+}
+
 MAX_PAGES = #reference_pages
 MAX_BLOCK_POS = MAX_PAGES * 256
 
@@ -33,10 +37,16 @@ end
 
 function pos_to_map_bit(map_start, page_nr, block_nr)
     local ref_map_addr = map_start + (BYTES_PER_PAGE_IN_MAP * page_nr) + math.floor(block_nr / 8)
-    local ref_mask = math.fmod(block_nr, 8) 
+    local ref_mask = math.fmod(block_nr, 8)
 
     return ref_map_addr, ref_mask
 end
+
+
+function contains_flag(f)
+    return string.find(get_flags(), f, 0, true) ~= nil
+end
+
 
 function get_mem_state(addr) 
     local page_window = de_ref(addr)

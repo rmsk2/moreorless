@@ -1,0 +1,5 @@
+{
+    "Name": "Check isCurrentBlockFree",
+    "TestDriverSource": "free1.asm",
+    "TestScript": "free1.lua"
+}

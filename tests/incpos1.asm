@@ -1,8 +1,6 @@
 * = $0800
 .cpu "w65c02"
 
-DATA_PTR = $30
-
 jmp main
 
 ITERATION .byte 0
