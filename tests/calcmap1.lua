@@ -35,8 +35,7 @@ function assert()
     local block_nr = test_table[iterations][1]
     local page_nr = test_table[iterations][2]
 
-    local ref_map_addr = map_start + (BYTES_PER_PAGE_IN_MAP * page_nr) + math.floor(block_nr / 8)
-    local ref_mask = math.fmod(block_nr, 8) 
+    local ref_map_addr, ref_mask = pos_to_map_bit(map_start, page_nr, block_nr)
 
     if ref_map_addr ~= map_addr then
         return false, string.format("Wrong address: %x", map_addr)

@@ -37,6 +37,33 @@ MainMem_t .struct
     pageMap       .fill PAGE_MAP_LEN
 .endstruct
 
+ENTER_ZP .macro ptr
+    pha
+    phy
+    ldy #FarPtr_t.page
+    lda (\ptr), y
+    sta MMU_REG
+    ply
+    pla
+.endmacro
+
+ENTER_ADDR .macro ptr
+    pha
+    lda \ptr + FarPtr_t.page
+    sta MMU_REG
+    pla
+.endmacro
+
+
+LEAVE_ZP .macro ptr
+    ; nothing at the moment
+.endmacro
+
+LEAVE_ADDR .macro ptr
+    ; nothing at the moment
+.endmacro
+
+
 memory .namespace
 
 BIT_MASKS .byte 1, 2, 4, 8, 16, 32, 64, 128
@@ -368,15 +395,19 @@ _blockFound
 
 
 incBlockPosCtr
+    ;
     ; increment map bit position
+    ;
     lda MEM_STATE.mapPos.mask
     ina
     and #%00000111
     sta MEM_STATE.mapPos.mask
     bne _incPos
     #inc16Bit MEM_STATE.mapPos.address
-    ; calculate block counter
 _incPos
+    ;
+    ; increment blockPos
+    ;
     lda MEM_STATE.blockPos
     ina
     and #BLOCK_MASK
@@ -384,6 +415,10 @@ _incPos
     inc MEM_STATE.blockPos + 1
 _noCarry
     sta MEM_STATE.blockPos
+    ;
+    ; Check if we have reached the maximun position and need to
+    ; do a wrap around.
+    ;
     #cmp16Bit MEM_STATE.blockPos, MEM_STATE.maxBlockPos
     bne _done
     ; wrap around. Max block was reached.
@@ -398,6 +433,7 @@ _done
 ; carry is set if curent block is free
 isCurrentBlockFree
     #move16Bit MEM_STATE.mapPos.address, MEM_PTR4
+isCurrentBlockFreeInt
     lda (MEM_PTR4)
     ldx MEM_STATE.mapPos.mask
     and BIT_MASKS, x
@@ -410,12 +446,9 @@ _free
 
 
 markCurrentBlockUsed
-    ; check if block is already used
-    ldx MEM_STATE.mapPos.mask    
-    #move16Bit MEM_STATE.mapPos.address, MEM_PTR4
-    lda (MEM_PTR4)
-    and BIT_MASKS, x
-    bne _done
+    jsr isCurrentBlockFree
+    bcc _done
+    ; here MEM_PTR4 points to MEM_STATE.mapPos.address
     ; not used
     lda (MEM_PTR4)
     ora BIT_MASKS, x
@@ -431,11 +464,9 @@ FREE_POS .dstruct MapBit_t
 INVERSE_MASK .byte 0
 markBlockFree
     ; check if block is already free
-    ldx FREE_POS.mask
     #move16Bit FREE_POS.address, MEM_PTR4
-    lda (MEM_PTR4)
-    and BIT_MASKS, x
-    beq _done 
+    jsr isCurrentBlockFreeInt
+    bcs _done
     ; block is currently marked as allocated
     ; => free it and increase number of free blocks
     lda BIT_MASKS, x
@@ -470,10 +501,12 @@ allocPtr
 _checkFree
     jsr isCurrentBlockFree
     bcs _isFree
-    jsr incBlockPosCtr
     inc TRY_CTR
+    beq _performSearch
     ; we have still tries left
-    bne _checkFree
+    jsr incBlockPosCtr
+    bra _checkFree
+_performSearch
     ; we have tried 256 times to find a free block which did not work.
     ; we now speed things up a bit. There has to be at least one free block
     ; otherwise we would not be here.

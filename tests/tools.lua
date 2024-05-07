@@ -31,6 +31,13 @@ function set_word_at(addr, w)
     write_byte(addr+1, hi)
 end
 
+function pos_to_map_bit(map_start, page_nr, block_nr)
+    local ref_map_addr = map_start + (BYTES_PER_PAGE_IN_MAP * page_nr) + math.floor(block_nr / 8)
+    local ref_mask = math.fmod(block_nr, 8) 
+
+    return ref_map_addr, ref_mask
+end
+
 function get_mem_state(addr) 
     local page_window = de_ref(addr)
     addr = addr + 2
