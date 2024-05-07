@@ -1,0 +1,5 @@
+{
+    "Name": "Check increment position",
+    "TestDriverSource": "incpos1.asm",
+    "TestScript": "incpos1.lua"
+}
