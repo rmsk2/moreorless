@@ -1,8 +1,14 @@
 require("string")
 require (test_dir.."tools")
 
+-- This code tests the memSet and memCpy routines by first setting a memory
+-- block at a given address and length to a defined value via memSet and then
+-- copying this block to a new address via memCpy. Then it is verified that
+-- all values are at the correct addresses.
+
 iterations = 0
 test_table = {
+    -- value to write, target address to write, len to write, target address for copy
     {42, 0xA000, 1, 0x8000},
     {42, 0xA000, 1033, 0x8000},
     {42, 0xA000, 256, 0x8000},

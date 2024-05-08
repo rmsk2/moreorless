@@ -1,5 +1,4 @@
 
-DATA_SIZE = size(Line_t) - (size(FarPtr_t) * 7 + 3)   ; At the moment this has the value 8
 NUM_EDIT_LINES = 60
 
 Line_t .struct 
@@ -8,12 +7,13 @@ Line_t .struct
     len             .byte 0
     freeInLastBlock .byte 0
     lastBlock       .byte 0
-    data            .fill DATA_SIZE
+    reserved        .fill 5
     block1          .dstruct FarPtr_t
     block2          .dstruct FarPtr_t
     block3          .dstruct FarPtr_t
     block4          .dstruct FarPtr_t
     block5          .dstruct FarPtr_t
+    block6          .dstruct FarPtr_t    
 .endstruct
 
 

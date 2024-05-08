@@ -433,9 +433,9 @@ _done
 ; carry is set if curent block is free
 isCurrentBlockFree
     #move16Bit MEM_STATE.mapPos.address, MEM_PTR4
+    ldx MEM_STATE.mapPos.mask
 isCurrentBlockFreeInt
     lda (MEM_PTR4)
-    ldx MEM_STATE.mapPos.mask
     and BIT_MASKS, x
     beq _free
     clc
@@ -449,7 +449,7 @@ markCurrentBlockUsed
     jsr isCurrentBlockFree
     bcc _done
     ; here MEM_PTR4 points to MEM_STATE.mapPos.address
-    ; not used
+    ; and x contains MEM_STATE.mapPos.mask
     lda (MEM_PTR4)
     ora BIT_MASKS, x
     sta (MEM_PTR4)
@@ -463,8 +463,9 @@ _done
 FREE_POS .dstruct MapBit_t
 INVERSE_MASK .byte 0
 markBlockFree
-    ; check if block is already free
+    ; check if block which is represented by FREE_POS is already free
     #move16Bit FREE_POS.address, MEM_PTR4
+    ldx FREE_POS.mask
     jsr isCurrentBlockFreeInt
     bcs _done
     ; block is currently marked as allocated

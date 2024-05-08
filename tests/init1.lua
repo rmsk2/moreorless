@@ -1,6 +1,10 @@
 require("string")
 require (test_dir.."tools")
 
+-- This code tests the memory.init routine by calling it. Then the struct
+-- at memory.MEM_STATE is parsed and each value is checked whether it
+-- contains the expected values.
+
 function arrange()
 
 end
@@ -67,6 +71,7 @@ function assert()
         return false, string.format("Wrong length for page map: %d", #state["pageMap"])
     end
 
+    -- check whether block/page map was cleared correctly.
     for i, v in ipairs(state["pageMap"]) do
         if v ~= 0 then
             return false, string.format("page map not cleared at index %d (%d)", i, v)
