@@ -34,7 +34,7 @@ function arrange()
     
     -- determine reference value for mapPos.address and mask
     local ref_map_addr, ref_mask = pos_to_map_bit(map_start, page_nr, block_nr)
-    -- set value for switch which causes the block to be marked free or allocated 
+    
     local is_free = test_table[iterations][3]
     local bit_val = 0
 
