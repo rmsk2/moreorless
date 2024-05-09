@@ -1,7 +1,7 @@
 require("string")
 require (test_dir.."tools")
 
--- This code tests whether allocPtr finds a new block 
+-- This code tests whether allocPtr finds a new block after 256 failures.
 
 function arrange()
     
