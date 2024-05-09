@@ -44,6 +44,7 @@ _done
     ; carry is set if an error occured
     brk
 _free
+    ; freee four of the eight block again
     #load16BitImmediate PTR2, MEM_PTR3
     jsr memory.freePtr
     #load16BitImmediate PTR4, MEM_PTR3
