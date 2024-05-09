@@ -13,6 +13,7 @@ STATE    .word memory.MEM_STATE         ; 3
 .include "arith16.asm"
 .include "memory.asm"
 
+TEMP .dstruct FarPtr_t
 
 main
     jsr setup.mmu
@@ -32,5 +33,6 @@ _loop
 
     ; we are at block 0 on page 0. Try to allocate a new block. The next
     ; free one is block 0 on page 2.
+    #load16BitImmediate TEMP, MEM_PTR3
     jsr memory.allocPtr
     brk
