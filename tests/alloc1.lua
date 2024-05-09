@@ -13,7 +13,7 @@ iterations = 0
 test_table = {
     -- block nr, page nr, free: true/false
     {0 , 0, true},
-    {15, 3, false},
+    {127, 3, false},
     {255,79, true},   -- adapt when block size increases
 }
 
