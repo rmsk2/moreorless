@@ -1,0 +1,5 @@
+{
+    "Name": "Test block deallocation",
+    "TestDriverSource": "dealloc1.asm",
+    "TestScript": "dealloc1.lua"
+}

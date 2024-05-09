@@ -23,9 +23,9 @@ main
     jsr memory.init
 
     ; set position
-    #move16Bit ADDR, memory.MEM_STATE.mapPos.address
+    #move16Bit ADDR, memory.FREE_POS.address
     lda MASK
-    sta memory.MEM_STATE.mapPos.mask
+    sta memory.FREE_POS.mask
 
     lda SET
     beq notSet
@@ -34,8 +34,9 @@ main
     ldx MASK
     lda memory.BIT_MASKS, x
     sta (HELP_PTR)
+    ; decrement numFreeBlocks
     #dec16Bit memory.MEM_STATE.numFreeBlocks
 notSet
     ; call routine to test
-    jsr memory.markCurrentBlockUsed
+    jsr memory.markBlockFree
     brk

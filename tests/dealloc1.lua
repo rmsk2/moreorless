@@ -1,20 +1,20 @@
 require("string")
 require (test_dir.."tools")
 
--- This code tests the subroutine memory.markCurrentBlockUsed. The asm test driver
+-- This code tests the subroutine memory.markBlockFree. The asm test driver
 -- receives three values. At first an address and a mask index for a block in the
--- block map. This information is used to initialize memory.MEM_STATE.mapPos.address
+-- block map. This information is used to initialize FREE_POS.mapPos.address
 -- and mask. The third value determines if this block is to be marked as free or
--- allocated before calling the routine under test. Finally memory.markCurrentBlockUsed 
--- is called and afterwards it is  verified that the block was marked as allocated and
+-- allocated before calling the routine under test. Finally memory.markBlockFree
+-- is called and afterwards it is  verified that the block was marked as free and
 -- whether the value of memory.MEM_STATE.numFreeBlocks is correct.
 
 iterations = 0
 test_table = {
     -- block nr, page nr, free: true/false
-    {0 , 0, true},
-    {127, 3, false},
-    {255,79, true},   -- adapt when block size increases
+    {0 , 0, false},
+    {127, 3, true},
+    {255,79, false},   -- adapt when block size increases
 }
 
 
@@ -39,9 +39,9 @@ function arrange()
     local is_free = test_table[iterations][3]
     local bit_val = 0
 
-    -- set value for mapPos.address
+    -- set value for FREE_POS.address
     set_word_at(load_address + 5, ref_map_addr)
-    -- set value for mapPos.mask
+    -- set value for FREE_POS.mask
     write_byte(load_address + 7, ref_mask)
 
     if not is_free then 
@@ -63,14 +63,11 @@ function assert()
     -- determine reference value for offset and mask in state["pageMap"]
     local ref_map_addr, ref_mask = pos_to_map_bit(0, page_nr, block_nr)
 
-    -- check if the block is allocated after the call. This has to be true independent of whether the
-    -- block was marked free or allocated before markCurrentBlockUsed was called.
-    if (state["pageMap"][1 + ref_map_addr] - mask_bits[1 + ref_mask]) ~= 0 then
-        return false, "Block is free, but was expected to be allocated"
+    -- check if the block is free after the call. This has to be true independent of whether the
+    -- block was marked free or allocated before memory.markBlockFree was called.
+    if state["pageMap"][1 + ref_map_addr] ~= 0 then
+        return false, "Block is allocated, but was expected to be free"
     end
 
-    local is_free = test_table[iterations][3]
-    
-    -- Check if number of free blocks is correct
-    return state["numFreeBlocks"] == (state["numBlocks"] - 1), "Number of free blocks is incorrect" 
+    return state["numFreeBlocks"] == state["numBlocks"], "Number of free blocks is wrong" 
 end
