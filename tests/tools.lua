@@ -87,7 +87,7 @@ function get_mem_state(addr)
     local page_map = {}
 
     for i = addr, addr + page_map_len - 1, 1 do
-        table.insert(page_map, read_byte(addr))
+        table.insert(page_map, read_byte(i))
     end
 
     res = {}

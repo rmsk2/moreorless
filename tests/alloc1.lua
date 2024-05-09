@@ -1,12 +1,13 @@
 require("string")
 require (test_dir.."tools")
 
--- This code tests the subroutine memory.isCurrentBlockFree. The asm test driver
+-- This code tests the subroutine memory.markCurrentBlockUsed. The asm test driver
 -- receives three values. At first an address and a mask index for a block in the
 -- block map. This information is used to initialize memory.MEM_STATE.mapPos.address
 -- and mask. The third value determines if this block is to be marked as free or
--- allocated. Then the memory.isCurrentBlockFree is called and afterwards it is 
--- verified that the block was correctly recognized as free or allocated.
+-- allocated before calling the routine under test. Finally memory.markCurrentBlockUsed 
+-- is called and afterwards it is  verified that the block was marked as allocated and
+-- whether the value of memory.MEM_STATE.numFreeBlocks is correct.
 
 iterations = 0
 test_table = {
@@ -53,13 +54,27 @@ end
 
 
 function assert()
-    local flags = get_flags()
-    local is_free = test_table[iterations][3]
+    -- parse whole memory.MEM_STATE struct at the address stored at load_address + 9
+    local state = get_mem_state(de_ref(load_address + 9))
 
-    -- Carry flag is set if block is free and clear if it is allocated 
+    local block_nr = test_table[iterations][1]
+    local page_nr = test_table[iterations][2]
+    
+    -- determine reference value for offset and mask in state["pageMap"]
+    local ref_map_addr, ref_mask = pos_to_map_bit(0, page_nr, block_nr)
+
+    -- check if the block is allocated after the call. This has to be true independent of whether the
+    -- block was marked free or allocated before markCurrentBlockUsed was called.
+    if (state["pageMap"][1 + ref_map_addr] - mask_bits[1 + ref_mask]) ~= 0 then
+        return false, "Block is free, but was expected to be allocated"
+    end
+
+    local is_free = test_table[iterations][3]
+    
+    -- Check if number of free blocks is correct
     if is_free then
-        return contains_flag("C"), "Carry is not set: Block is not free"
+        return state["numFreeBlocks"] == (state["numBlocks"] - 1), "Number of free blocks was not decremented (but should have)" 
     else
-        return not contains_flag("C"), "Carry is set: Block is free"
+        return state["numFreeBlocks"] == state["numBlocks"], "Number of free blocks was decremented (but should have not)" 
     end
 end

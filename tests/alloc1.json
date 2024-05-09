@@ -1,0 +1,5 @@
+{
+    "Name": "Test block allocation",
+    "TestDriverSource": "alloc1.asm",
+    "TestScript": "alloc1.lua"
+}
