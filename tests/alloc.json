@@ -1,0 +1,5 @@
+{
+    "Name": "Simple alloc test",
+    "TestDriverSource": "alloc.asm",
+    "TestScript": "alloc.lua"
+}
