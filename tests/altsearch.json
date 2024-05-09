@@ -1,0 +1,5 @@
+{
+    "Name": "Test alternative search",
+    "TestDriverSource": "altsearch.asm",
+    "TestScript": "altsearch.lua"
+}
