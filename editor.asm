@@ -7,13 +7,14 @@ Line_t .struct
     len             .byte 0
     freeInLastBlock .byte 0
     lastBlock       .byte 0
-    reserved        .fill 5
+    reserved        .fill 2
     block1          .dstruct FarPtr_t
     block2          .dstruct FarPtr_t
     block3          .dstruct FarPtr_t
     block4          .dstruct FarPtr_t
     block5          .dstruct FarPtr_t
-    block6          .dstruct FarPtr_t    
+    block6          .dstruct FarPtr_t
+    block7          .dstruct FarPtr_t    
 .endstruct
 
 
