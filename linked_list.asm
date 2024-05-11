@@ -17,18 +17,69 @@ TEMP     .dstruct FarPtr_t
 
 LIST .dstruct List_t
 
+; func (l *List) Remove() {
+; 	if l.Length == 1 {
+; 		return
+; 	}
+;
+; 	switch {
+; 	case (l.Current.Flags & FLAG_IS_LAST) != 0:
+; 		temp := l.Current.Prev
+; 		temp.Next = nil
+; 		temp.Flags |= FLAG_IS_LAST
+; 		// free l.Current and its subblocks
+; 		l.Current = temp
+; 	case (l.Current.Flags & FLAG_IS_FIRST) != 0:
+; 		temp := l.Current.Next
+; 		temp.Prev = nil
+; 		temp.Flags |= FLAG_IS_FIRST
+; 		// free l.Current and its subblocks
+; 		l.Current = temp
+; 		l.Head = temp
+; 	default:
+; 		oldPrev := l.Current.Prev
+; 		oldNext := l.Current.Next
+; 		oldPrev.Next = oldNext
+; 		oldNext.Prev = oldPrev
+; 		// free l.Current and its subblocks
+; 		l.Current = oldNext
+; 	}
+;
+; 	l.Length--
+; }
 remove
     rts
 
+
+; func (l *List) InsertBefore() {
+; 	newItem := NewLine(0)
+;
+; 	if (l.Current.Flags & FLAG_IS_FIRST) != 0 {
+; 		l.Current.Flags = l.Current.Flags & ^FLAG_IS_FIRST
+; 		newItem.Flags = newItem.Flags | FLAG_IS_FIRST
+; 		l.Current.Prev = newItem
+; 		newItem.Next = l.Current
+; 		l.Head = newItem
+; 	} else {
+; 		oldPrev := l.Current.Prev
+; 		oldPrev.Next = newItem
+; 		l.Current.Prev = newItem
+; 		newItem.Prev = oldPrev
+; 		newItem.Next = l.Current
+; 	}
+;
+; 	l.Length++
+; }
 insertBefore
     rts
+
 
 MASK_TEMP  .byte 0
 ORIG_FLAGS .byte 0
 
 ; func (l *List) InsertAfter() {
 ; 	newItem := NewLine(0)
-
+;
 ; 	if (l.Current.Flags & FLAG_IS_LAST) != 0 {
 ; 		l.Current.Flags = l.Current.Flags & ^FLAG_IS_LAST
 ; 		newItem.Flags = newItem.Flags | FLAG_IS_LAST
@@ -41,10 +92,9 @@ ORIG_FLAGS .byte 0
 ; 		newItem.Prev = l.Current
 ; 		newItem.Next = oldNext
 ; 	}
-
+;
 ; 	l.Length++
 ; }
-
 ; Append a new empty line after the current item
 ; If this routine fails the carry is set upon return.
 insertAfter
@@ -121,6 +171,13 @@ rewind
     rts
 
 
+; func (l *List) Prev() {
+; 	if (l.Current.Flags & FLAG_IS_FIRST) != 0 {
+; 		return
+; 	}
+;
+; 	l.Current = l.Current.Prev
+; }
 ; move one item to the left
 prev
     #ENTER_ADDR LIST.current                                         ; set MMU
@@ -137,6 +194,13 @@ _done
     rts
 
 
+; func (l *List) Next() {
+; 	if (l.Current.Flags & FLAG_IS_LAST) != 0 {
+; 		return
+; 	}
+;
+; 	l.Current = l.Current.Next
+; }
 ; move one item to the right
 next
     #ENTER_ADDR LIST.current                                         ; set MMU
@@ -157,8 +221,189 @@ copyCurrentLine
     rts
 
 
+; frees all subblocks of the current line
+freeCurrentLine
+    rts
+
+
+calcPtrAddress
+    ; get number of used blocks
+    ldy #Line_t.numBlocks
+    lda (PTR_CURRENT), y
+calcPtrAddressInt
+    sta $DE02
+    stz $DE03
+    #load16BitImmediate size(FarPtr_t), $DE00
+    ; $DE10/11 now contains numBlocks * 3 
+    #move16Bit $DE10, MEM_PTR3
+    ; add  offset for block1
+    #add16BitImmediate Line_t.block1, MEM_PTR3
+    ; add base address of whole FarPtr
+    #add16Bit PTR_CURRENT, MEM_PTR3
+    rts    
+
+
+DATA_LEN            .byte 0
+FULL_BLOCKS         .byte 0
+BYTES_IN_LAST_BLOCK .byte 0
+BLOCKS_NEEDED       .byte 0
+BLOCKS_TO_PROCESS   .byte 0, 0
+; carry is set if this routine fails. LINE_PTR points to data, accu holds length
 setCurrentLine
+    cmp #NUM_SUB_BLOCKS * BLOCK_SIZE
+    bcc _goOn
+    jmp _done
+_goOn
+    sta DATA_LEN
+    ; divide length by BLOCK_SIZE => $DE14 contains number of block in page
+    sta $DE06
+    stz $DE07
+    #load16BitImmediate BLOCK_SIZE, $DE04    
+    lda $DE14
+    sta FULL_BLOCKS
+    sta BLOCKS_NEEDED
+    lda $DE16
+    sta BYTES_IN_LAST_BLOCK
+    ; check if we need an additional block which is not used in full. The sta did not change the zero flag.
+    beq _noInc
+    inc BLOCKS_NEEDED
+_noInc    
+    #ENTER_ADDR LIST.current
+    #move16Bit LIST.current, PTR_CURRENT
+    ; calculate BLOCKS_NEEDED - l.current.numBlocks
+    sec
+    lda BLOCKS_NEEDED
+    ldy #Line_t.numBlocks
+    sbc (PTR_CURRENT), y    
+    bne _goOn2
+    ; we already have the correct number of blocks
+    jmp _doCopy
+_goOn2
+    ; we have more blocks than we need => Let's free some blocks
+    bmi _freeBlocks
+_allocBlocks
+    ; we have less blocks than we need => Allocate some blocks
+    sta BLOCKS_TO_PROCESS
+    ; do we still have enough memory?
+    #cmp16Bit BLOCKS_TO_PROCESS, memory.MEM_STATE.numFreeBlocks
+    ; exactly the number we need is available
+    beq _doAlloc
+    bcc _doAlloc
+    ; Not enough blocks left. Carry is set.
+    jmp  _done
+_doAlloc
+    jsr calcPtrAddress
+    ; now MEM_PTR3 points to the first free FarPtr slot.
+    ldx #0
+_allocLoop
+    phx
+    ; we still have enough blocks for this
+    jsr memory.allocPtr
+    plx
+    #add16BitImmediate size(FarPtr_t), MEM_PTR3
+    inx
+    cpx BLOCKS_TO_PROCESS
+    bne _allocLoop
+    bra _doCopy
+_freeBlocks
+    ; change sign
+    clc
+    eor #$FF
+    adc #1
+    sta BLOCKS_TO_PROCESS
+    
+    ; calculate numBlocks - BLOCKS_TO_PROCESS
+    ldy #Line_t.numBlocks
+    lda (PTR_CURRENT), y
+    sec
+    sbc BLOCKS_TO_PROCESS
+    ; accu now contains the position of the first slot to be freed    
+    jsr calcPtrAddressInt
+    ; Now MEM_PTR3 points to the first FarPtr that is to be freed
+    ldx #0
+_freeLoop
+    phx
+    jsr memory.freePtr
+    plx
+    #add16BitImmediate size(FarPtr_t), MEM_PTR3
+    inx
+    cpx BLOCKS_TO_PROCESS
+    bne _freeLoop    
+_doCopy
+    lda BLOCKS_NEEDED
+    ldy #Line_t.numBlocks
+    sta (PTR_CURRENT), y
+
+    #move16Bit PTR_CURRENT, MEM_PTR3
+    #add16BitImmediate Line_t.block1, MEM_PTR3
+
+    jsr blockCpy
+    
+    ; switch MMU back to page of list item
+    #ENTER_ADDR LIST.current
+    ; set length
+    lda DATA_LEN
+    ldy #Line_t.len
+    sta (PTR_CURRENT), y
+
+    clc
+_done
     rts   
+
+
+blockCpy
+    ldx #0
+_copy
+    lda FULL_BLOCKS
+    beq _lastBlockOnly
+    ; read pointer of data block
+    lda (MEM_PTR3)
+    sta PTR_TEMP
+    ldy #1
+    lda (MEM_PTR3),y
+    sta PTR_TEMP+1
+    ; set MMU to page of data block
+    #ENTER_ZP MEM_PTR3    
+
+    ldy #0
+_copyBlock
+    lda (PTR_TEMP), y
+    sta LINE_BUFFER, x
+    iny
+    inx
+    cpy #BLOCK_SIZE
+    bne _copyBlock
+    ; set MMU to page of list item
+    #ENTER_ADDR LIST.current
+    ; set MEM_PTR3 to next FarPtr
+    #add16BitImmediate size(FarPtr_t), MEM_PTR3
+    dec FULL_BLOCKS
+    bra _copy
+
+    ; here the page window shows the page which contains LIST.current
+_lastBlockOnly
+    lda BYTES_IN_LAST_BLOCK
+    beq _done
+
+    ; read pointer of data block
+    lda (MEM_PTR3)
+    sta PTR_TEMP
+    ldy #1
+    lda (MEM_PTR3),y
+    sta PTR_TEMP+1
+    ; set MMU to page of data block
+    #ENTER_ZP MEM_PTR3    
+
+    ldy #0
+_loop
+    lda (PTR_TEMP), y
+    sta LINE_BUFFER, x
+    iny
+    inx
+    cpy BYTES_IN_LAST_BLOCK
+    bne _loop
+_done
+    rts
 
 
 ; create a new document with one line which is empty. If this routine fails

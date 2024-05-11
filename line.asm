@@ -1,12 +1,12 @@
+NUM_SUB_BLOCKS = 7
 
 Line_t .struct 
     next            .dstruct FarPtr_t
     prev            .dstruct FarPtr_t
     len             .byte 0
-    freeInLastBlock .byte 0
-    lastBlock       .byte 0
+    numBlocks       .byte 0
     flags           .byte 0
-    reserved        .fill 1
+    reserved        .fill 2
     block1          .dstruct FarPtr_t
     block2          .dstruct FarPtr_t
     block3          .dstruct FarPtr_t
@@ -16,6 +16,8 @@ Line_t .struct
     block7          .dstruct FarPtr_t    
 .endstruct
 
+LINE_BUFFER .fill NUM_SUB_BLOCKS * BLOCK_SIZE
+
 line .namespace
 
 
@@ -23,17 +25,14 @@ line .namespace
 init
     #copyMem2Ptr NIL, MEM_PTR3, Line_t.next
     #copyMem2Ptr NIL, MEM_PTR3, Line_t.prev
+    lda #0
     ; set len to zero
     ldy #Line_t.len
     sta (MEM_PTR3), y
-    ; set freeInLastBlock to zero
-    ldy #Line_t.freeInLastBlock 
-    sta (MEM_PTR3), y
-    ; set lastBlock to 0
-    ldy #Line_t.lastBlock
+    ; set numBlocks to 0
+    ldy #Line_t.numBlocks
     sta (MEM_PTR3), y
     ; initialize LinePtr_t.flags
-    lda #0
     ; set flags
     ldy #Line_t.flags
     sta (MEM_PTR3), y     
