@@ -54,6 +54,10 @@ ENTER_ADDR .macro ptr
     pla
 .endmacro
 
+IS_NIL_ADDR .macro addr
+    lda \addr.page
+.endmacro
+
 
 LEAVE_ZP .macro ptr
     ; nothing at the moment
@@ -63,6 +67,42 @@ LEAVE_ADDR .macro ptr
     ; nothing at the moment
 .endmacro
 
+copyMem2Mem .macro src, target
+    lda \src.lo
+    sta \target.lo
+    lda \src.hi
+    sta \target.hi
+    lda \src.page
+    sta \target.page
+.endmacro
+
+
+copyPtr2Mem .macro ptr, index, target
+    ldy #\index
+    lda (\ptr), y
+    sta \target.lo
+    iny
+    lda (\ptr), y
+    sta \target.hi
+    iny
+    lda (\ptr), y
+    sta \target.hi
+.endmacro
+
+
+copyMem2Ptr .macro source, ptr, index
+    ldy #\index
+    lda \source.lo
+    sta (\ptr), y
+    iny
+    lda \source.hi
+    sta (\ptr), y
+    iny
+    lda \source.page
+    sta (\ptr), y
+.endmacro
+
+NIL   .dstruct FarPtr_t
 
 memory .namespace
 

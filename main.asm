@@ -12,6 +12,8 @@ jmp main
 .include "khelp.asm"
 .include "key_repeat.asm"
 .include "memory.asm"
+.include "linked_list.asm"
+.include "line.asm"
 .include "editor.asm"
 
 START_TXT1 .text "Use cursor keys to control cursor", $0d

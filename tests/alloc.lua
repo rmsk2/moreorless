@@ -36,5 +36,27 @@ function assert()
         return false, string.format("Block map incorrect: %d", state["pageMap"][1])
     end
 
+    local page = read_byte(load_address + 8)
+    local addr = de_ref(load_address + 6)
+
+    if page ~= reference_pages[1] then 
+        return false, string.format("Wrong page number: %d", page)
+    end
+
+    if addr ~= PAGE_WINDOW then
+        return false, string.format("Wrong address: %x", addr)
+    end
+
+    page = read_byte(load_address + 29)
+    addr = de_ref(load_address + 27)
+
+    if page ~= reference_pages[1] then 
+        return false, string.format("Wrong page number: %d", page)
+    end
+
+    if addr ~= PAGE_WINDOW + ((blocks_to_reserve - 1) * BLOCK_SIZE) then
+        return false, string.format("Wrong address: %x", addr)
+    end
+
     return true, ""
 end

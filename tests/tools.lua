@@ -1,6 +1,7 @@
 require("math")
 require("table")
 
+PAGE_WINDOW = 0xA000
 PAGE_SIZE = 8192
 BLOCK_SIZE = 32
 BLOCKS_PER_PAGE = PAGE_SIZE / BLOCK_SIZE
