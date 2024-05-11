@@ -86,7 +86,7 @@ copyPtr2Mem .macro ptr, index, target
     sta \target.hi
     iny
     lda (\ptr), y
-    sta \target.hi
+    sta \target.page
 .endmacro
 
 
