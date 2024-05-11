@@ -217,7 +217,7 @@ _done
     rts
 
 
-copyCurrentLine
+readCurrentLine
     rts
 
 
