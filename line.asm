@@ -25,9 +25,13 @@ LINE_BUFFER .dstruct LineBuffer_t
 
 line .namespace
 
+init
+    lda #0
+    sta LINE_BUFFER.len
+    rts
 
 ; Initializes a new Line_t item to which MEM_PTR3 points
-init
+create
     #copyMem2Ptr NIL, MEM_PTR3, Line_t.next
     #copyMem2Ptr NIL, MEM_PTR3, Line_t.prev
     lda #0

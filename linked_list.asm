@@ -303,6 +303,7 @@ BLOCKS_TO_PROCESS   .byte 0, 0
 setCurrentLine
     lda LINE_BUFFER.len
     cmp #NUM_SUB_BLOCKS * BLOCK_SIZE
+    beq _goOn
     bcc _goOn
     jmp _done
 _goOn
@@ -480,10 +481,10 @@ create
     #copyMem2Mem LIST.current, LIST.head
     #load16BitImmediate 1, LIST.length
 
-    #SET_MMU_ADDR LIST.current                                         ; set MMU
+    #SET_MMU_ADDR LIST.current                                       ; set MMU
     #move16Bit LIST.current, MEM_PTR3                                ; initialize indirect address
 
-    jsr line.init
+    jsr line.create
 
     ; initialize LinePtr_t.flags
     lda #FLAG_IS_FIRST | FLAG_IS_LAST

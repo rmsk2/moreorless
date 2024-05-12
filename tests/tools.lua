@@ -54,6 +54,22 @@ function contains_flag(f)
     return string.find(get_flags(), f, 0, true) ~= nil
 end
 
+function read_allocated_block(lo, hi, page)
+    local res = {}
+    local offset = (hi * 256 + lo) - PAGE_WINDOW
+    local long_addr = (page * 8192) + offset
+
+    print()
+    for i = long_addr, long_addr + BLOCK_SIZE - 1, 1 do
+        local d = read_byte_long(i) 
+        print(i, d)
+        table.insert(res, d)
+    end
+
+    return res
+end
+
+
 -- Parses memory.MEM_STATE into a table
 function get_mem_state(addr) 
     local page_window = de_ref(addr)
