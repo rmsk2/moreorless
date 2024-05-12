@@ -28,7 +28,7 @@ main
     jsr memory.blockPosToFarPtr
 
     #move16Bit TEST_PTR, DATA_PTR
-    #ENTER_ADDR TEST_PTR
+    #SET_MMU_ADDR TEST_PTR
 
     ldy #0
 _loop
@@ -37,7 +37,5 @@ _loop
     iny
     cpy #BLOCK_SIZE
     bne _loop
-
-    #LEAVE_ADDR MEM_PTR3
 
     brk

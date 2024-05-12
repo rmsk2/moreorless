@@ -37,7 +37,7 @@ MainMem_t .struct
     pageMap       .fill PAGE_MAP_LEN
 .endstruct
 
-ENTER_ZP .macro ptr
+SET_MMU_ZP .macro ptr
     pha
     phy
     ldy #FarPtr_t.page
@@ -47,7 +47,7 @@ ENTER_ZP .macro ptr
     pla
 .endmacro
 
-ENTER_ADDR .macro ptr
+SET_MMU_ADDR .macro ptr
     pha
     lda \ptr + FarPtr_t.page
     sta MMU_REG
@@ -58,14 +58,6 @@ IS_NIL_ADDR .macro addr
     lda \addr.page
 .endmacro
 
-
-LEAVE_ZP .macro ptr
-    ; nothing at the moment
-.endmacro
-
-LEAVE_ADDR .macro ptr
-    ; nothing at the moment
-.endmacro
 
 copyMem2Mem .macro src, target
     lda \src.lo

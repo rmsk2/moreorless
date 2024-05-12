@@ -104,13 +104,13 @@ insertAfter
     bcc _allocOk
     jmp _done
 _allocOk
-    #ENTER_ADDR NEW    
+    #SET_MMU_ADDR NEW    
     jsr line.init
 
     #move16Bit LIST.current, PTR_CURRENT
     #move16Bit NEW, PTR_NEW
 
-    #ENTER_ADDR LIST.current
+    #SET_MMU_ADDR LIST.current
     ; copy flags
     ldy #Line_t.flags
     lda (PTR_CURRENT), y
@@ -131,7 +131,7 @@ _atEnd
     and MASK_TEMP
     sta (PTR_CURRENT), y
 
-    #ENTER_ADDR NEW
+    #SET_MMU_ADDR NEW
     ; newItem.Flags = newItem.Flags | FLAG_IS_LAST
     ldy #Line_t.flags
     lda #FLAG_IS_LAST
@@ -139,7 +139,7 @@ _atEnd
     ; newItem.Prev = l.Current
     #copyMem2Ptr LIST.current, PTR_NEW, Line_t.prev
 
-    #ENTER_ADDR LIST.current
+    #SET_MMU_ADDR LIST.current
     ; l.Current.Next = newItem
     #copyMem2Ptr NEW, PTR_CURRENT, Line_t.next
     bra _doneOK 
@@ -151,10 +151,10 @@ _normal
     ; l.Current.Next = newItem    
     #copyMem2Ptr NEW, PTR_CURRENT, Line_t.next
     ; oldNext.Prev = newItem
-    #ENTER_ADDR OLD_NEXT
+    #SET_MMU_ADDR OLD_NEXT
     #copyMem2Ptr NEW, PTR_OLD_NEXT, Line_t.prev
     
-    #ENTER_ADDR NEW
+    #SET_MMU_ADDR NEW
     ; newItem.Prev = l.Current
     #copyMem2Ptr LIST.current, PTR_NEW, Line_t.prev
     ; newItem.Next = oldNext
@@ -180,7 +180,7 @@ rewind
 ; }
 ; move one item to the left
 prev
-    #ENTER_ADDR LIST.current                                         ; set MMU
+    #SET_MMU_ADDR LIST.current                                         ; set MMU
     #move16Bit LIST.current, PTR_CURRENT                               ; initialize indirect address
     ; check flags. Are we at the beginning?
     ldy #Line_t.flags
@@ -190,7 +190,6 @@ prev
     ; copy prev pointer to LIST.current
     #copyPtr2Mem PTR_CURRENT, Line_t.prev, LIST.current
 _done
-    #LEAVE_ADDR LIST.current                                         ; set MMU
     rts
 
 
@@ -203,7 +202,7 @@ _done
 ; }
 ; move one item to the right
 next
-    #ENTER_ADDR LIST.current                                         ; set MMU
+    #SET_MMU_ADDR LIST.current                                         ; set MMU
     #move16Bit LIST.current, PTR_CURRENT                               ; initialize indirect address
     ; check flags. Are we at the end?
     ldy #Line_t.flags
@@ -213,7 +212,6 @@ next
     ; copy next pointer to LIST.current
     #copyPtr2Mem PTR_CURRENT, Line_t.next, LIST.current
 _done
-    #LEAVE_ADDR LIST.current
     rts
 
 
@@ -268,7 +266,7 @@ _goOn
     beq _noInc
     inc BLOCKS_NEEDED
 _noInc    
-    #ENTER_ADDR LIST.current
+    #SET_MMU_ADDR LIST.current
     #move16Bit LIST.current, PTR_CURRENT
     ; calculate BLOCKS_NEEDED - l.current.numBlocks
     sec
@@ -340,7 +338,7 @@ _doCopy
     jsr blockCpy
     
     ; switch MMU back to page of list item
-    #ENTER_ADDR LIST.current
+    #SET_MMU_ADDR LIST.current
     ; set length
     lda DATA_LEN
     ldy #Line_t.len
@@ -363,7 +361,7 @@ _copy
     lda (MEM_PTR3),y
     sta PTR_TEMP+1
     ; set MMU to page of data block
-    #ENTER_ZP MEM_PTR3    
+    #SET_MMU_ZP MEM_PTR3    
 
     ldy #0
 _copyBlock
@@ -374,7 +372,7 @@ _copyBlock
     cpy #BLOCK_SIZE
     bne _copyBlock
     ; set MMU to page of list item
-    #ENTER_ADDR LIST.current
+    #SET_MMU_ADDR LIST.current
     ; set MEM_PTR3 to next FarPtr
     #add16BitImmediate size(FarPtr_t), MEM_PTR3
     dec FULL_BLOCKS
@@ -392,7 +390,7 @@ _lastBlockOnly
     lda (MEM_PTR3),y
     sta PTR_TEMP+1
     ; set MMU to page of data block
-    #ENTER_ZP MEM_PTR3    
+    #SET_MMU_ZP MEM_PTR3    
 
     ldy #0
 _loop
@@ -415,7 +413,7 @@ create
     #copyMem2Mem LIST.current, LIST.head
     #load16BitImmediate 1, LIST.length
 
-    #ENTER_ADDR LIST.current                                         ; set MMU
+    #SET_MMU_ADDR LIST.current                                         ; set MMU
     #move16Bit LIST.current, MEM_PTR3                                ; initialize indirect address
 
     jsr line.init
@@ -426,8 +424,6 @@ create
     ldy #Line_t.flags
     sta (MEM_PTR3), y   
 
-
-    #LEAVE_ADDR LIST.current
     clc
 _error
     rts
