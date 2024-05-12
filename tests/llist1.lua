@@ -46,7 +46,6 @@ function assert()
 
     for i = data_addr, data_addr + out_len - 1, 1 do
         local b = read_byte(i)
-        print(i, b)
         if b ~= 65 then
             return false, string.format("Unexpected byte %d at 0x%x", b, i)
         end

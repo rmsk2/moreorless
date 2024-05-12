@@ -218,6 +218,8 @@ _done
 readCurrentLine
     #SET_MMU_ADDR LIST.current
     #move16Bit LIST.current, PTR_CURRENT
+    #move16Bit LIST.current, MEM_PTR3
+    #add16BitImmediate Line_t.block1, MEM_PTR3
     ldy #Line_t.len
     lda (PTR_CURRENT), y
     sta LINE_BUFFER.len
