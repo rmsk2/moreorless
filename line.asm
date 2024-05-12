@@ -16,7 +16,12 @@ Line_t .struct
     block7          .dstruct FarPtr_t    
 .endstruct
 
-LINE_BUFFER .fill NUM_SUB_BLOCKS * BLOCK_SIZE
+LineBuffer_t .struct
+    buffer .fill NUM_SUB_BLOCKS * BLOCK_SIZE
+    len    .byte 0
+.endstruct
+
+LINE_BUFFER .dstruct LineBuffer_t 
 
 line .namespace
 

@@ -216,19 +216,54 @@ _done
 
 
 readCurrentLine
+    #SET_MMU_ADDR LIST.current
+    #move16Bit LIST.current, PTR_CURRENT
+    ldy #Line_t.len
+    lda (PTR_CURRENT), y
+    sta LINE_BUFFER.len
+    jsr calcBlkCopyParams
+    jsr cpStruct2LineBuffer
     rts
 
 
+NUM_BLOCKS .byte 0
 ; frees all subblocks of the current line
 freeCurrentLine
+    #SET_MMU_ADDR LIST.current
+    #move16Bit LIST.current, MEM_PTR3
+    ldy #Line_t.numBlocks
+    lda (MEM_PTR3), y
+    sta NUM_BLOCKS
+    ; set MEM_PTR3 to Line_t.block1
+    lda #Line_t.block1
+    clc
+    adc MEM_PTR3
+    sta MEM_PTR3
+    lda #0
+    adc MEM_PTR3 + 1
+    sta MEM_PTR3 + 1
+    ldx #0
+_loop
+    cpx NUM_BLOCKS
+    beq _done
+    phx
+    jsr memory.freePtr
+    plx
+    inx
+    #add16BitImmediate size(FarPtr_t), MEM_PTR3
+    bra _loop
+_done    
     rts
 
 
-calcPtrAddress
+calcPtrSlotAddress
     ; get number of used blocks
     ldy #Line_t.numBlocks
     lda (PTR_CURRENT), y
-calcPtrAddressInt
+; expects the number of the FarPtr in the Line_t in the accu and that PTR_CURRENT 
+; points to the line item in the correct MMU page. Upon return MEM_PTR3 is set to
+; the start address of the corresponding FarPtr.
+calcPtrSlotAddressInt
     sta $DE02
     stz $DE03
     #load16BitImmediate size(FarPtr_t), $DE00
@@ -241,18 +276,8 @@ calcPtrAddressInt
     rts    
 
 
-DATA_LEN            .byte 0
-FULL_BLOCKS         .byte 0
-BYTES_IN_LAST_BLOCK .byte 0
-BLOCKS_NEEDED       .byte 0
-BLOCKS_TO_PROCESS   .byte 0, 0
-; carry is set if this routine fails. LINE_PTR points to data, accu holds length
-setCurrentLine
-    cmp #NUM_SUB_BLOCKS * BLOCK_SIZE
-    bcc _goOn
-    jmp _done
-_goOn
-    sta DATA_LEN
+; length in Accu. Result in FULL_BLOCKS, BYTES_IN_LAST_BLOCK and BLOCKS_NEEDED
+calcBlkCopyParams
     ; divide length by BLOCK_SIZE => $DE14 contains number of block in page
     sta $DE06
     stz $DE07
@@ -265,7 +290,24 @@ _goOn
     ; check if we need an additional block which is not used in full. The sta did not change the zero flag.
     beq _noInc
     inc BLOCKS_NEEDED
-_noInc    
+_noInc
+    rts
+
+
+DATA_LEN            .byte 0
+FULL_BLOCKS         .byte 0
+BYTES_IN_LAST_BLOCK .byte 0
+BLOCKS_NEEDED       .byte 0
+BLOCKS_TO_PROCESS   .byte 0, 0
+; carry is set if this routine fails. Data is read from LINE_BUFFER.
+setCurrentLine
+    lda LINE_BUFFER.len
+    cmp #NUM_SUB_BLOCKS * BLOCK_SIZE
+    bcc _goOn
+    jmp _done
+_goOn
+    sta DATA_LEN
+    jsr calcBlkCopyParams
     #SET_MMU_ADDR LIST.current
     #move16Bit LIST.current, PTR_CURRENT
     ; calculate BLOCKS_NEEDED - l.current.numBlocks
@@ -290,7 +332,7 @@ _allocBlocks
     ; Not enough blocks left. Carry is set.
     jmp  _done
 _doAlloc
-    jsr calcPtrAddress
+    jsr calcPtrSlotAddress
     ; now MEM_PTR3 points to the first free FarPtr slot.
     ldx #0
 _allocLoop
@@ -310,13 +352,13 @@ _freeBlocks
     adc #1
     sta BLOCKS_TO_PROCESS
     
-    ; calculate numBlocks - BLOCKS_TO_PROCESS
+    ; calculate current.numBlocks - BLOCKS_TO_PROCESS
     ldy #Line_t.numBlocks
     lda (PTR_CURRENT), y
     sec
     sbc BLOCKS_TO_PROCESS
     ; accu now contains the position of the first slot to be freed    
-    jsr calcPtrAddressInt
+    jsr calcPtrSlotAddressInt
     ; Now MEM_PTR3 points to the first FarPtr that is to be freed
     ldx #0
 _freeLoop
@@ -332,10 +374,11 @@ _doCopy
     ldy #Line_t.numBlocks
     sta (PTR_CURRENT), y
 
+    ; set MEM_PTR3 to address of first FarPtr in line
     #move16Bit PTR_CURRENT, MEM_PTR3
     #add16BitImmediate Line_t.block1, MEM_PTR3
 
-    jsr blockCpy
+    jsr cpLineBuffer2Struct
     
     ; switch MMU back to page of list item
     #SET_MMU_ADDR LIST.current
@@ -348,8 +391,18 @@ _doCopy
 _done
     rts   
 
+DIRECTION .byte 0
 
-blockCpy
+; MEM_PTR3 has to point to current list element and the MMU has to be set to the
+; page which holds the data of this element. DIRECTION == 0 => Copy struct to line
+; buffer. DIRECTION != 0 => Copy from line buffer to struct
+cpLineBuffer2Struct
+    lda #1
+    sta DIRECTION
+    bra cpStart 
+cpStruct2LineBuffer
+    stz DIRECTION
+cpStart
     ldx #0
 _copy
     lda FULL_BLOCKS
@@ -365,8 +418,15 @@ _copy
 
     ldy #0
 _copyBlock
+    lda DIRECTION
+    bne _reverse1
     lda (PTR_TEMP), y
-    sta LINE_BUFFER, x
+    sta LINE_BUFFER.buffer, x
+    bra _skip1
+_reverse1
+    lda LINE_BUFFER.buffer, x
+    sta (PTR_TEMP), y
+_skip1
     iny
     inx
     cpy #BLOCK_SIZE
@@ -378,7 +438,7 @@ _copyBlock
     dec FULL_BLOCKS
     bra _copy
 
-    ; here the page window shows the page which contains LIST.current
+    ; here the MMU is configured to bank in the page which contains LIST.current
 _lastBlockOnly
     lda BYTES_IN_LAST_BLOCK
     beq _done
@@ -394,8 +454,15 @@ _lastBlockOnly
 
     ldy #0
 _loop
+    lda DIRECTION
+    bne _reverse2
     lda (PTR_TEMP), y
-    sta LINE_BUFFER, x
+    sta LINE_BUFFER.buffer, x
+    bra _skip2
+_reverse2
+    lda LINE_BUFFER.buffer, x
+    sta (PTR_TEMP), y    
+_skip2
     iny
     inx
     cpy BYTES_IN_LAST_BLOCK
