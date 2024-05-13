@@ -19,7 +19,7 @@ function assert()
         return false, string.format("Unexpected number of blocks: %d of %d", state["numFreeBlocks"], state["numBlocks"])
     end
 
-    -- look at length field in the first allocated block, which is at offset 6 + 1.
+    -- look at length field in the first allocated block, which is at offset.
     local elem = parse_allocated_block(read_byte(load_address + 5), read_byte(load_address + 6), read_byte(load_address + 7))
     local l = elem.len
     if l ~= 14 then

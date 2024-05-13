@@ -28,7 +28,7 @@ function assert()
 
     -- print()
 
-    -- look at length field in the first allocated block, which is at offset 6 + 1.
+    -- look at length field in the first allocated block, which is at offset.
     local elem = parse_allocated_block(read_byte(load_address + 5), read_byte(load_address + 6), read_byte(load_address + 7))
     -- print_whole_list(elem)
     local l = elem.len
@@ -36,14 +36,14 @@ function assert()
         return false, string.format("Line 1 length wrong: %d", l)
     end
     
-    -- look at length field in the second allocated block, which is at offset 6 + 1.
+    -- look at length field in the second allocated block, which is at offset.
     elem = parse_allocated_block(read_byte(load_address + 8), read_byte(load_address + 9), read_byte(load_address + 10))    
     l = elem.len
     if l ~= 23 then
         return false, string.format("Line 1 length wrong: %d", l)
     end    
 
-    -- look at length field in the second allocated block, which is at offset 6 + 1.
+    -- look at length field in the second allocated block, which is at offset.
     elem = parse_allocated_block(read_byte(load_address + 13), read_byte(load_address + 14), read_byte(load_address + 15))
     l = elem.len
     if l ~= 51 then
