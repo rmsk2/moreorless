@@ -26,11 +26,11 @@ function assert()
         return false, string.format("Wrong length: %d", list_len)
     end
 
-    print()
+    -- print()
 
     -- look at length field in the first allocated block, which is at offset 6 + 1.
     local elem = parse_allocated_block(read_byte(load_address + 5), read_byte(load_address + 6), read_byte(load_address + 7))
-    print_whole_list(elem)
+    -- print_whole_list(elem)
     local l = elem.len
     if l ~= 14 then
         return false, string.format("Line 1 length wrong: %d", l)
