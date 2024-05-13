@@ -71,6 +71,46 @@ remove
 ; 	l.Length++
 ; }
 insertBefore
+    jsr allocNewLine
+    bcc _allocSuccess
+    rts
+_allocSuccess
+    #move16Bit LIST.current, PTR_CURRENT
+    #SET_MMU_ADDR LIST.current
+    ; copy flags
+    ldy #Line_t.flags
+    lda (PTR_CURRENT), y
+    sta ORIG_FLAGS
+
+    ; test flags of current element
+    and #FLAG_IS_FIRST
+    beq _normal
+_atStart
+    ; we are at the current start of the list
+    lda #FLAG_IS_FIRST
+    eor #$FF
+    sta MASK_TEMP
+    ; l.Current.Flags = l.Current.Flags & ^FLAG_IS_FIRST
+    ldy #Line_t.flags
+    lda (PTR_CURRENT), y
+    and MASK_TEMP
+    sta (PTR_CURRENT), y
+
+    #SET_MMU_ADDR NEW
+    ; newItem.Flags = newItem.Flags | FLAG_IS_FIRST
+    ldy #Line_t.flags
+    lda #FLAG_IS_FIRST
+    sta (PTR_NEW), y
+    ;
+    ; ToDo
+
+    bra _doneOK
+_normal
+    ;
+    ; ToDo
+_doneOK
+    #inc16Bit LIST.length
+    clc
     rts
 
 
