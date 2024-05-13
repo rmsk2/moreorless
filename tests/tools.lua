@@ -54,15 +54,110 @@ function contains_flag(f)
     return string.find(get_flags(), f, 0, true) ~= nil
 end
 
+
+function seg_2_linear(lo, hi, page)
+    local offset = (hi * 256 + lo) - PAGE_WINDOW
+    return (page * PAGE_SIZE) + offset
+end
+
+
+function to_addr(a)
+    return to_addr_flat(a[1], a[2], a[3])
+end
+
+
+function to_addr_flat(lo, hi, page)
+    if page == 0 then
+        return "nil"
+    else 
+        return string.format("%02x:%04x", page, (lo + hi * 256) - PAGE_WINDOW)
+    end
+end
+
+
+function block_to_string(a, len)
+    local s = ""
+    local addr = seg_2_linear(a[1], a[2], a[3])
+
+    for i = addr, addr + len - 1, 1 do
+        s = s .. string.char(read_byte_long(i))
+    end
+
+    return s
+end
+
+
+function print_allocated_block(b)
+    print(to_addr(b["addr"]))
+    print("    ", to_addr(b["next"]))
+    print("    ", to_addr(b["prev"]))
+    print("    ", b["len"])
+    print("    ", b["numBlocks"])
+    print("    ", b["flags"])
+    print("    ", b["data"])
+end
+
+
+function print_whole_list(b)
+    done = false
+
+    while not done do
+        print_allocated_block(b)
+        done = (b.flags == 2) or (b.flags == 3)
+        if not done then
+            b = parse_allocated_block(b.next[1], b.next[2], b.next[3])        
+        end
+    end
+end
+
+
+function parse_allocated_block(lo, hi, page)
+    local d = read_allocated_block(lo, hi, page)
+    local res = {}
+    local len = d[7]
+    local num_blocks = d[8]
+
+    local s = ""
+
+    local full_blocks = math.floor(len / BLOCK_SIZE)
+    local last_block = math.fmod(len, BLOCK_SIZE)
+
+    res["next"] = {d[1], d[2], d[3]}
+    res["prev"] = {d[4], d[5], d[6]}
+    res["len"] = len 
+    res["numBlocks"] = num_blocks
+    res["flags"] = d[9]
+    res["block1"] = {d[12], d[13], d[14]}
+    res["block2"] = {d[15], d[16], d[17]}
+    res["block3"] = {d[18], d[19], d[20]}
+    res["block4"] = {d[21], d[22], d[23]}
+    res["block5"] = {d[24], d[25], d[26]}
+    res["block6"] = {d[27], d[28], d[29]}
+    res["block7"] = {d[30], d[31], d[32]}
+    res["addr"] =  {lo, hi, page}
+
+    for i = 1, full_blocks, 1 do
+        local index = string.format("block%d", i)
+        s = s .. block_to_string(res[index], BLOCK_SIZE)
+    end
+    
+    if  last_block ~= 0 then
+        local index = string.format("block%d", num_blocks)
+        s = s .. block_to_string(res[index], last_block)
+    end
+
+    res["data"] = s
+
+    return res
+end
+
+
 function read_allocated_block(lo, hi, page)
     local res = {}
-    local offset = (hi * 256 + lo) - PAGE_WINDOW
-    local long_addr = (page * 8192) + offset
+    local long_addr = seg_2_linear(lo, hi, page)
 
-    print()
     for i = long_addr, long_addr + BLOCK_SIZE - 1, 1 do
         local d = read_byte_long(i) 
-        print(i, d)
         table.insert(res, d)
     end
 

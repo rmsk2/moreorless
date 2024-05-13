@@ -74,6 +74,23 @@ insertBefore
     rts
 
 
+; Allocate and initialize a new line. Carry is set if an error occurred.
+; If the routine was successfull NEW and PTR_NEW point the newly allocated
+; line and the MMU is configured to bank in the new line.
+allocNewLine
+    #load16BitImmediate NEW, MEM_PTR3
+    ; allocate a new Line_t struct
+    jsr memory.allocPtr
+    bcs _done
+    #SET_MMU_ADDR NEW
+    #move16Bit NEW, MEM_PTR3    
+    jsr line.init
+    #move16Bit NEW, PTR_NEW
+    clc
+_done
+    rts    
+
+
 MASK_TEMP  .byte 0
 ORIG_FLAGS .byte 0
 
@@ -98,26 +115,18 @@ ORIG_FLAGS .byte 0
 ; Append a new empty line after the current item
 ; If this routine fails the carry is set upon return.
 insertAfter
-    #load16BitImmediate NEW, MEM_PTR3
-    ; allocate a new Line_t struct
-    jsr memory.allocPtr
-    bcc _allocOk
-    jmp _done
-_allocOk
-    #SET_MMU_ADDR NEW    
-    jsr line.init
-
+    jsr allocNewLine
+    bcc _allocSuccess
+    rts
+_allocSuccess
     #move16Bit LIST.current, PTR_CURRENT
-    #move16Bit NEW, PTR_NEW
-
     #SET_MMU_ADDR LIST.current
     ; copy flags
     ldy #Line_t.flags
     lda (PTR_CURRENT), y
     sta ORIG_FLAGS
 
-    ; test flags of current
-    lda ORIG_FLAGS
+    ; test flags of current element
     and #FLAG_IS_LAST
     beq _normal
 _atEnd
@@ -162,7 +171,6 @@ _normal
 _doneOK
     #inc16Bit LIST.length
     clc
-_done
     rts
 
 
@@ -171,14 +179,16 @@ rewind
     rts
 
 
-; func (l *List) Prev() {
+; func (l *List) Prev() bool {
 ; 	if (l.Current.Flags & FLAG_IS_FIRST) != 0 {
-; 		return
+; 		return true
 ; 	}
 ;
 ; 	l.Current = l.Current.Prev
+;
+;   return false
 ; }
-; move one item to the left
+; move one item to the left. Carry is set if beginning is reached.
 prev
     #SET_MMU_ADDR LIST.current                                         ; set MMU
     #move16Bit LIST.current, PTR_CURRENT                               ; initialize indirect address
@@ -189,18 +199,23 @@ prev
     bne _done                                                        ; yes => we can't go left
     ; copy prev pointer to LIST.current
     #copyPtr2Mem PTR_CURRENT, Line_t.prev, LIST.current
+    clc
+    rts
 _done
+    sec
     rts
 
 
-; func (l *List) Next() {
+; func (l *List) Next() bool {
 ; 	if (l.Current.Flags & FLAG_IS_LAST) != 0 {
-; 		return
+; 		return true
 ; 	}
 ;
 ; 	l.Current = l.Current.Next
+;
+;   return false
 ; }
-; move one item to the right
+; move one item to the right. Carry is set if end is reached.
 next
     #SET_MMU_ADDR LIST.current                                         ; set MMU
     #move16Bit LIST.current, PTR_CURRENT                               ; initialize indirect address
@@ -211,10 +226,15 @@ next
     bne _done                                                        ; yes => we can't go right
     ; copy next pointer to LIST.current
     #copyPtr2Mem PTR_CURRENT, Line_t.next, LIST.current
+    clc
+    rts
 _done
+    sec
     rts
 
 
+; This routine copies the data of the line to which LIST.current points
+; to the line buffer. It changes the MMU config.
 readCurrentLine
     #SET_MMU_ADDR LIST.current
     #move16Bit LIST.current, PTR_CURRENT
@@ -236,21 +256,13 @@ freeCurrentLine
     ldy #Line_t.numBlocks
     lda (MEM_PTR3), y
     sta NUM_BLOCKS
-    ; set MEM_PTR3 to Line_t.block1
-    lda #Line_t.block1
-    clc
-    adc MEM_PTR3
-    sta MEM_PTR3
-    lda #0
-    adc MEM_PTR3 + 1
-    sta MEM_PTR3 + 1
+    ; set MEM_PTR3 to address where Line_t.block1 is located
+    #add16BitImmediate Line_t.block1, MEM_PTR3
     ldx #0
 _loop
     cpx NUM_BLOCKS
     beq _done
-    phx
-    jsr memory.freePtr
-    plx
+    #CALL_X_PROT memory.freePtr
     inx
     #add16BitImmediate size(FarPtr_t), MEM_PTR3
     bra _loop
@@ -339,10 +351,8 @@ _doAlloc
     ; now MEM_PTR3 points to the first free FarPtr slot.
     ldx #0
 _allocLoop
-    phx
     ; we still have enough blocks for this
-    jsr memory.allocPtr
-    plx
+    #CALL_X_PROT memory.allocPtr
     #add16BitImmediate size(FarPtr_t), MEM_PTR3
     inx
     cpx BLOCKS_TO_PROCESS
@@ -365,9 +375,7 @@ _freeBlocks
     ; Now MEM_PTR3 points to the first FarPtr that is to be freed
     ldx #0
 _freeLoop
-    phx
-    jsr memory.freePtr
-    plx
+    #CALL_X_PROT memory.freePtr
     #add16BitImmediate size(FarPtr_t), MEM_PTR3
     inx
     cpx BLOCKS_TO_PROCESS
@@ -486,7 +494,7 @@ create
     #SET_MMU_ADDR LIST.current                                       ; set MMU
     #move16Bit LIST.current, MEM_PTR3                                ; initialize indirect address
 
-    jsr line.create
+    jsr line.init
 
     ; initialize LinePtr_t.flags
     lda #FLAG_IS_FIRST | FLAG_IS_LAST

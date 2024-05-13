@@ -1,5 +1,10 @@
 require (test_dir.."tools")
 
+-- In this test the asm test driver allocates a new line and fills it with data_len "A"s. After that
+-- the line is shortened to 32 and then lengthened to 33 "A" characters. The Lua part then verifies
+-- that the number of free blocks (here numBlocks - 3) is and the data length (here 33) is correct. 
+-- Finally the Lua part checks whether the line buffer was filled correctly. 
+
 data_len = 224
 
 function arrange()
@@ -24,6 +29,12 @@ function assert()
         return false, "Error: Carry was set"
     end
 
+    local list_len = de_ref(load_address + 13)
+
+    if list_len ~= 1 then
+        return false , string.format("Wrong length: %d", list_len)
+    end
+
     -- parse whole memory.MEM_STATE struct at the address stored at load_address + 3
     local state = get_mem_state(de_ref(load_address + 3))
     
@@ -31,12 +42,14 @@ function assert()
         return false, string.format("Unexpected number of blocks: %d of %d", state["numFreeBlocks"], state["numBlocks"])
     end
 
+    -- look at length field in the allocated block, which is at offset 6 + 1.
     local elem = read_allocated_block(read_byte(load_address + 10), read_byte(load_address + 11), read_byte(load_address + 12))
     local l = elem[7]
     if l ~= 33 then
         return false, string.format("Wrong length: %d", l)
     end
 
+    -- check whether the length of the line buffer was set correctly
     local out_len = read_byte(de_ref(load_address + 7))
     if out_len ~= 33 then
         return false, string.format("Wrong length: %d", out_len)
@@ -44,6 +57,7 @@ function assert()
 
     local data_addr = de_ref(load_address + 5)
 
+    -- Test whether the line buffer contains 33 As
     for i = data_addr, data_addr + out_len - 1, 1 do
         local b = read_byte(i)
         if b ~= 65 then

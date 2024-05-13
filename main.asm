@@ -52,6 +52,7 @@ main
     jsr initEvents
 
     jsr memory.init
+    jsr line.init_module
     jsr editor.init
 
     lda editor.STATE.col

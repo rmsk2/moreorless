@@ -58,6 +58,11 @@ IS_NIL_ADDR .macro addr
     lda \addr.page
 .endmacro
 
+CALL_X_PROT .macro addr
+    phx
+    jsr \addr
+    plx
+.endmacro
 
 copyMem2Mem .macro src, target
     lda \src.lo
@@ -92,6 +97,13 @@ copyMem2Ptr .macro source, ptr, index
     iny
     lda \source.page
     sta (\ptr), y
+.endmacro
+
+memCopy .macro src, target, length 
+    #load16BitImmediate \src, memory.MEM_CPY.startAddress
+    #load16BitImmediate \target, memory.MEM_CPY.targetAddress
+    #load16BitImmediate \length, memory.MEM_CPY.length
+    jsr memory.memCpy
 .endmacro
 
 NIL   .dstruct FarPtr_t
