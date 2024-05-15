@@ -48,6 +48,14 @@ LIST .dstruct List_t
 ; 	l.Length--
 ; }
 remove
+    ; if l.Length == 1 {
+    ; 	return
+    ; }
+    #cmp16BitImmediate 1, LIST.length
+    bne _atLeastTwo
+    sec
+    rts
+_atLeastTwo
     #move16Bit LIST.current, PTR_CURRENT
     #SET_MMU_ADDR LIST.current
     ldy #Line_t.flags
@@ -83,8 +91,8 @@ _default
     #copyMem2Mem OLD_NEXT, LIST.current
     jmp _doneOK
 _removeLast
+    ; MMU is at page of LIST.current
     ; temp := l.Current.Prev
-    #SET_MMU_ADDR LIST.current
     #copyPtr2Mem PTR_CURRENT, Line_t.prev, TEMP
     #move16Bit TEMP, PTR_TEMP
     ; temp.Next = nil
@@ -104,8 +112,8 @@ _removeLast
     #copyMem2Mem TEMP, LIST.current
     bra _doneOK
 _removeFirst
+    ; MMU is at page of LIST.current
     ; temp := l.Current.Next
-    #SET_MMU_ADDR LIST.current
     #copyPtr2Mem PTR_CURRENT, Line_t.next, TEMP
     #move16Bit TEMP, PTR_TEMP
     ; temp.Prev = nil
@@ -127,6 +135,7 @@ _removeFirst
     #copyMem2Mem TEMP, LIST.head
 _doneOK
     #dec16Bit LIST.length
+    clc
     rts
 
 ; func (l *List) InsertBefore() {
