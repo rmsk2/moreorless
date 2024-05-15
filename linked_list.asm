@@ -127,7 +127,6 @@ _removeFirst
     #copyMem2Mem TEMP, LIST.head
 _doneOK
     #dec16Bit LIST.length
-    clc
     rts
 
 ; func (l *List) InsertBefore() {
