@@ -57,8 +57,8 @@ remove
 ; 	if (l.Current.Flags & FLAG_IS_FIRST) != 0 {
 ; 		l.Current.Flags = l.Current.Flags & ^FLAG_IS_FIRST
 ; 		newItem.Flags = newItem.Flags | FLAG_IS_FIRST
-; 		l.Current.Prev = newItem
 ; 		newItem.Next = l.Current
+; 		l.Current.Prev = newItem
 ; 		l.Head = newItem
 ; 	} else {
 ; 		oldPrev := l.Current.Prev
@@ -102,12 +102,29 @@ _atStart
     lda #FLAG_IS_FIRST
     sta (PTR_NEW), y
     ;
-    ; ToDo
-
+    ; newItem.Next = l.Current
+    #copyMem2Ptr LIST.current, PTR_NEW, Line_t.next
+    ;l.Current.Prev = newItem
+    #SET_MMU_ADDR LIST.current
+    #copyMem2Ptr NEW, PTR_CURRENT, Line_t.prev 
+    ; l.Head = newItem
+    #copyMem2Mem NEW, LIST.head
     bra _doneOK
 _normal
-    ;
-    ; ToDo
+    ; here MMU is at page of LIST.current
+    ; oldPrev := l.Current.Prev
+    #copyPtr2Mem PTR_CURRENT, Line_t.prev, OLD_PREV
+    #move16Bit OLD_PREV, PTR_OLD_PREV
+    ; l.Current.Prev = newItem
+    #copyMem2Ptr NEW, PTR_CURRENT, Line_t.prev
+    ; oldPrev.Next = newItem
+    #SET_MMU_ADDR OLD_PREV
+    #copyMem2Ptr NEW, PTR_OLD_PREV, Line_t.next
+    ; newItem.Prev = oldPrev
+    #SET_MMU_ADDR NEW
+    #copyMem2Ptr OLD_PREV, PTR_NEW, Line_t.prev
+    ; newItem.Next = l.Current
+    #copyMem2Ptr LIST.current, PTR_NEW, Line_t.next
 _doneOK
     #inc16Bit LIST.length
     clc

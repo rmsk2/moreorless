@@ -17,9 +17,9 @@ PTR3     .dstruct FarPtr_t         ; 13
 .include "line.asm"
 .include "linked_list.asm"
 
-line_1 .text "this is line 1"
+line_1 .text "this is line 2"
 line_2 .text "line 2 this is, really!"
-line_3 .text "this is line three and things get longer and longer"
+line_3 .text "this is line one and things are longer and longer"
 
 main
     jsr setup.mmu
@@ -39,15 +39,15 @@ _l1
     bcc _l2
     rts
 _l2
-    jsr list.insertAfter
+    jsr list.insertBefore
     bcc _l3
     rts
 _l3
-    jsr list.insertAfter
+    jsr list.insertBefore
     bcc _l4
     rts
 _l4
-    jsr list.next
+    jsr list.prev
     bcc _l5
     rts
 _l5
@@ -59,7 +59,7 @@ _l5
     jsr list.setCurrentLine
     bcs _done
 
-    jsr list.next
+    jsr list.prev
     bcs _done
 
     #copyMem2Mem list.LIST.current, PTR3
@@ -72,7 +72,7 @@ _l5
 
     #move16Bit list.LIST.length, LLEN
 
-    jsr list.next
+    jsr list.prev
     ; here we expect that the carry is set
     bcc _done
 
