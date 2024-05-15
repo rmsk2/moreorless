@@ -48,8 +48,87 @@ LIST .dstruct List_t
 ; 	l.Length--
 ; }
 remove
+    #move16Bit LIST.current, PTR_CURRENT
+    #SET_MMU_ADDR LIST.current
+    ldy #Line_t.flags
+    lda (PTR_CURRENT), y
+    cmp #FLAG_IS_LAST
+    bne _checkNext
+    jmp _removeLast
+_checkNext    
+    cmp #FLAG_IS_FIRST
+    bne _default
+    jmp _removeFirst
+_default
+    ; MMU is at page of LIST.current
+    ; oldPrev := l.Current.Prev    
+    #copyPtr2Mem PTR_CURRENT, Line_t.prev, OLD_PREV
+    #move16Bit OLD_PREV, PTR_OLD_PREV
+    ; oldNext := l.Current.Next
+    #copyPtr2Mem PTR_CURRENT, Line_t.next, OLD_NEXT
+    #move16Bit OLD_NEXT, PTR_OLD_NEXT
+    ; oldPrev.Next = oldNext
+    #SET_MMU_ADDR OLD_PREV
+    #copyMem2Ptr OLD_NEXT, PTR_OLD_PREV, Line_t.next
+    ; oldNext.Prev = oldPrev
+    #SET_MMU_ADDR OLD_NEXT
+    #copyMem2Ptr OLD_PREV, PTR_OLD_NEXT, Line_t.prev
+    ; free l.Current and its subblocks
+    ; free subblocks
+    jsr freeCurrentLine
+    #load16BitImmediate LIST.current, MEM_PTR3
+    ; free Line
+    jsr memory.freePtr
+    ; l.Current = oldNext    
+    #copyMem2Mem OLD_NEXT, LIST.current
+    jmp _doneOK
+_removeLast
+    ; temp := l.Current.Prev
+    #SET_MMU_ADDR LIST.current
+    #copyPtr2Mem PTR_CURRENT, Line_t.prev, TEMP
+    #move16Bit TEMP, PTR_TEMP
+    ; temp.Next = nil
+    #SET_MMU_ADDR TEMP
+    #copyMem2Ptr NIL, PTR_TEMP, Line_t.next
+    ; temp.Flags |= FLAG_IS_LAST
+    lda #FLAG_IS_LAST
+    ldy #Line_t.flags
+    ora (PTR_TEMP), y
+    sta (PTR_TEMP), y
+    ; free subblocks
+    jsr freeCurrentLine
+    #load16BitImmediate LIST.current, MEM_PTR3
+    ; free Line
+    jsr memory.freePtr
+    ; l.Current = temp
+    #copyMem2Mem TEMP, LIST.current
+    bra _doneOK
+_removeFirst
+    ; temp := l.Current.Next
+    #SET_MMU_ADDR LIST.current
+    #copyPtr2Mem PTR_CURRENT, Line_t.next, TEMP
+    #move16Bit TEMP, PTR_TEMP
+    ; temp.Prev = nil
+    #SET_MMU_ADDR TEMP
+    #copyMem2Ptr NIL, PTR_TEMP, Line_t.prev
+    ; temp.Flags |= FLAG_IS_FIRST
+    lda #FLAG_IS_FIRST
+    ldy #Line_t.flags
+    ora (PTR_TEMP), y
+    sta (PTR_TEMP), y
+    ; free subblocks
+    jsr freeCurrentLine
+    #load16BitImmediate LIST.current, MEM_PTR3
+    ; free Line
+    jsr memory.freePtr
+    ; l.Current = temp
+    #copyMem2Mem TEMP, LIST.current
+    ; l.Head = temp
+    #copyMem2Mem TEMP, LIST.head
+_doneOK
+    #dec16Bit LIST.length
+    clc
     rts
-
 
 ; func (l *List) InsertBefore() {
 ; 	newItem := NewLine(0)

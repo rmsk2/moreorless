@@ -26,7 +26,7 @@ function assert()
         return false, string.format("Wrong length: %d", list_len)
     end
 
-    print()
+    --print()
 
     -- look at length field in the first allocated block, which is at offset.
     local elem = parse_allocated_block(read_byte(load_address + 5), read_byte(load_address + 6), read_byte(load_address + 7))
@@ -44,7 +44,7 @@ function assert()
 
     -- look at length field in the second allocated block, which is at offset.
     elem = parse_allocated_block(read_byte(load_address + 13), read_byte(load_address + 14), read_byte(load_address + 15))
-    print_whole_list(elem)
+    --print_whole_list(elem)
     l = elem.len
     if l ~= 49 then
         return false, string.format("Line 1 length wrong: %d", l)
