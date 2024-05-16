@@ -1,0 +1,5 @@
+{
+    "Name": "Linked list: Remove last",
+    "TestDriverSource": "llist8.asm",
+    "TestScript": "llist8.lua"
+}

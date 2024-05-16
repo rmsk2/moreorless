@@ -47,6 +47,9 @@ LIST .dstruct List_t
 ;
 ; 	l.Length--
 ; }
+;
+; PUBLIC: remove current element from list and free its memory.
+; If this routine fails the carry is set upon return.
 remove
     ; if l.Length == 1 {
     ; 	return
@@ -138,6 +141,7 @@ _doneOK
     clc
     rts
 
+
 ; func (l *List) InsertBefore() {
 ; 	newItem := NewLine(0)
 ;
@@ -157,6 +161,9 @@ _doneOK
 ;
 ; 	l.Length++
 ; }
+;
+; PUBLIC: Insert new element before the current element
+; If this routine fails the carry is set upon return.
 insertBefore
     jsr allocNewLine
     bcc _allocSuccess
@@ -256,7 +263,8 @@ ORIG_FLAGS .byte 0
 ;
 ; 	l.Length++
 ; }
-; Append a new empty line after the current item
+;
+; PUBLIC: Append a new empty line after the current item
 ; If this routine fails the carry is set upon return.
 insertAfter
     jsr allocNewLine
@@ -318,6 +326,7 @@ _doneOK
     rts
 
 
+; PUBLIC: Set head as current element
 rewind
     #copyMem2Mem LIST.head, LIST.current
     rts
@@ -332,7 +341,10 @@ rewind
 ;
 ;   return false
 ; }
-; move one item to the left. Carry is set if beginning is reached.
+;
+; PUBLIC: Make next element of this element the new current element
+; Upon return the carry is set if the current element is already the 
+; last element.
 prev
     #SET_MMU_ADDR LIST.current                                         ; set MMU
     #move16Bit LIST.current, PTR_CURRENT                               ; initialize indirect address
@@ -359,7 +371,10 @@ _done
 ;
 ;   return false
 ; }
-; move one item to the right. Carry is set if end is reached.
+;
+; PUBLIC: Make previous element of this element the new current element
+; Upon return the carry is set if the current element is already the 
+; first element.
 next
     #SET_MMU_ADDR LIST.current                                         ; set MMU
     #move16Bit LIST.current, PTR_CURRENT                               ; initialize indirect address
@@ -377,7 +392,7 @@ _done
     rts
 
 
-; This routine copies the data of the line to which LIST.current points
+; PUBLIC: This routine copies the data of the line to which LIST.current points
 ; to the line buffer. It changes the MMU config.
 readCurrentLine
     #SET_MMU_ADDR LIST.current
@@ -457,7 +472,9 @@ FULL_BLOCKS         .byte 0
 BYTES_IN_LAST_BLOCK .byte 0
 BLOCKS_NEEDED       .byte 0
 BLOCKS_TO_PROCESS   .byte 0, 0
-; carry is set if this routine fails. Data is read from LINE_BUFFER.
+;
+; PUBLIC: Change data of current element to the value given in LINE_BUFFER
+; carry is set if this routine fails.
 setCurrentLine
     lda LINE_BUFFER.len
     cmp #NUM_SUB_BLOCKS * BLOCK_SIZE
@@ -626,8 +643,25 @@ _done
     rts
 
 
-; create a new document with one line which is empty. If this routine fails
-; the carry is set upon return.
+; PUBLIC: Free all memory used by the list
+destroy
+    jsr rewind
+    ; delete all elements but the last
+_loop
+    jsr remove
+    bcc _loop
+
+    ; free the remaining element
+    jsr freeCurrentLine
+    #load16BitImmediate LIST.current, MEM_PTR3
+    ; free Line
+    jsr memory.freePtr
+
+    rts
+
+
+; PUBLIC: create a new document with one line which is empty. 
+; If this routine fails the carry is set upon return.
 create
     #load16BitImmediate LIST.current, MEM_PTR3
     jsr memory.allocPtr

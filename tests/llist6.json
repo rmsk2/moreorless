@@ -1,0 +1,5 @@
+{
+    "Name": "Linked list: Remove default",
+    "TestDriverSource": "llist6.asm",
+    "TestScript": "llist6.lua"
+}
