@@ -13,10 +13,10 @@ function assert()
 
     -- parse whole memory.MEM_STATE struct at the address stored at load_address + 3
     local state = get_mem_state(de_ref(load_address + 3))
-    
+
     -- verify number of freee blocks
-    if state["numFreeBlocks"] ~= (state["numBlocks"]) then
-        return false, string.format("Unexpected number of blocks: %d of %d", state["numFreeBlocks"], state["numBlocks"])
+    if state.numFreeBlocks ~= (state.numBlocks) then
+        return false, string.format("Unexpected number of blocks: %d of %d", state.numFreeBlocks, state.numBlocks)
     end
 
     return true, ""
