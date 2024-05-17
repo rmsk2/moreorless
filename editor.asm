@@ -28,9 +28,9 @@ _created
     lda #1
     sta ALREADY_CREATED
     load16BitImmediate TXT_FILE, FILEIO_PTR1
-    jsr disk.waitOpen
-    bcs _error
     jsr iohelp.begin
+    jsr disk.waitOpen
+    bcs _error    
 _lineLoop
     jsr iohelp.readline
     bcc _process

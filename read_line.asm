@@ -11,13 +11,14 @@ begin
     rts
 
 
-; Carry is set, if an error ocurred
+; Carry is set, if an error ocurred. Zero length lines can and will occur.
 readline
     rts
 
 
 ; carry is set if all data has been successfully read and the
-; the file can be closed.
+; the file can be closed. Should only be called when readLine has returned
+; with a set carry bit.
 isSuccessfullyFinished
     rts
 
