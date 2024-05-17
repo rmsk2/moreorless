@@ -155,6 +155,18 @@ cmp16BitImmediate .macro  value, memAddr
 _unequal2
 .endmacro
 
+
+mul8x8BitCoproc .macro oper1, oper2, oper3
+    lda \oper1
+    sta $DE00
+    stz $DE01
+    lda \oper2
+    sta $DE02
+    stz $DE03
+    #move16Bit $DE10, \oper3
+.endmacro
+
+
 ModN_t .struct
     arg1 .word 0
     arg2 .word 0

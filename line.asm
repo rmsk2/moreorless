@@ -25,6 +25,7 @@ LINE_BUFFER .dstruct LineBuffer_t
 
 line .namespace
 
+
 init_module
     lda #0
     sta LINE_BUFFER.len

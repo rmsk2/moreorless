@@ -440,9 +440,22 @@ _done
     rts
 
 
+; --------------------------------------------------
+; This routine moves the cursor up one line. If it is called
+; while the cursor is in the top line then the screen is scrolled 
+; one line upwards.
+;
+; This routine does not return a value.
+; --------------------------------------------------
 up
     lda CURSOR_STATE.yPos
-    beq _done
+    cmp CURSOR_STATE.yOffset
+    bne _noScroll
+    phy
+    jsr scrollDown
+    ply
+    bra _done
+_noScroll
     dec CURSOR_STATE.yPos
 _done
     jsr cursorSet
@@ -451,8 +464,8 @@ _done
 
 ; --------------------------------------------------
 ; This routine moves the cursor down one line. If it is called
-; while the cursor is in the bottom line then the screen is scrolled on 
-; line upwards.
+; while the cursor is in the bottom line then the screen is scrolled
+; one line upwards.
 ;
 ; This routine does not return a value.
 ; --------------------------------------------------
@@ -569,12 +582,111 @@ scrollUp_t .struct
 .endstruct
 
 SCROLL_UP .dstruct scrollUp_t
+SCROLL_DOWN .dstruct scrollUp_t
+
+LINE_TEMP .byte 0
+; accu has to contain the line to clear in the context of the
+; screen segment.
+clearLine
+    sta LINE_TEMP
+    #saveIoState
+    jsr clearLineWithOffset
+    #restoreIoState
+    rts
+
+
+; LINE_TEMP has to contain the line to clear in the context of the
+; screen segment.
+clearLineWithOffset
+    #mul8x8BitCoproc LINE_TEMP, CURSOR_STATE.xMax, TXT_PTR1
+    #add16Bit CURSOR_STATE.vramOffset, TXT_PTR1 
+; TXT_PTR1 has to be set to line start
+clearLineInternal
+    ldy #0
+_lastLineLoop
+    #toTxtMatrix
+    lda #32
+    sta (TXT_PTR1), y
+    #toColorMatrix
+    lda CURSOR_STATE.col
+    sta (TXT_PTR1), y
+    iny
+    cpy CURSOR_STATE.xMax
+    bne _lastLineLoop
+
+    rts
+
+
+scrollDown
+    lda CURSOR_STATE.scrollOn
+    bne scrollDownInternal
+    rts
+
+
+; --------------------------------------------------
+; scrollDownInternal scrolls the text screen one line down. It makes use
+; of TXT_PTR1 and TXT_PTR2 in order to implement this functionality.
+;
+; This routine does not return a value.
+; --------------------------------------------------
+scrollDownInternal
+    #saveIoState
+
+    #move16Bit CURSOR_STATE.lastLinePtr, TXT_PTR1
+    #move16Bit CURSOR_STATE.lastLinePtr, TXT_PTR2
+
+    sec
+    lda TXT_PTR2
+    sbc CURSOR_STATE.xMax
+    sta TXT_PTR2
+    lda TXT_PTR2 + 1
+    sbc #0    
+    sta TXT_PTR2 + 1
+
+    lda CURSOR_STATE.yMaxMinus1
+    sec
+    sbc CURSOR_STATE.yOffset
+    sta SCROLL_DOWN.line_count
+
+    ; move all lines one step down
+_nextLine
+    ldy #0
+_lineLoop
+    #toTxtMatrix
+    lda (TXT_PTR2), y
+    sta (TXT_PTR1), y
+    #toColorMatrix
+    lda (TXT_PTR2), y
+    sta (TXT_PTR1), y
+    iny
+    cpy CURSOR_STATE.xMax
+    bne _lineLoop
+    
+    #move16Bit TXT_PTR2, TXT_PTR1
+    dec SCROLL_DOWN.line_count
+    beq _clearFirstLine
+
+    sec
+    lda TXT_PTR2
+    sbc CURSOR_STATE.xMax
+    sta TXT_PTR2
+    lda TXT_PTR2+1
+    sbc #0
+    sta TXT_PTR2+1
+    bra _nextLine
+
+_clearFirstLine
+    jsr clearLineInternal
+
+    #restoreIoState
+    rts
 
 
 scrollUp
     lda CURSOR_STATE.scrollOn
     bne scrollUpInternal
     rts
+
 
 ; --------------------------------------------------
 ; scrollUpInternal scrolls the text screen one line up. It makes use
@@ -592,8 +704,8 @@ scrollUpInternal
     adc CURSOR_STATE.xMax
     sta TXT_PTR2
     lda #0
-    adc TXT_PTR2
-    sta TXT_PTR2
+    adc TXT_PTR2+1
+    sta TXT_PTR2+1
 
     stz SCROLL_UP.line_count
 
@@ -628,17 +740,7 @@ _lineLoop
     #move16Bit CURSOR_STATE.lastLinePtr, TXT_PTR1
 
     ; clear last line
-    ldy #0
-_lastLineLoop
-    #toTxtMatrix
-    lda #32
-    sta (TXT_PTR1), y
-    #toColorMatrix
-    lda CURSOR_STATE.col
-    sta (TXT_PTR1), y
-    iny
-    cpy CURSOR_STATE.xMax
-    bne _lastLineLoop
+    jsr clearLineInternal
 
     #restoreIoState
     rts
