@@ -36,7 +36,7 @@ Y_OFFSET = 10
 
 main
     jsr setup.mmu
-    jsr clut.init    
+    jsr clut.init
     ; #load16BitImmediate $c000 + Y_OFFSET*80, CURSOR_STATE.vramOffset
     ; lda #80
     ; sta CURSOR_STATE.xMax

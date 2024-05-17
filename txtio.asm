@@ -449,7 +449,6 @@ _done
 ; --------------------------------------------------
 up
     lda CURSOR_STATE.yPos
-    cmp CURSOR_STATE.yOffset
     bne _noScroll
     phy
     jsr scrollDown
@@ -644,8 +643,6 @@ scrollDownInternal
     sta TXT_PTR2 + 1
 
     lda CURSOR_STATE.yMaxMinus1
-    sec
-    sbc CURSOR_STATE.yOffset
     sta SCROLL_DOWN.line_count
 
     ; move all lines one step down
