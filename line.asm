@@ -1,4 +1,5 @@
 NUM_SUB_BLOCKS = 7
+LINE_BUFFER_LEN = NUM_SUB_BLOCKS * BLOCK_SIZE
 
 Line_t .struct 
     next            .dstruct FarPtr_t
@@ -17,7 +18,7 @@ Line_t .struct
 .endstruct
 
 LineBuffer_t .struct
-    buffer .fill NUM_SUB_BLOCKS * BLOCK_SIZE
+    buffer .fill LINE_BUFFER_LEN + 1                 ; make room for line ending character
     len    .byte 0
 .endstruct
 

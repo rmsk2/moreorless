@@ -15,12 +15,16 @@ jmp main
 .include "linked_list.asm"
 .include "line.asm"
 .include "editor.asm"
+.include "diskio.asm"
+.include "read_line.asm"
 
 START_TXT1 .text "Use cursor keys to control cursor", $0d
 START_TXT4 .text "Use backspace to delete character left of cursor", $0d
 START_TXT3 .text "Use Ctrl-l to clear screen, Ctrl+c or RUN/STOP to quit", $0d
 START_TXT5 .text "Use F1 to test text entry box", $0d
 START_TXT2 .text "Other keys are printed raw", $0d
+FILE_ERROR .text "File read error. Please reset computer.", $0d
+LIST_CREATE_ERROR .text "Unable to create list. Please reset computer.", $0d
 DONE_TXT .text $0d, "Done!", $0d
 
 CRLF = $0D
@@ -57,8 +61,13 @@ main
 
     lda editor.STATE.col
     sta CURSOR_STATE.col 
-    jsr txtio.clear       
+    jsr txtio.clear
 
+    jsr editor.loadFile
+    bcc _l1
+    #printString FILE_ERROR, len(FILE_ERROR)
+    jmp endlessLoop
+_l1       
     lda memory.MEM_STATE.ramExpFound
     bne _withRamExp
     #printString NO_RAM_EXP, len(NO_RAM_EXP)
@@ -86,6 +95,11 @@ _loopNewLine
     jsr sys64738
     ; I guess we never get here ....
     rts
+
+    
+endlessLoop
+    nop
+    bra endlessLoop
 
 NO_RAM_EXP .text "No RAM expansion found"
 
