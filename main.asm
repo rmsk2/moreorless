@@ -29,6 +29,7 @@ DONE_TXT .text $0d, "Done!", $0d
 LINES_READ_TXT .text "Lines read: $"
 BLOCK_FREE_TXT .text "Blocks free: $"
 NO_RAM_EXP .text "No RAM expansion found"
+LOADING_FILE_TXT .text "Loading file ... "
 
 CRLF = $0D
 KEY_EXIT = 3
@@ -66,11 +67,13 @@ main
     sta CURSOR_STATE.col 
     jsr txtio.clear
 
+    #printString LOADING_FILE_TXT, len(LOADING_FILE_TXT)
     jsr editor.loadFile
     bcc _l1
     #printString FILE_ERROR, len(FILE_ERROR)
     jmp endlessLoop
 _l1
+    #printString DONE_TXT + 1, len(DONE_TXT) - 1
     #printString LINES_READ_TXT, len(LINES_READ_TXT)
     lda list.LIST.length + 1
     jsr txtio.printByte
