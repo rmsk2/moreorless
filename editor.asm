@@ -11,11 +11,11 @@ EditState_t .struct
     line_list    .word 0
 .endstruct
 
-editor .namespace
-
 FILE_NAME .text "test.txt"
 
 TXT_FILE .dstruct FileState_t, 76, FILE_NAME, len(FILE_NAME), LINE_BUFFER.buffer, LINE_BUFFER_LEN + 1, MODE_READ, DEVICE_NUM
+
+editor .namespace
 
 ALREADY_CREATED .byte 1
 
@@ -28,11 +28,12 @@ _created
     lda #1
     sta ALREADY_CREATED
     load16BitImmediate TXT_FILE, FILEIO_PTR1
-    jsr iohelp.begin
     jsr disk.waitOpen
     bcs _error    
+    jsr iohelp.begin
+    bcs _error
 _lineLoop
-    jsr iohelp.readline
+    jsr iohelp.readLine
     bcc _process
     jsr iohelp.isSuccessfullyFinished
     bcs _doneOK

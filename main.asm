@@ -26,6 +26,8 @@ START_TXT2 .text "Other keys are printed raw", $0d
 FILE_ERROR .text "File read error. Please reset computer.", $0d
 LIST_CREATE_ERROR .text "Unable to create list. Please reset computer.", $0d
 DONE_TXT .text $0d, "Done!", $0d
+LINES_READ_TXT .text "Lines read: $"
+BLOCK_FREE_TXT .text "Blocks free: $"
 
 CRLF = $0D
 KEY_EXIT = 3
@@ -67,7 +69,21 @@ main
     bcc _l1
     #printString FILE_ERROR, len(FILE_ERROR)
     jmp endlessLoop
-_l1       
+_l1
+    #printString LINES_READ_TXT, len(LINES_READ_TXT)
+    lda list.LIST.length + 1
+    jsr txtio.printByte
+    lda list.LIST.length
+    jsr txtio.printByte
+    jsr txtio.newLine
+    #printString BLOCK_FREE_TXT, len(BLOCK_FREE_TXT)
+    lda memory.MEM_STATE.numFreeBlocks + 1
+    jsr txtio.printByte
+    lda memory.MEM_STATE.numFreeBlocks
+    jsr txtio.printByte
+    jsr txtio.newLine
+    
+    
     lda memory.MEM_STATE.ramExpFound
     bne _withRamExp
     #printString NO_RAM_EXP, len(NO_RAM_EXP)
