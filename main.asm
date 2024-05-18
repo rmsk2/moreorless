@@ -21,18 +21,19 @@ jmp main
 START_TXT1 .text "Use cursor keys to control cursor", $0d
 START_TXT4 .text "Use backspace to delete character left of cursor", $0d
 START_TXT3 .text "Use Ctrl-l to clear screen, Ctrl+c or RUN/STOP to quit", $0d
-START_TXT5 .text "Use F1 to test text entry box", $0d
+START_TXT5 .text "Use F1 to show file", $0d
 START_TXT2 .text "Other keys are printed raw", $0d
 FILE_ERROR .text "File read error. Please reset computer.", $0d
 LIST_CREATE_ERROR .text "Unable to create list. Please reset computer.", $0d
 DONE_TXT .text $0d, "Done!", $0d
 LINES_READ_TXT .text "Lines read: $"
 BLOCK_FREE_TXT .text "Blocks free: $"
+NO_RAM_EXP .text "No RAM expansion found"
 
 CRLF = $0D
 KEY_EXIT = 3
 KEY_CLEAR = 12
-KEY_ENTRY_TEST = $81
+SHOW_FILE = $81
 CRSR_UP = $10
 CRSR_DOWN = $0E
 CRSR_LEFT = $02
@@ -83,7 +84,6 @@ _l1
     jsr txtio.printByte
     jsr txtio.newLine
     
-    
     lda memory.MEM_STATE.ramExpFound
     bne _withRamExp
     #printString NO_RAM_EXP, len(NO_RAM_EXP)
@@ -117,8 +117,7 @@ endlessLoop
     nop
     bra endlessLoop
 
-NO_RAM_EXP .text "No RAM expansion found"
-
+LINE_COUNT .byte 0
 
 processKeyEvent
     cmp #KEY_EXIT
@@ -128,13 +127,35 @@ processKeyEvent
 _checkUp
     cmp #CRSR_UP
     bne _checkDown
+    jsr list.prev
+    bcs _alreadyTop
+    stz txtio.HAS_SCROLLED
     jsr txtio.up
+    lda txtio.HAS_SCROLLED
+    beq _alreadyTop
+    jsr list.readCurrentLine
+    jsr txtio.leftMost
+    #printStringLenMem LINE_BUFFER.buffer, LINE_BUFFER.len
+    jsr txtio.leftMost
+_alreadyTop    
     sec
     rts
 _checkDown
     cmp #CRSR_DOWN
     bne _checkLeft
-    jsr txtio.down
+    jsr list.next
+    bcs _alreadyBottom
+    stz txtio.HAS_SCROLLED
+    jsr txtio.down    
+    lda txtio.HAS_SCROLLED
+    beq _alreadyBottom
+    stz CURSOR_STATE.scrollOn
+    jsr list.readCurrentLine
+    jsr txtio.leftMost
+    #printStringLenMem LINE_BUFFER.buffer, LINE_BUFFER.len
+    jsr txtio.leftMost
+    inc CURSOR_STATE.scrollOn
+_alreadyBottom
     sec
     rts
 _checkLeft
@@ -169,48 +190,29 @@ _checkBackspace
     sec
     rts
 _checkF1
-    cmp #KEY_ENTRY_TEST
-    bne _print
-    ; print "Enter string: "
-    #printString ENTER_TXT, len(ENTER_TXT)
-    jsr txtio.reverseColor
-    #inputStringNonBlocking ENTRY_RESULT, len(ENTRY_RESULT), ALLOWED_CHARS_1, len(ALLOWED_CHARS_1)
-    #load16BitImmediate processTextEntry, keyrepeat.FOCUS_VECTOR
+    cmp #SHOW_FILE
+    beq _show
+    jmp _print
+_show
+    stz LINE_COUNT
+    jsr txtio.clear
+    jsr txtio.home
+    jsr list.rewind
+_loopLines
+    jsr list.readCurrentLine    
+    stz CURSOR_STATE.scrollOn
+    #printStringLenMem LINE_BUFFER.buffer, LINE_BUFFER.len
+    jsr txtio.NewLine
+    jsr list.next
+    inc LINE_COUNT
+    lda LINE_COUNT
+    cmp CURSOR_STATE.yMax
+    bne _loopLines
+    inc CURSOR_STATE.scrollOn
+    jsr list.prev
     sec
     rts
 _print
     jsr txtio.charOut
     sec
-    rts
-
-
-ALLOWED_CHARS_1 .text "abcdefghijklmnopqrstuvwxyz "
-ENTRY_RESULT .text "                "
-OUT_LEN .byte 0
-ENTER_TXT .text "Enter text: "
-OUT_LEN_TXT .text "Number of characters: $"
-
-processTextEntry
-    jsr txtio.getStringFocusFunc
-    bcs _notDone
-    sta OUT_LEN
-    jsr txtio.reverseColor
-
-    ; print "Number of characters: $"
-    jsr txtio.newLine
-    #printString OUT_LEN_TXT, len(OUT_LEN_TXT)
-
-    ; print text length in hex
-    lda OUT_LEN    
-    jsr txtio.printByte
-    jsr txtio.newLine    
-    
-    ; print text the user entered
-    #printStringLenMem ENTRY_RESULT, OUT_LEN
-    jsr txtio.newLine
-
-    #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
-    jsr txtio.cursorOn
-_notDone
-    sec    
     rts

@@ -439,6 +439,7 @@ _done
     jsr cursorSet
     rts
 
+HAS_SCROLLED .byte 0
 
 ; --------------------------------------------------
 ; This routine moves the cursor up one line. If it is called
@@ -451,6 +452,7 @@ up
     lda CURSOR_STATE.yPos
     bne _noScroll
     phy
+    inc HAS_SCROLLED
     jsr scrollDown
     ply
     bra _done
@@ -475,6 +477,7 @@ down
     bcc _done
     dec CURSOR_STATE.yPos
     phy
+    inc HAS_SCROLLED
     jsr scrollUp
     ply
 _done
@@ -506,6 +509,18 @@ backSpace
 newLine
     stz CURSOR_STATE.xPos
     jsr down
+    rts
+
+
+; --------------------------------------------------
+; This routine sets the cursor to the leftmost position in the current 
+; line
+;
+; This routine does not return a value.
+; --------------------------------------------------
+leftMost
+    stz CURSOR_STATE.xPos
+    jsr cursorSet
     rts
 
 

@@ -44,6 +44,7 @@ _process
     bra _lineLoop
 _doneOK
     jsr disk.waitClose
+    jsr list.rewind
     clc
     rts
 _errorClose
