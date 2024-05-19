@@ -84,6 +84,9 @@ setCol .macro col
 
 ; Take a look at key_repeat_test.asm for an example on how to define a screen segment
 
+BOOL_FALSE = 0
+BOOL_TRUE = 1
+
 cursorState_t .struct 
     xPos        .byte 0
     yPos        .byte 0
@@ -96,7 +99,8 @@ cursorState_t .struct
     tempIo      .byte 0
     nextChar    .byte 0
     maxVideoRam .word 0           ; is calculated in init routine
-    scrollOn    .byte 1           ; set to zero to prevent scrolling when lower right edge is reached
+    scrollOn    .byte BOOL_TRUE   ; set to zero to prevent scrolling when lower right edge is reached
+    cursorOn    .byte BOOL_FALSE
     vramOffset  .word $c000       ; set to address of the line that begins at yOffset, if yOffset is nonzero
     yOffset     .word 0           ; set to a nonzero value to define the row in which the screen segment begins
 .endstruct
@@ -124,15 +128,34 @@ _loop
 
 
 ; --------------------------------------------------
+; This routine switches between two CursorState_t structs. The one to
+; which the current state should be saved has to be pointed to TXT_PTR2
+; and the one which should be restored is referenced by TXT_PTR1.
+; --------------------------------------------------
+switch
+    jsr cursorGet
+    jsr saveCursorState
+    jsr restoreCursorState
+    jsr cursorSet
+    lda CURSOR_STATE.cursorOn
+    beq _off
+    jsr cursorOn
+    rts
+_off    
+    jsr cursorOff
+    rts
+
+
+; --------------------------------------------------
 ; This routine restores the saved CURSOR_STATE struct from
-; the memory location to which TXT_PTR2 points.
+; the memory location to which TXT_PTR1 points.
 ;
 ; This routine does not return a value.
 ; --------------------------------------------------
 restoreCursorState
     ldy #0
 _loop
-    lda (TXT_PTR2), y
+    lda (TXT_PTR1), y
     sta CURSOR_STATE, y
     iny
     cpy #size(cursorState_t)
@@ -165,7 +188,8 @@ init
     #move16Bit CURSOR_STATE.videoRamPtr, CURSOR_STATE.lastLinePtr
 
     ; Make sure hardware cursor is in current screen segment
-    jsr txtio.home
+    jsr home
+    jsr cursorOff
     rts
 
 
@@ -374,6 +398,8 @@ cursorOn
     sta $D010
     lda #214
     sta $D012
+    lda #BOOL_TRUE
+    sta CURSOR_STATE.cursorOn
     rts
 
 ; --------------------------------------------------
@@ -385,6 +411,7 @@ cursorOff
     lda #%11111110
     and $D010
     sta $D010
+    stz CURSOR_STATE.cursorOn
     rts
 
 
