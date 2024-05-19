@@ -20,7 +20,7 @@ jmp main
 
 START_TXT1 .text "Use cursor keys, SPACE and b to navigate file. Press q to quit.", $0d
 START_TXT5 .text $0d, "***** Use F1 to show file *****", $0d
-FILE_ERROR .text "File read error. Please reset computer.", $0d
+FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
 LINES_READ_TXT    .text "Lines read   : $"
 BLOCK_FREE_TXT    .text "Blocks free  : $"
@@ -36,6 +36,7 @@ CRLF = $0D
 KEY_EXIT = $71
 KEY_CLEAR = 12
 SHOW_FILE = $81
+SHOW_FILE_80x30 = $83
 CRSR_UP = $10
 CRSR_DOWN = $0E
 CRSR_LEFT = $02
@@ -48,7 +49,6 @@ Y_OFFSET = 10
 main
     jsr setup.mmu
     jsr clut.init
-    jsr keyrepeat.init
     jsr initEvents
 
     ; #load16BitImmediate $c000 + Y_OFFSET*80, CURSOR_STATE.vramOffset
@@ -71,6 +71,8 @@ main
     sta CURSOR_STATE.col 
     jsr txtio.clear
 
+_restart
+    jsr keyrepeat.init
     jsr enterFileName
     bcc _l2
     jmp _reset
@@ -81,7 +83,7 @@ _l2
     jsr editor.loadFile
     bcc _l1
     #printString FILE_ERROR, len(FILE_ERROR)
-    jmp endlessLoop
+    jmp _restart
 _l1
     #printString DONE_TXT + 1, len(DONE_TXT) - 1
     jsr txtio.newLine
@@ -189,8 +191,18 @@ _checkPgDown
     rts
 _checkPgUp
     cmp #PAGE_DOWN
-    bne _checkF1
+    bne _checkF3
     jsr pageUp
+    jsr printScreen
+    sec
+    rts
+_checkF3
+    cmp #SHOW_FILE_80x30
+    bne _checkF1
+    jsr list.rewind
+    #load16BitImmediate 1, editor.STATE.curLine
+    jsr txtio.init80x30
+    jsr txtio.cursorOn
     jsr printScreen
     sec
     rts
