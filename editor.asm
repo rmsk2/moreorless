@@ -6,7 +6,9 @@ EditState_t .struct
     ptrScratch   .dstruct FarPtr_t
 .endstruct
 
-FILE_NAME .text "test.txt"
+MAX_FILE_LENGTH = 100
+
+FILE_NAME .fill MAX_FILE_LENGTH
 
 TXT_FILE .dstruct FileState_t, 76, FILE_NAME, len(FILE_NAME), LINE_BUFFER.buffer, LINE_BUFFER_LEN + 1, MODE_READ, DEVICE_NUM
 

@@ -18,15 +18,19 @@ jmp main
 .include "diskio.asm"
 .include "io_help.asm"
 
-START_TXT1 .text "Use cursor keys to control cursor", $0d
+START_TXT1 .text "Use cursor keys, SPACE and b to navigate file. Press q to quit.", $0d
 START_TXT5 .text "Use F1 to show file", $0d
 FILE_ERROR .text "File read error. Please reset computer.", $0d
-LIST_CREATE_ERROR .text "Unable to create list. Please reset computer.", $0d
 DONE_TXT .text $0d, "Done!", $0d
-LINES_READ_TXT .text "Lines read: $"
-BLOCK_FREE_TXT .text "Blocks free: $"
-NO_RAM_EXP .text "No RAM expansion found"
+LINES_READ_TXT    .text "Lines read   : $"
+BLOCK_FREE_TXT    .text "Blocks free  : $"
+TXT_RAM_EXPANSION .text "RAM expansion: "
+FOUND_TXT .text "Present", $0d, $0d
+NOT_FOUND_TXT .text "NOT Present", $0d, $0d
+ENTER_FILE_TXT .text "Enter filename: "
 LOADING_FILE_TXT .text "Loading file ... "
+
+FILE_ALLOWED .text "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./:#+~()!&@[]"
 
 CRLF = $0D
 KEY_EXIT = $71
@@ -44,6 +48,9 @@ Y_OFFSET = 10
 main
     jsr setup.mmu
     jsr clut.init
+    jsr keyrepeat.init
+    jsr initEvents
+
     ; #load16BitImmediate $c000 + Y_OFFSET*80, CURSOR_STATE.vramOffset
     ; lda #80
     ; sta CURSOR_STATE.xMax
@@ -55,8 +62,6 @@ main
 
     jsr txtio.init80x60
     jsr txtio.cursorOn
-    jsr keyrepeat.init
-    jsr initEvents
 
     jsr memory.init
     jsr line.init_module
@@ -66,6 +71,12 @@ main
     sta CURSOR_STATE.col 
     jsr txtio.clear
 
+    jsr enterFileName
+    bcc _l2
+    jmp _reset
+_l2
+    jsr txtio.newLine
+    jsr txtio.newLine
     #printString LOADING_FILE_TXT, len(LOADING_FILE_TXT)
     jsr editor.loadFile
     bcc _l1
@@ -73,6 +84,7 @@ main
     jmp endlessLoop
 _l1
     #printString DONE_TXT + 1, len(DONE_TXT) - 1
+    jsr txtio.newLine
     #printString LINES_READ_TXT, len(LINES_READ_TXT)
     lda list.LIST.length + 1
     jsr txtio.printByte
@@ -86,27 +98,26 @@ _l1
     jsr txtio.printByte
     jsr txtio.newLine
     
+    #printString TXT_RAM_EXPANSION, len(TXT_RAM_EXPANSION)
     lda memory.MEM_STATE.ramExpFound
     bne _withRamExp
-    #printString NO_RAM_EXP, len(NO_RAM_EXP)
-
-_withRamExp
-    ldx #24
-_loopNewLine
-    jsr txtio.newLine
-    dex
-    bpl _loopNewLine
-
+    #printString NOT_FOUND_TXT, len(NOT_FOUND_TXT)
+    bra _help
+_withRamExp    
+    #printString FOUND_TXT, len(FOUND_TXT)
+_help
     #printString START_TXT1, len(START_TXT1)
     #printString START_TXT5, len(START_TXT5)    
-
+    
+    jsr keyrepeat.init
     #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
     jsr keyrepeat.keyEventLoop
-    
+
     jsr restoreEvents
     jsr txtio.clear
     jsr txtio.init80x60
     #printString DONE_TXT, len(DONE_TXT)
+_reset    
     jsr sys64738
     ; I guess we never get here ....
     rts
@@ -246,3 +257,31 @@ _loop
     bne _loop
 _done
     rts
+
+
+enterFileName
+    #printString ENTER_FILE_TXT, len(ENTER_FILE_TXT)
+    jsr txtio.reverseColor
+    #inputStringNonBlocking FILE_NAME, 79 - len(ENTER_FILE_TXT), FILE_ALLOWED, len(FILE_ALLOWED)
+    #load16BitImmediate processFileNameEntry, keyrepeat.FOCUS_VECTOR
+    jsr keyrepeat.keyEventLoop
+    lda TXT_FILE.nameLen
+    beq _reset 
+    clc
+    rts
+_reset
+    sec
+    rts
+
+
+processFileNameEntry
+    jsr txtio.getStringFocusFunc
+    bcs _notDone
+    sta TXT_FILE.nameLen
+    jsr txtio.reverseColor
+    jsr txtio.cursorOn
+    clc
+    rts
+_notDone
+    sec    
+    rts    
