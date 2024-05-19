@@ -16,13 +16,10 @@ jmp main
 .include "line.asm"
 .include "editor.asm"
 .include "diskio.asm"
-.include "read_line.asm"
+.include "io_help.asm"
 
 START_TXT1 .text "Use cursor keys to control cursor", $0d
-START_TXT4 .text "Use backspace to delete character left of cursor", $0d
-START_TXT3 .text "Use Ctrl-l to clear screen, Ctrl+c or RUN/STOP to quit", $0d
 START_TXT5 .text "Use F1 to show file", $0d
-START_TXT2 .text "Other keys are printed raw", $0d
 FILE_ERROR .text "File read error. Please reset computer.", $0d
 LIST_CREATE_ERROR .text "Unable to create list. Please reset computer.", $0d
 DONE_TXT .text $0d, "Done!", $0d
@@ -32,13 +29,15 @@ NO_RAM_EXP .text "No RAM expansion found"
 LOADING_FILE_TXT .text "Loading file ... "
 
 CRLF = $0D
-KEY_EXIT = 3
+KEY_EXIT = $71
 KEY_CLEAR = 12
 SHOW_FILE = $81
 CRSR_UP = $10
 CRSR_DOWN = $0E
 CRSR_LEFT = $02
 CRSR_RIGHT = $06
+PAGE_DOWN = $62
+PAGE_UP = $20
 
 Y_OFFSET = 10
 
@@ -99,10 +98,7 @@ _loopNewLine
     bpl _loopNewLine
 
     #printString START_TXT1, len(START_TXT1)
-    #printString START_TXT4, len(START_TXT4)
-    #printString START_TXT3, len(START_TXT3)
     #printString START_TXT5, len(START_TXT5)    
-    #printString START_TXT2, len(START_TXT2)
 
     #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
     jsr keyrepeat.keyEventLoop
@@ -132,14 +128,15 @@ _checkUp
     bne _checkDown
     jsr list.prev
     bcs _alreadyTop
+    #dec16Bit editor.STATE.curLine
     stz txtio.HAS_SCROLLED
     jsr txtio.up
     lda txtio.HAS_SCROLLED
     beq _alreadyTop
     jsr list.readCurrentLine
     jsr txtio.leftMost
-    #printStringLenMem LINE_BUFFER.buffer, LINE_BUFFER.len
-    jsr txtio.leftMost
+    #printLineBuffer
+    jsr txtio.leftMost    
 _alreadyTop    
     sec
     rts
@@ -148,16 +145,15 @@ _checkDown
     bne _checkLeft
     jsr list.next
     bcs _alreadyBottom
+    #inc16Bit editor.STATE.curLine
     stz txtio.HAS_SCROLLED
     jsr txtio.down    
     lda txtio.HAS_SCROLLED
     beq _alreadyBottom
-    stz CURSOR_STATE.scrollOn
     jsr list.readCurrentLine
     jsr txtio.leftMost
-    #printStringLenMem LINE_BUFFER.buffer, LINE_BUFFER.len
-    jsr txtio.leftMost
-    inc CURSOR_STATE.scrollOn
+    #printLineBuffer
+    jsr txtio.leftMost    
 _alreadyBottom
     sec
     rts
@@ -169,53 +165,84 @@ _checkLeft
     rts
 _checkRight
     cmp #CRSR_RIGHT
-    bne _checkClear
+    bne _checkPgDown
     jsr txtio.right
     sec
     rts
-_checkClear
-    cmp #KEY_CLEAR
-    bne _checkCR
-    jsr txtio.clear
-    jsr txtio.home
+_checkPgDown
+    cmp #PAGE_UP
+    bne _checkPgUp
+    jsr pageDown
+    jsr printScreen
     sec
     rts
-_checkCR
-    cmp #CRLF
-    bne _checkBackspace
-    jsr txtio.newLine
-    sec
-    rts
-_checkBackspace
-    cmp #BACK_SPACE
+_checkPgUp
+    cmp #PAGE_DOWN
     bne _checkF1
-    jsr txtio.backSpace
+    jsr pageUp
+    jsr printScreen
     sec
     rts
 _checkF1
     cmp #SHOW_FILE
     beq _show
-    jmp _print
+    jmp _nothing
 _show
+    jsr list.rewind
+    #load16BitImmediate 1, editor.STATE.curLine
+    jsr printScreen
+    sec
+    rts
+_nothing
+    sec
+    rts
+
+
+printScreen
     stz LINE_COUNT
     jsr txtio.clear
     jsr txtio.home
-    jsr list.rewind
+    #copyMem2Mem list.LIST.current, editor.STATE.ptrScratch
+    stz CURSOR_STATE.scrollOn
 _loopLines
     jsr list.readCurrentLine    
-    stz CURSOR_STATE.scrollOn
-    #printStringLenMem LINE_BUFFER.buffer, LINE_BUFFER.len
-    jsr txtio.NewLine
+    #printLineBuffer
+    jsr txtio.newLine
     jsr list.next
+    bcs _done
     inc LINE_COUNT
     lda LINE_COUNT
     cmp CURSOR_STATE.yMax
     bne _loopLines
-    inc CURSOR_STATE.scrollOn
     jsr list.prev
-    sec
+_done
+    inc CURSOR_STATE.scrollOn
+    jsr txtio.home
+    #copyMem2Mem editor.STATE.ptrScratch, list.LIST.current
     rts
-_print
-    jsr txtio.charOut
-    sec
+
+
+pageDown
+    ldy #0
+_loop
+    #CALL_Y_PROT list.next
+    bcs _done
+    #inc16Bit editor.STATE.curLine
+    iny
+    cpy CURSOR_STATE.yMax
+    bne _loop
+_done
+    rts
+
+
+pageUp
+    ldy #0
+_loop    
+    #CALL_Y_PROT list.prev
+    bcs _done
+    #dec16Bit editor.STATE.curLine
+    iny
+    cpy CURSOR_STATE.yMax
+    bne _loop
+_done
     rts

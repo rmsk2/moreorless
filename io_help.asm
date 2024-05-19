@@ -1,6 +1,12 @@
 
 LINE_END_CHAR = $0A
 
+printLineBuffer .macro
+    #load16BitImmediate LINE_BUFFER.buffer, TXT_PTR3
+    lda LINE_BUFFER.len
+    jsr txtio.printStrClipped
+.endmacro
+
 iohelp .namespace
 
 DATA_AVAILABLE .byte 0

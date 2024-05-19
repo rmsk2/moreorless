@@ -64,6 +64,13 @@ CALL_X_PROT .macro addr
     plx
 .endmacro
 
+CALL_Y_PROT .macro addr
+    phy
+    jsr \addr
+    ply
+.endmacro
+
+
 copyMem2Mem .macro src, target
     lda \src.lo
     sta \target.lo

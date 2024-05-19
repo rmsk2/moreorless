@@ -868,6 +868,52 @@ _done
     rts
 
 
+; --------------------------------------------------
+; printStrClipped prints the string to which TXT_PTR3 points assuming
+; that the number of characters to print is contained in the accu. This
+; routine does not scroll the screen segment and it stops as soon as the
+; text would spill into the next line.
+;
+; This routine does not return a value.
+; --------------------------------------------------
+printStrClipped
+    sta PRINT_STR.out_len
+    ; save current state of scrolling "enablement"
+    lda CURSOR_STATE.scrollOn
+    pha
+    ; turn off scrolling
+    stz CURSOR_STATE.scrollOn
+    ldy #0
+_printLoop
+    cpy PRINT_STR.out_len
+    beq _done
+    lda (TXT_PTR3), y
+    cmp #CARRIAGE_RETURN
+    ; ignore CR/LF
+    beq _nextChar
+    jsr charOut
+    ; Check if last character caused a wrap around
+    lda CURSOR_STATE.xPos
+    beq _doClip
+_nextChar
+    iny
+    bra _printLoop 
+_doClip
+    ; as clipping occurred we are at the following line, so we have to move
+    ; the cursor on line up unless we are already on the last line. On the last
+    ; line the cursor simply wraps around as we have turned of scrolling.
+    lda CURSOR_STATE.yPos
+    cmp CURSOR_STATE.yMaxMinus1
+    beq _done
+    dec CURSOR_STATE.yPos
+    #moveCursor
+_done
+    ; restore scrolling "enablement" state
+    pla
+    sta CURSOR_STATE.scrollOn
+    rts
+
+
 printSpace_t .struct
     temp_x    .byte 0
     temp_y    .byte 0

@@ -1,14 +1,9 @@
-
-NUM_EDIT_LINES = 60
-
 EditState_t .struct 
     curLine      .word 0
     curCol       .byte 0
-    numEditLines .byte NUM_EDIT_LINES
-    numLines     .word 0
     col          .byte $12
     colReversed  .byte $21
-    line_list    .word 0
+    ptrScratch   .dstruct FarPtr_t
 .endstruct
 
 FILE_NAME .text "test.txt"

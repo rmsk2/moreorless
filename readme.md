@@ -1,1 +1,1 @@
-A simple text viewer for the Foenix F256 family of modern retro computers.
+A (not so) simple text viewer for the Foenix F256 family of modern retro computers.
