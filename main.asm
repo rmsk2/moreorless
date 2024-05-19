@@ -19,7 +19,7 @@ jmp main
 .include "io_help.asm"
 
 START_TXT1 .text "Use cursor keys, SPACE and b to navigate file. Press q to quit.", $0d
-START_TXT5 .text "Use F1 to show file", $0d
+START_TXT5 .text $0d, "***** Use F1 to show file *****", $0d
 FILE_ERROR .text "File read error. Please reset computer.", $0d
 DONE_TXT .text $0d, "Done!", $0d
 LINES_READ_TXT    .text "Lines read   : $"
