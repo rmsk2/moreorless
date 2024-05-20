@@ -57,3 +57,6 @@ text editor for the Foenix 256 line of computers. But as Foenix retro systems ha
 will be followed by the F256K2, which seems to offer vastly more memory, it is questionable whether the effort
 to implement advanced features is well spent at this moment. Nontheless I think this software is useful as
 it is.
+
+My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
+the memory managment and linked list functionality.
