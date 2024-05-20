@@ -305,7 +305,7 @@ printFixedProgData
     #printString BLANKS_80, len(BLANKS_80)
 
     stz CURSOR_STATE.yPos
-    lda #32
+    lda #34
     sta CURSOR_STATE.xPos
     jsr txtio.cursorSet
     #printString PROG_NAME, len(PROG_NAME)
