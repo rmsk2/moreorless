@@ -27,8 +27,9 @@ BLOCK_FREE_TXT    .text " KB free |"
 TXT_RAM_EXPANSION .text "RAM expansion: "
 FOUND_TXT .text "Present | "
 NOT_FOUND_TXT .text "NOT Present | "
-ENTER_FILE_TXT .text "Enter filename: "
+ENTER_FILE_TXT .text "File (enter to reset): "
 LOADING_FILE_TXT .text "Loading file ... "
+ENTER_DRIVE .text "Enter drive number (0, 1 or 2): "
 
 FILE_ALLOWED .text "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./:#+~()!&@[]"
 
@@ -58,6 +59,8 @@ main
     lda editor.STATE.col
     sta CURSOR_STATE.col 
     jsr txtio.clear
+
+    jsr enterDrive
 
 _restart
     jsr keyrepeat.init
@@ -281,6 +284,32 @@ _done
     jsr updateProgData
     rts
 
+
+enterDrive
+    #printString ENTER_DRIVE, len(ENTER_DRIVE)
+    jsr waitForKey
+    cmp #$30
+    bne _c31
+    beq _selected
+_c31
+    cmp #$31
+    bne _c32
+    beq _selected
+_c32
+    cmp #$32
+    beq _selected
+    jsr txtio.newLine
+    jsr txtio.newLine
+    jmp enterDrive
+
+_selected
+    jsr txtio.charOut
+    sec 
+    sbc #$30
+    sta TXT_FILE.drive
+    jsr txtio.newLine
+    jsr txtio.newLine
+    rts
 
 enterFileName
     #printString ENTER_FILE_TXT, len(ENTER_FILE_TXT)
