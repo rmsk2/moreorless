@@ -2,7 +2,7 @@ RM=rm
 PORT=/dev/ttyUSB0
 SUDO=
 
-BINARY=f_edit
+BINARY=mless
 FORCE=-f
 
 ifdef WIN
