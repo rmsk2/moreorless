@@ -44,22 +44,10 @@ CRSR_RIGHT = $06
 PAGE_DOWN = $62
 PAGE_UP = $20
 
-Y_OFFSET = 10
-
 main
     jsr setup.mmu
     jsr clut.init
     jsr initEvents
-
-    ; #load16BitImmediate $c000 + Y_OFFSET*80, CURSOR_STATE.vramOffset
-    ; lda #80
-    ; sta CURSOR_STATE.xMax
-    ; lda #40
-    ; sta CURSOR_STATE.yMax
-    ; lda #Y_OFFSET
-    ; sta CURSOR_STATE.yOffset
-    ; jsr txtio.setMode80x60
-
     jsr txtio.init80x60
     jsr txtio.cursorOn
 
@@ -140,8 +128,9 @@ _checkUp
     cmp #CRSR_UP
     bne _checkDown
     jsr list.prev
-    bcs _alreadyTop
+    bcs _alreadyTop    
     #dec16Bit editor.STATE.curLine
+    jsr updateProgData
     stz txtio.HAS_SCROLLED
     jsr txtio.up
     lda txtio.HAS_SCROLLED
@@ -157,8 +146,9 @@ _checkDown
     cmp #CRSR_DOWN
     bne _checkLeft
     jsr list.next
-    bcs _alreadyBottom
+    bcs _alreadyBottom    
     #inc16Bit editor.STATE.curLine
+    jsr updateProgData
     stz txtio.HAS_SCROLLED
     jsr txtio.down    
     lda txtio.HAS_SCROLLED
@@ -201,19 +191,25 @@ _checkF3
     bne _checkF1
     jsr list.rewind
     #load16BitImmediate 1, editor.STATE.curLine
-    jsr txtio.init80x30
+    jsr setup80x30
+    jsr txtio.setMode80x30
     jsr txtio.cursorOn
     jsr printScreen
+    jsr updateProgData
     sec
     rts
 _checkF1
     cmp #SHOW_FILE
     beq _show
     jmp _nothing
-_show
+_show    
     jsr list.rewind
     #load16BitImmediate 1, editor.STATE.curLine
+    jsr setup80x60
+    jsr txtio.setMode80x60
+    jsr txtio.cursorOn
     jsr printScreen
+    jsr updateProgData
     sec
     rts
 _nothing
@@ -255,6 +251,7 @@ _loop
     cpy CURSOR_STATE.yMax
     bne _loop
 _done
+    jsr updateProgData
     rts
 
 
@@ -268,6 +265,7 @@ _loop
     cpy CURSOR_STATE.yMax
     bne _loop
 _done
+    jsr updateProgData
     rts
 
 
@@ -297,3 +295,128 @@ processFileNameEntry
 _notDone
     sec    
     rts    
+
+
+CURSOR_STATE_DATA .dstruct CursorState_t
+CURSOR_STATE_PROG .dstruct CursorState_t
+
+toData
+    #load16BitImmediate CURSOR_STATE_PROG, TXT_PTR2
+    #load16BitImmediate CURSOR_STATE_DATA, TXT_PTR1
+    jsr txtio.switch
+    rts
+
+
+toProg
+    #load16BitImmediate CURSOR_STATE_DATA, TXT_PTR2
+    #load16BitImmediate CURSOR_STATE_PROG, TXT_PTR1
+    jsr txtio.switch    
+    rts
+
+
+BLANKS_80 .text "                                                                                "
+CURRENT_LINE .text "Current line: "
+
+printFixedProgData
+    jsr txtio.home
+    jsr txtio.reverseColor
+    #printString BLANKS_80, len(BLANKS_80)
+    stz CURSOR_STATE.xPos
+    sec
+    lda CURSOR_STATE.yMax
+    sbc #INFO_SIZE    
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString BLANKS_80, len(BLANKS_80)    
+    jsr txtio.reverseColor
+    #printString CURRENT_LINE, len(CURRENT_LINE)
+    rts
+
+
+updateProgData
+    jsr toProg
+    lda #len(CURRENT_LINE)
+    sta CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #move16Bit editor.STATE.curLine, WORD_DATA
+    jsr printWord
+    jsr toData
+    rts
+
+
+WORD_DATA .word 0
+printWord
+    lda WORD_DATA + 1
+    jsr txtio.printByte
+    lda WORD_DATA
+    jsr txtio.printByte
+    rts
+
+
+Y_OFFSET = 1
+INFO_SIZE = 2
+
+setup80x60
+    #load16BitImmediate $c000 + Y_OFFSET*80, CURSOR_STATE.vramOffset
+    lda #80
+    sta CURSOR_STATE.xMax
+    lda #60 - INFO_SIZE - 1
+    sta CURSOR_STATE.yMax
+    lda #Y_OFFSET
+    sta CURSOR_STATE.yOffset
+    jsr txtio.init
+    jsr txtio.cursorOn
+    
+    #load16BitImmediate CURSOR_STATE_DATA, TXT_PTR2
+    jsr txtio.saveCursorState
+
+    lda #80
+    sta CURSOR_STATE.xMax
+    lda #60
+    sta CURSOR_STATE.yMax
+    jsr txtio.initSegmentDefaults
+    jsr txtio.init
+    jsr txtio.cursorOff
+
+    #load16BitImmediate CURSOR_STATE_PROG, TXT_PTR2
+    jsr txtio.saveCursorState
+    jsr txtio.clear
+    jsr printFixedProgData
+
+    jsr toData
+
+    rts
+
+
+setup80x30
+    #load16BitImmediate $c000 + Y_OFFSET*80, CURSOR_STATE.vramOffset
+    lda #80
+    sta CURSOR_STATE.xMax
+    lda #30 - INFO_SIZE - 1
+    sta CURSOR_STATE.yMax
+    lda #Y_OFFSET
+    sta CURSOR_STATE.yOffset
+    jsr txtio.init
+    jsr txtio.cursorOn
+
+    #load16BitImmediate CURSOR_STATE_DATA, TXT_PTR2
+    jsr txtio.saveCursorState
+    
+    lda #80
+    sta CURSOR_STATE.xMax
+    lda #30
+    sta CURSOR_STATE.yMax
+    jsr txtio.initSegmentDefaults
+    jsr txtio.init
+    jsr txtio.cursorOff
+
+    #load16BitImmediate CURSOR_STATE_PROG, TXT_PTR2
+    jsr txtio.saveCursorState
+    jsr txtio.clear
+    jsr printFixedProgData
+
+    jsr toData
+
+    rts
