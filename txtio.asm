@@ -431,6 +431,7 @@ left
 _leftEdge
     lda CURSOR_STATE.yPos
     beq _done                                            ; was yPos zero?
+    inc HAS_LINE_CHANGED
     lda CURSOR_STATE.xMax
     dec a
     sta CURSOR_STATE.xPos
@@ -453,12 +454,14 @@ right
     lda CURSOR_STATE.xPos
     cmp CURSOR_STATE.xMax
     bcc _done
+    inc HAS_LINE_CHANGED
     stz CURSOR_STATE.xPos
     inc CURSOR_STATE.yPos
     lda CURSOR_STATE.yPos
     cmp CURSOR_STATE.yMax
     bcc _done
     phy
+    inc HAS_SCROLLED
     jsr scrollUp
     ply
     dec CURSOR_STATE.yPos
@@ -466,7 +469,8 @@ _done
     jsr cursorSet
     rts
 
-HAS_SCROLLED .byte 0
+HAS_SCROLLED     .byte 0
+HAS_LINE_CHANGED .byte 0
 
 ; --------------------------------------------------
 ; This routine moves the cursor up one line. If it is called

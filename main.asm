@@ -19,8 +19,6 @@ jmp main
 .include "io_help.asm"
 
 PROG_NAME .text "MOREORLESS"
-START_TXT1 .text "Use cursor keys, SPACE and b to navigate file. Press q to quit.", $0d
-START_TXT5 .text $0d, "***** Use F1 to show file *****", $0d
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
 LINES_TXT    .text " Lines | "
@@ -122,6 +120,7 @@ _alreadyTop
 _checkDown
     cmp #CRSR_DOWN
     bne _checkLeft
+_doDown
     jsr list.next
     bcs _alreadyBottom    
     #inc16Bit editor.STATE.curLine
@@ -140,13 +139,46 @@ _alreadyBottom
 _checkLeft
     cmp #CRSR_LEFT
     bne _checkRight
+    stz txtio.HAS_LINE_CHANGED
     jsr txtio.left
+    lda txtio.HAS_LINE_CHANGED
+    beq _doneLeft
+    jsr list.prev
+    bcs _doneLeft
+    #dec16Bit editor.STATE.curLine
+    jsr updateProgData
+_doneLeft    
     sec
     rts
 _checkRight
     cmp #CRSR_RIGHT
     bne _checkPgDown
+    ; turn scrolling off
+    stz CURSOR_STATE.scrollOn
+    stz txtio.HAS_LINE_CHANGED
+    stz txtio.HAS_SCROLLED
     jsr txtio.right
+    ; turn scrolling on
+    inc CURSOR_STATE.scrollOn
+    lda txtio.HAS_LINE_CHANGED
+    ; if 0 line has not changed
+    beq _doneRight
+    lda txtio.HAS_SCROLLED
+    ; if not zero we scroll one line down
+    beq _lineDown
+    jmp _doDown
+_lineDown    
+    ; only line change
+    jsr list.next
+    bcs _endReached
+    #inc16Bit editor.STATE.curLine
+    jsr updateProgData
+    bra _doneRight
+_endReached
+    ; go one line up again if end of file was reached
+    dec CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+_doneRight
     sec
     rts
 _checkPgDown
