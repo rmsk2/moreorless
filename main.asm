@@ -18,15 +18,17 @@ jmp main
 .include "diskio.asm"
 .include "io_help.asm"
 
+PROG_NAME .text "MOREORLESS"
 START_TXT1 .text "Use cursor keys, SPACE and b to navigate file. Press q to quit.", $0d
 START_TXT5 .text $0d, "***** Use F1 to show file *****", $0d
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
-LINES_READ_TXT    .text "Lines read   : $"
-BLOCK_FREE_TXT    .text "Blocks free  : $"
+LINES_TXT    .text " Lines | "
+OF_TEXT .text " of "
+BLOCK_FREE_TXT    .text " KB free |"
 TXT_RAM_EXPANSION .text "RAM expansion: "
-FOUND_TXT .text "Present", $0d, $0d
-NOT_FOUND_TXT .text "NOT Present", $0d, $0d
+FOUND_TXT .text "Present | "
+NOT_FOUND_TXT .text "NOT Present | "
 ENTER_FILE_TXT .text "Enter filename: "
 LOADING_FILE_TXT .text "Loading file ... "
 
@@ -73,32 +75,7 @@ _l2
     #printString FILE_ERROR, len(FILE_ERROR)
     jmp _restart
 _l1
-    #printString DONE_TXT + 1, len(DONE_TXT) - 1
-    jsr txtio.newLine
-    #printString LINES_READ_TXT, len(LINES_READ_TXT)
-    lda list.LIST.length + 1
-    jsr txtio.printByte
-    lda list.LIST.length
-    jsr txtio.printByte
-    jsr txtio.newLine
-    #printString BLOCK_FREE_TXT, len(BLOCK_FREE_TXT)
-    lda memory.MEM_STATE.numFreeBlocks + 1
-    jsr txtio.printByte
-    lda memory.MEM_STATE.numFreeBlocks
-    jsr txtio.printByte
-    jsr txtio.newLine
-    
-    #printString TXT_RAM_EXPANSION, len(TXT_RAM_EXPANSION)
-    lda memory.MEM_STATE.ramExpFound
-    bne _withRamExp
-    #printString NOT_FOUND_TXT, len(NOT_FOUND_TXT)
-    bra _help
-_withRamExp    
-    #printString FOUND_TXT, len(FOUND_TXT)
-_help
-    #printString START_TXT1, len(START_TXT1)
-    #printString START_TXT5, len(START_TXT5)    
-    
+    jsr start80x60
     jsr keyrepeat.init
     #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
     jsr keyrepeat.keyEventLoop
@@ -203,6 +180,15 @@ _checkF1
     beq _show
     jmp _nothing
 _show    
+    jsr start80x60
+    sec
+    rts
+_nothing
+    sec
+    rts
+
+
+start80x60
     jsr list.rewind
     #load16BitImmediate 1, editor.STATE.curLine
     jsr setup80x60
@@ -210,12 +196,7 @@ _show
     jsr txtio.cursorOn
     jsr printScreen
     jsr updateProgData
-    sec
     rts
-_nothing
-    sec
-    rts
-
 
 printScreen
     stz LINE_COUNT
@@ -316,19 +297,71 @@ toProg
 
 BLANKS_80 .text "                                                                                "
 CURRENT_LINE .text "Current line: "
-
+INFO_LINE .byte 0
+BLOCK_FREE .word 0
 printFixedProgData
     jsr txtio.home
     jsr txtio.reverseColor
     #printString BLANKS_80, len(BLANKS_80)
+
+    stz CURSOR_STATE.yPos
+    lda #32
+    sta CURSOR_STATE.xPos
+    jsr txtio.cursorSet
+    #printString PROG_NAME, len(PROG_NAME)
+
     stz CURSOR_STATE.xPos
     sec
     lda CURSOR_STATE.yMax
     sbc #INFO_SIZE    
     sta CURSOR_STATE.yPos
+    sta INFO_LINE
     jsr txtio.cursorSet
     #printString BLANKS_80, len(BLANKS_80)    
+
+    stz CURSOR_STATE.xPos
+    lda INFO_LINE
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+
+    #printString TXT_RAM_EXPANSION, len(TXT_RAM_EXPANSION)
+    lda memory.MEM_STATE.ramExpFound
+    bne _withRamExp
+    #printString NOT_FOUND_TXT, len(NOT_FOUND_TXT)
+    bra _goOn
+_withRamExp    
+    #printString FOUND_TXT, len(FOUND_TXT)
+_goOn    
+    #move16Bit list.LIST.length, txtio.WORD_TEMP
+    jsr txtio.printWordDecimal
+    #printString LINES_TXT, len(LINES_TXT)
+
+    #move16Bit memory.MEM_STATE.numFreeBlocks, txtio.WORD_TEMP
+    #halve16Bit txtio.WORD_TEMP
+    #halve16Bit txtio.WORD_TEMP
+    #halve16Bit txtio.WORD_TEMP
+    #halve16Bit txtio.WORD_TEMP
+    #halve16Bit txtio.WORD_TEMP
+    jsr txtio.printWordDecimal
+
+    #printString OF_TEXT, len(OF_TEXT)
+
+    #move16Bit memory.MEM_STATE.numBlocks, txtio.WORD_TEMP
+    #halve16Bit txtio.WORD_TEMP
+    #halve16Bit txtio.WORD_TEMP
+    #halve16Bit txtio.WORD_TEMP
+    #halve16Bit txtio.WORD_TEMP
+    #halve16Bit txtio.WORD_TEMP
+    jsr txtio.printWordDecimal
+
+    #printString BLOCK_FREE_TXT, len(BLOCK_FREE_TXT)
+
     jsr txtio.reverseColor
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
     #printString CURRENT_LINE, len(CURRENT_LINE)
     rts
 
@@ -340,18 +373,15 @@ updateProgData
     lda CURSOR_STATE.yMaxMinus1
     sta CURSOR_STATE.yPos
     jsr txtio.cursorSet
-    #move16Bit editor.STATE.curLine, WORD_DATA
-    jsr printWord
+    #printString BLANKS_80, 5
+    lda #len(CURRENT_LINE)
+    sta CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #move16Bit editor.STATE.curLine, txtio.WORD_TEMP
+    jsr txtio.printWordDecimal
     jsr toData
-    rts
-
-
-WORD_DATA .word 0
-printWord
-    lda WORD_DATA + 1
-    jsr txtio.printByte
-    lda WORD_DATA
-    jsr txtio.printByte
     rts
 
 

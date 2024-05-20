@@ -813,6 +813,35 @@ printByte
     jsr charOut
     rts
 
+
+WORD_TEMP .word 0
+COUNT_DIGITS .byte 0
+printWordDecimal
+    stz COUNT_DIGITS
+    #load16BitImmediate 10, $DE04
+    lda WORD_TEMP 
+    sta $DE06
+    lda WORD_TEMP + 1
+    sta $DE07
+_loop
+    ldx $DE16
+    lda PRBYTE.hex_chars, x
+    pha
+    inc COUNT_DIGITS
+    #cmp16BitImmediate 0, $DE14
+    beq _done
+    #move16Bit $DE14, $DE06
+    bra _loop
+_done
+    ldy #0
+_loop2
+    pla
+    jsr charOut
+    iny
+    cpy COUNT_DIGITS
+    bne _loop2 
+    rts
+
 ; --------------------------------------------------
 ; This routine reverses the colour that is currently defined in CURSOR_STATE.col
 ;
