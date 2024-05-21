@@ -253,6 +253,7 @@ start80x60
     jsr updateProgData
     rts
 
+
 printScreen
     stz LINE_COUNT
     jsr txtio.clear
@@ -330,6 +331,7 @@ _selected
     jsr txtio.newLine
     jsr txtio.newLine
     rts
+
 
 enterFileName
     #printString ENTER_FILE_TXT, len(ENTER_FILE_TXT)
