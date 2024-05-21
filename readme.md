@@ -60,3 +60,10 @@ I think this software is useful as it is.
 
 My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
 the memory managment and linked list functionality.
+
+# Building the software
+
+You will need `64tass`, GNU `make` and a Python3 interpreter in order to build the software. Configure the
+port in the makefile in order to use the target `upload` which, after bulding the software, uploads it to
+your F256 via the USB debug port and executes it. Build the target `test` in order to run all test cases
+(this requires `6502profiler`).
