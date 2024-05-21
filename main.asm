@@ -90,10 +90,6 @@ _reset
     ; I guess we never get here ....
     rts
 
-    
-endlessLoop
-    nop
-    bra endlessLoop
 
 LINE_COUNT .byte 0
 
@@ -105,83 +101,25 @@ processKeyEvent
 _checkUp
     cmp #CRSR_UP
     bne _checkDown
-    jsr list.prev
-    bcs _alreadyTop    
-    #dec16Bit editor.STATE.curLine
-    jsr updateProgData
-    stz txtio.HAS_SCROLLED
-    jsr txtio.up
-    lda txtio.HAS_SCROLLED
-    beq _alreadyTop
-    jsr list.readCurrentLine
-    jsr txtio.leftMost
-    #printLineBuffer
-    jsr txtio.leftMost    
-_alreadyTop    
+    jsr procCrsrUp
     sec
     rts
 _checkDown
     cmp #CRSR_DOWN
     bne _checkLeft
-_doDown
-    jsr list.next
-    bcs _alreadyBottom    
-    #inc16Bit editor.STATE.curLine
-    jsr updateProgData
-    stz txtio.HAS_SCROLLED
-    jsr txtio.down    
-    lda txtio.HAS_SCROLLED
-    beq _alreadyBottom
-    jsr list.readCurrentLine
-    jsr txtio.leftMost
-    #printLineBuffer
-    jsr txtio.leftMost    
-_alreadyBottom
+    jsr procCrsrDown
     sec
     rts
 _checkLeft
     cmp #CRSR_LEFT
     bne _checkRight
-    stz txtio.HAS_LINE_CHANGED
-    jsr txtio.left
-    lda txtio.HAS_LINE_CHANGED
-    beq _doneLeft
-    jsr list.prev
-    bcs _doneLeft
-    #dec16Bit editor.STATE.curLine
-    jsr updateProgData
-_doneLeft    
+    jsr procCrsrLeft
     sec
     rts
 _checkRight
     cmp #CRSR_RIGHT
     bne _checkPgDown
-    ; turn scrolling off
-    stz CURSOR_STATE.scrollOn
-    stz txtio.HAS_LINE_CHANGED
-    stz txtio.HAS_SCROLLED
-    jsr txtio.right
-    ; turn scrolling on
-    inc CURSOR_STATE.scrollOn
-    lda txtio.HAS_LINE_CHANGED
-    ; if 0 line has not changed
-    beq _doneRight
-    lda txtio.HAS_SCROLLED
-    ; if not zero we scroll one line down
-    beq _lineDown
-    jmp _doDown
-_lineDown    
-    ; only line change
-    jsr list.next
-    bcs _endReached
-    #inc16Bit editor.STATE.curLine
-    jsr updateProgData
-    bra _doneRight
-_endReached
-    ; go one line up again if end of file was reached
-    dec CURSOR_STATE.yPos
-    jsr txtio.cursorSet
-_doneRight
+    jsr procCrsrRight
     sec
     rts
 _checkPgDown
@@ -201,13 +139,7 @@ _checkPgUp
 _checkF3
     cmp #SHOW_FILE_80x30
     bne _checkF1
-    jsr list.rewind
-    #load16BitImmediate 1, editor.STATE.curLine
-    jsr setup80x30
-    jsr txtio.setMode80x30
-    jsr txtio.cursorOn
-    jsr printScreen
-    jsr updateProgData
+    jsr start80x30
     sec
     rts
 _checkF1
@@ -220,6 +152,94 @@ _show
     rts
 _nothing
     sec
+    rts
+
+
+procCrsrRight
+    ; turn scrolling off
+    stz CURSOR_STATE.scrollOn
+    stz txtio.HAS_LINE_CHANGED
+    stz txtio.HAS_SCROLLED
+    jsr txtio.right
+    ; turn scrolling on
+    inc CURSOR_STATE.scrollOn
+    lda txtio.HAS_LINE_CHANGED
+    ; if 0 line has not changed
+    beq _doneRight
+    lda txtio.HAS_SCROLLED
+    ; if not zero we scroll one line down
+    beq _lineDown
+    jmp procCrsrDown
+_lineDown    
+    ; only line change
+    jsr list.next
+    bcs _endReached
+    #inc16Bit editor.STATE.curLine
+    jsr updateProgData
+    bra _doneRight
+_endReached
+    ; go one line up again if end of file was reached
+    dec CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+_doneRight
+    rts
+
+
+procCrsrLeft
+    stz txtio.HAS_LINE_CHANGED
+    jsr txtio.left
+    lda txtio.HAS_LINE_CHANGED
+    beq _doneLeft
+    jsr list.prev
+    bcs _doneLeft
+    #dec16Bit editor.STATE.curLine
+    jsr updateProgData
+_doneLeft
+    rts
+
+
+procCrsrUp
+    jsr list.prev
+    bcs _alreadyTop    
+    #dec16Bit editor.STATE.curLine
+    jsr updateProgData
+    stz txtio.HAS_SCROLLED
+    jsr txtio.up
+    lda txtio.HAS_SCROLLED
+    beq _alreadyTop
+    jsr list.readCurrentLine
+    jsr txtio.leftMost
+    #printLineBuffer
+    jsr txtio.leftMost    
+_alreadyTop  
+    rts
+
+
+procCrsrDown
+    jsr list.next
+    bcs _alreadyBottom    
+    #inc16Bit editor.STATE.curLine
+    jsr updateProgData
+    stz txtio.HAS_SCROLLED
+    jsr txtio.down    
+    lda txtio.HAS_SCROLLED
+    beq _alreadyBottom
+    jsr list.readCurrentLine
+    jsr txtio.leftMost
+    #printLineBuffer
+    jsr txtio.leftMost    
+_alreadyBottom
+    rts
+
+
+start80x30
+    jsr list.rewind
+    #load16BitImmediate 1, editor.STATE.curLine
+    jsr setup80x30
+    jsr txtio.setMode80x30
+    jsr txtio.cursorOn
+    jsr printScreen
+    jsr updateProgData
     rts
 
 
