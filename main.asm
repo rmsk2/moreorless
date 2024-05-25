@@ -279,29 +279,42 @@ _done
 
 
 pageDown
-    ldy #0
-_loop
-    #CALL_Y_PROT list.next
-    bcs _done
-    #inc16Bit editor.STATE.curLine
-    iny
-    cpy CURSOR_STATE.yMax
-    bne _loop
-_done
+    ldx CURSOR_STATE.yMax
+    lda #0
+    jsr list.move
+    bcs _endReached
+    clc
+    lda CURSOR_STATE.yMax
+    adc editor.STATE.curLine
+    sta editor.STATE.curLine
+    lda editor.STATE.curLine + 1
+    adc #0
+    sta editor.STATE.curLine + 1
+    bra _end
+_endReached
+    #move16Bit list.LIST.length, editor.STATE.curLine
+_end
     jsr updateProgData
     rts
 
 
+MINUS_YMAX .word 0
 pageUp
-    ldy #0
-_loop    
-    #CALL_Y_PROT list.prev
-    bcs _done
-    #dec16Bit editor.STATE.curLine
-    iny
-    cpy CURSOR_STATE.yMax
-    bne _loop
-_done
+    ldx MINUS_YMAX
+    lda MINUS_YMAX + 1
+    jsr list.move
+    bcs _endReached
+    clc
+    lda editor.STATE.curLine
+    adc MINUS_YMAX
+    sta editor.STATE.curLine
+    lda editor.STATE.curLine + 1
+    adc MINUS_YMAX + 1
+    sta editor.STATE.curLine + 1
+    bra _end
+_endReached
+    #load16BitImmediate 1, editor.STATE.curLine
+_end
     jsr updateProgData
     rts
 
@@ -481,6 +494,13 @@ setup80x60
     sta CURSOR_STATE.yOffset
     jsr txtio.init
     jsr txtio.cursorOn
+
+    lda CURSOR_STATE.yMax
+    eor #$FF
+    sta MINUS_YMAX
+    lda #$FF
+    sta MINUS_YMAX + 1
+    #add16BitImmediate 1, MINUS_YMAX
     
     #load16BitImmediate CURSOR_STATE_DATA, TXT_PTR2
     jsr txtio.saveCursorState
@@ -513,6 +533,13 @@ setup80x30
     sta CURSOR_STATE.yOffset
     jsr txtio.init
     jsr txtio.cursorOn
+
+    lda CURSOR_STATE.yMax
+    eor #$FF
+    sta MINUS_YMAX
+    lda #$FF
+    sta MINUS_YMAX + 1
+    #add16BitImmediate 1, MINUS_YMAX
 
     #load16BitImmediate CURSOR_STATE_DATA, TXT_PTR2
     jsr txtio.saveCursorState
