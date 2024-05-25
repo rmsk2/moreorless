@@ -31,6 +31,7 @@ NOT_FOUND_TXT .text "NOT Present | "
 ENTER_FILE_TXT .text "File (enter to reset): "
 LOADING_FILE_TXT .text "Loading file ... "
 ENTER_DRIVE .text "Enter drive number (0, 1 or 2): "
+ENTER_NEW_LINE .text "Goto Line: "
 
 FILE_ALLOWED .text "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./:#+~()!&@[]"
 
@@ -44,6 +45,7 @@ CRSR_DOWN = $0E
 CRSR_LEFT = $02
 CRSR_RIGHT = $06
 PAGE_DOWN = $62
+GOTO_LINE = $67
 PAGE_UP = $20
 
 main
@@ -132,9 +134,15 @@ _checkPgDown
     rts
 _checkPgUp
     cmp #PAGE_DOWN
-    bne _checkF3
+    bne _checkGotoLine
     jsr pageUp
     jsr printScreen
+    sec
+    rts
+_checkGotoLine
+    cmp #GOTO_LINE
+    bne _checkF3
+    jsr gotoLine
     sec
     rts
 _checkF3
@@ -291,6 +299,87 @@ _endReached
 _end
     jsr updateProgData
     rts
+
+
+LINE_NUMBER .text "     "
+LINE_LEN .byte 0
+gotoLine
+    jsr toProg
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString BLANKS_80, len(CURRENT_LINE) + 5
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString ENTER_NEW_LINE, len(ENTER_NEW_LINE)
+
+    #inputStringNonBlocking LINE_NUMBER, 5, txtio.PRBYTE.hex_chars, 10
+    #load16BitImmediate processLineNumberEntry, keyrepeat.FOCUS_VECTOR
+    rts
+
+TEMP2 .word 0
+processLineNumberEntry
+    jsr txtio.getStringFocusFunc
+    bcc _procEnd
+    jmp _notDone
+_procEnd
+    sta LINE_LEN
+    jsr txtio.cursorOn
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString BLANKS_80, len(CURRENT_LINE) + 7
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString CURRENT_LINE, len(CURRENT_LINE)
+
+    jsr progUpdateInt
+    jsr toData
+
+    #load16BitImmediate LINE_NUMBER, CONV_PTR1
+    lda LINE_LEN
+    jsr conv.checkMaxWord
+    bcc _done
+    jsr conv.atouw    
+    #cmp16BitImmediate 0, conv.ATOW
+    beq _done
+
+    #cmp16Bit conv.ATOW, list.LIST.length
+    beq _isAllowed
+    bcs _done
+_isAllowed
+    #move16Bit conv.ATOW, TEMP2
+    #sub16Bit editor.STATE.curLine, TEMP2
+    ldx TEMP2
+    lda TEMP2 + 1
+    jsr list.move
+    bcs _atEnd
+    #add16Bit TEMP2, editor.STATE.curLine
+    bra _done
+_atEnd
+    lda TEMP2 + 1
+    bpl _forward
+    #load16BitImmediate 1, editor.STATE.curLine
+    bra _done
+_forward
+    #move16Bit list.LIST.length, editor.STATE.curLine
+_done
+    jsr updateProgData
+    jsr printScreen
+    #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
+_notDone
+    sec    
+    rts 
 
 
 MINUS_YMAX .word 0
@@ -453,6 +542,12 @@ _goOn
 
 updateProgData
     jsr toProg
+    jsr progUpdateInt
+    jsr toData
+    rts
+
+
+progUpdateInt
     lda #len(CURRENT_LINE)
     sta CURSOR_STATE.xPos
     lda CURSOR_STATE.yMaxMinus1
@@ -466,9 +561,7 @@ updateProgData
     jsr txtio.cursorSet
     #move16Bit editor.STATE.curLine, txtio.WORD_TEMP
     jsr txtio.printWordDecimal
-    jsr toData
     rts
-
 
 Y_OFFSET = 1
 INFO_SIZE = 2
