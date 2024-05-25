@@ -33,4 +33,41 @@ _loop
 _done
     rts
 
+
+MAX_INT_STR .text "65535"
+; This routine checks whether the string to which CONV_PTR1 (length in accu)
+; points represents a word that is 65536 or bigger. The carry is set if the
+; string can be converted to an unsigned word.
+checkMaxWord
+    cmp #6
+    bcs _doneError
+    ; here we know the string is 5 characters or shorter
+    cmp #5
+    beq _fullCheck
+    ; Here we know the string is 4 Characters or shorter
+    bne _doneOK
+_fullCheck
+    ; the string is five characters long
+    ldy #0
+_loop
+    lda (CONV_PTR1), y
+    cmp MAX_INT_STR, y
+    ; value in string to test is equal to corresponding value in MAX_INT_STR => Check further
+    beq _next
+    ; value in string to test is bigger => not OK
+    bcs _doneError
+    ; value in string to test is smaller => OK
+    bra _doneOK
+_next
+    iny
+    cpy #5
+    bne _loop
+    ; string value is equal to MAX_INT_STR => OK
+_doneOK
+    sec
+    rts
+_doneError
+    clc
+    rts
+
 .endnamespace
