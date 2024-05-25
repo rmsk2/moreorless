@@ -86,6 +86,22 @@ add16Bit .macro  memAddr1, memAddr2
 .endmacro
 
 ; --------------------------------------------------
+; add16BitByte implements a 16 bit add of the byte stored at memAddr1 and the
+; 16 bit value stored at memAddr2. The result is stored in .memAddr2
+; --------------------------------------------------
+add16BitByte .macro  memAddr1, memAddr2 
+    clc
+    ; add lo bytes
+    lda \memAddr1
+    adc \memAddr2
+    sta \memAddr2
+    ; add hi bytes
+    lda #0
+    adc \memAddr2+1
+    sta \memAddr2+1
+.endmacro
+
+; --------------------------------------------------
 ; add16BitImmediate implements a 16 bit add of an immediate value to value stored at memAddr2 
 ; The result is stored in .memAddr2
 ; --------------------------------------------------

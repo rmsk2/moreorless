@@ -283,13 +283,7 @@ pageDown
     lda #0
     jsr list.move
     bcs _endReached
-    clc
-    lda CURSOR_STATE.yMax
-    adc editor.STATE.curLine
-    sta editor.STATE.curLine
-    lda editor.STATE.curLine + 1
-    adc #0
-    sta editor.STATE.curLine + 1
+    #add16BitByte CURSOR_STATE.yMax, editor.STATE.curLine
     bra _end
 _endReached
     #move16Bit list.LIST.length, editor.STATE.curLine
@@ -304,13 +298,7 @@ pageUp
     lda MINUS_YMAX + 1
     jsr list.move
     bcs _endReached
-    clc
-    lda editor.STATE.curLine
-    adc MINUS_YMAX
-    sta editor.STATE.curLine
-    lda editor.STATE.curLine + 1
-    adc MINUS_YMAX + 1
-    sta editor.STATE.curLine + 1
+    #add16Bit MINUS_YMAX, editor.STATE.curLine
     bra _end
 _endReached
     #load16BitImmediate 1, editor.STATE.curLine
