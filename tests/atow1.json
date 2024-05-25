@@ -1,0 +1,5 @@
+{
+    "Name": "ASCII to word I",
+    "TestDriverSource": "atow1.asm",
+    "TestScript": "atow1.lua"
+}

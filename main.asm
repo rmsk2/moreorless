@@ -17,6 +17,7 @@ jmp main
 .include "editor.asm"
 .include "diskio.asm"
 .include "io_help.asm"
+.include "conv.asm"
 
 PROG_NAME .text "MOREORLESS"
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
