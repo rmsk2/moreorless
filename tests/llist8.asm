@@ -83,7 +83,7 @@ _l7
     bcc _done
 
     clc
-    rts    
+    brk    
 _done
     sec
     brk

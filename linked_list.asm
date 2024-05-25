@@ -361,6 +361,60 @@ _done
     sec
     rts
 
+Move_t .struct 
+    offsetL  .byte 0
+    offsetH  .byte 0
+    moveNext .byte BOOL_TRUE
+.endstruct
+
+MOVE_HELP .dstruct Move_t
+
+
+; signed offset to move in a (hi) and x (lo). Negative value => move towards
+; beginning, else move towards end. Carry flag is set if either beginning or end of 
+; the list was reached and the flag is clear otherwise.
+move
+    ; set direction to backwards
+    stz MOVE_HELP.moveNext
+    ; store input data
+    stx MOVE_HELP.offsetL
+    sta MOVE_HELP.offsetH
+    ; test if offset is negative
+    lda MOVE_HELP.offsetH
+    bpl _positive
+    ; Sign is negative => change sign by computing the two's complement
+    ; we are moving towards the beginning of the list
+    lda #$FF
+    eor MOVE_HELP.offsetL
+    sta MOVE_HELP.offsetL
+    lda #$FF
+    eor MOVE_HELP.offsetH
+    sta MOVE_HELP.offsetH
+    #add16BitImmediate 1, MOVE_HELP.offsetL
+    bra _doMove
+_positive
+    ; set direction to forward, i.e. we move to the end of the list
+    lda #BOOL_TRUE
+    sta MOVE_HELP.moveNext
+_doMove
+    #cmp16BitImmediate 0, MOVE_HELP.offsetL
+    beq _doneNotEnd
+    lda MOVE_HELP.moveNext
+    bne _forward
+    jsr prev
+    bcs _done
+    bra _nextLoop
+_forward
+    jsr next
+    bcs _done
+_nextLoop
+    #dec16Bit MOVE_HELP.offsetL
+    bra _doMove
+_doneNotEnd
+    clc
+_done
+    rts
+
 
 ; func (l *List) Next() bool {
 ; 	if (l.Current.Flags & FLAG_IS_LAST) != 0 {

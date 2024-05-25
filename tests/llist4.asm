@@ -62,7 +62,7 @@ _l5
     #copyMem2Mem list.LIST.current, PTR1
 
     clc
-    rts    
+    brk   
 _done
     sec
     brk

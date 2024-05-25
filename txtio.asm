@@ -84,9 +84,6 @@ setCol .macro col
 
 ; Take a look at key_repeat_test.asm for an example on how to define a screen segment
 
-BOOL_FALSE = 0
-BOOL_TRUE = 1
-
 cursorState_t .struct 
     xPos        .byte 0
     yPos        .byte 0

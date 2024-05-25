@@ -68,7 +68,7 @@ _l7
     jsr list.destroy
 
     clc
-    rts    
+    brk    
 _done
     sec
     brk

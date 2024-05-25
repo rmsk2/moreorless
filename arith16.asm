@@ -1,3 +1,6 @@
+BOOL_FALSE = 0
+BOOL_TRUE = 1
+
 ; --------------------------------------------------
 ; load16BitImmediate loads the 16 bit value given in .val into the memory location given
 ; by .addr 

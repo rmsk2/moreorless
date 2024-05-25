@@ -77,7 +77,7 @@ _l5
     bcc _done
 
     clc
-    rts    
+    brk    
 _done
     sec
     brk
