@@ -19,7 +19,7 @@ jmp main
 .include "io_help.asm"
 .include "conv.asm"
 
-PROG_NAME .text "MOREORLESS"
+PROG_NAME .text "MOREORLESS v1.1"
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
 LINES_TXT    .text " Lines | "
@@ -480,7 +480,7 @@ printFixedProgData
     #printString BLANKS_80, len(BLANKS_80)
 
     stz CURSOR_STATE.yPos
-    lda #35
+    lda #33
     sta CURSOR_STATE.xPos
     jsr txtio.cursorSet
     #printString PROG_NAME, len(PROG_NAME)
