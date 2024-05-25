@@ -322,6 +322,7 @@ gotoLine
     #load16BitImmediate processLineNumberEntry, keyrepeat.FOCUS_VECTOR
     rts
 
+
 TEMP2 .word 0
 processLineNumberEntry
     jsr txtio.getStringFocusFunc
