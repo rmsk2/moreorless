@@ -14,6 +14,7 @@ bottom of the screen.
 - Pressing `F1` resets the view to line one in 80x60 text mode
 - Pressing `F3` resets the view to line one in 80x30 text mode
 - Pressing `q` leaves the program by causing a soft reset
+- Pressing `g` moves you to the line number which was entered after pressing the key
 
 In essence the basic navigation commands work in the same way as in the UNIX `less` utlility. 
 `Moreorless` uses a single line feed character as a line delimiter. Carriage return characters are 
