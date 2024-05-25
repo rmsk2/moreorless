@@ -9,7 +9,6 @@ END_POS       .dstruct FarPtr_t         ; 7
 END_REACHED   .byte 0                   ; 10
 LST_LEN       .word list.LIST.length    ; 11
 HEAD          .dstruct FarPtr_t         ; 13
-CHECK_POINT   .byte 0                   ; 16
 
 
 .include "zeropage.asm"
@@ -33,7 +32,6 @@ LEN_ARRAY .byte len(line_2), len(line_3), len(line_4), len(line_5), len(line_6),
 LINE_COUNT .byte 0
 
 main
-    stz CHECK_POINT
     jsr setup.mmu
     jsr memory.init
     jsr line.init_module

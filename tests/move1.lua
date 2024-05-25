@@ -1,14 +1,20 @@
 require (test_dir.."tools")
 
--- this code tests list.move
+-- this code tests list.move in two stages. It initializes a list of seven elements and then executes
+-- two moves. At the end it is checked whether we arrived a the expected element as identified by
+-- the first charatcer of the list data.
 
 iterations = 0
 test_table = {
     -- index_start lo, index_start hi, index_move lo, index_move hi, first character of data
     {0, 0, 5, 0, "6"},
+    -- offset -3
     {6, 0, 0xFD, 0xFF, "4"},
+    -- offset -6
     {6, 0, 0xFA, 0xFF, "1"},
+    -- offset -2
     {4, 0, 0xFE, 0xFF, "3"},
+    -- offset +32767
     {4, 0, 0xFF, 0x7F, "7"},
 }
 
@@ -34,8 +40,8 @@ function assert()
     
     -- check if error occurred
     if contains_flag("C") then
+        print()
         print_whole_list(h)
-        print(string.format("Checkpoint: %d", read_byte(load_address + 16)))
         return false, "Error: Carry was set"
     end
 
@@ -44,9 +50,6 @@ function assert()
     if llen ~= 7 then
         return false, string.format("List has wrong length: %d", llen)
     end
-
-    --print()    
-    --print_whole_list(h)
     
     local b = parse_allocated_block(read_byte(load_address + 7), read_byte(load_address + 8), read_byte(load_address + 9))    
     if string.sub(b.data, 1, 1) ~= test_table[iterations][5] then
