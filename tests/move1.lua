@@ -6,16 +6,16 @@ require (test_dir.."tools")
 
 iterations = 0
 test_table = {
-    -- index_start lo, index_start hi, index_move lo, index_move hi, first character of data
-    {0, 0, 5, 0, "6"},
+    -- index_start lo, index_start hi, index_move lo, index_move hi, first character of data, carry set in last list.move
+    {0, 0, 5, 0, "6", false},
     -- offset -3
-    {6, 0, 0xFD, 0xFF, "4"},
+    {6, 0, 0xFD, 0xFF, "4", false},
     -- offset -6
-    {6, 0, 0xFA, 0xFF, "1"},
+    {6, 0, 0xFA, 0xFF, "1", false},
     -- offset -2
-    {4, 0, 0xFE, 0xFF, "3"},
+    {4, 0, 0xFE, 0xFF, "3", false},
     -- offset +32767
-    {4, 0, 0xFF, 0x7F, "7"},
+    {4, 0, 0xFF, 0x7F, "7", true},
 }
 
 
@@ -55,6 +55,10 @@ function assert()
     if string.sub(b.data, 1, 1) ~= test_table[iterations][5] then
         print_allocated_block(b)
         return false, "Not at correct element"
+    end
+
+    if (read_byte(load_address + 10) ~= 0) ~= test_table[iterations][6] then
+        return false, string.format("end position not signalled correctly: %d", read_byte(load_address + 10))
     end
 
     return true, ""
