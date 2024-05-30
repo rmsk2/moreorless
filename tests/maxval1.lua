@@ -1,5 +1,8 @@
 require (test_dir.."tools")
 
+-- This code tests whether the subroutine conv.checkMaxWord correctly classifies strings whether they can
+-- be converted to an unsiged 16 bit word or not.
+
 function arrange()
 
 end

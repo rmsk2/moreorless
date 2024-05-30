@@ -1,5 +1,11 @@
 require (test_dir.."tools")
 
+-- This code tests the subroutines list.next and list.prev which implement iterating through the list in both
+-- directions. For this the assembly test driver creates a list of three elements using list.insertAfter. Then 
+-- it moves two elements towards the end of the list using list.next and then calls list.prev three times. It 
+-- is expected that after doing this the current element of the list is the first list element and that the 
+-- last call to list.prev signals through a set carry bit that the beginning has been reached. The Lua part 
+-- verifies that we arrived at the first element and that memory usage conforms to expectations.
 
 function arrange()
 

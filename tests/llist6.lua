@@ -1,5 +1,10 @@
 require (test_dir.."tools")
 
+-- This is intended to test removal of an element from a lsit. The assembly test driver creates
+-- a list of three elements using list.insertBefore and list.insertAfter. It then moves to the 
+-- middle element and deletes it by a call to list.remove. The Lua code then tests if memory
+-- has been freed correctly, whether the list length was updated and whether the correct element
+-- was removed.  
 
 function arrange()
 

@@ -1,5 +1,8 @@
 require (test_dir.."tools")
 
+-- This code tests whether the assembly test driver correctly converts values using the subroutine
+-- conv.atouw.
+
 function arrange()
 
 end

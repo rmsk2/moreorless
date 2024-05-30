@@ -1,6 +1,13 @@
 require (test_dir.."tools")
 
 
+-- This test verifies whether removing the last element of a list works as expected. For this the
+-- assembly test driver creates a list with three elements using list.insertBefore and list.insertAfter.
+-- After that the current element is moved to the end of the list and then list.remove is called.
+-- The Lua part tests whether memory was freed correctly, and wehther the list still contains the two 
+-- expected entries.
+
+
 function arrange()
 
 end

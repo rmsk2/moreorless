@@ -1,5 +1,11 @@
 require (test_dir.."tools")
 
+-- This code tests whether list.insertAfter and list.setCurrentLine work as expected. For this a new list
+-- with two elements is created by calling list.insertAfter. The assembly test driver then exports 
+-- "far pointers" to both elments, the list length as a word and the memory management data structures. 
+-- The assembly part also tests whether the new end of the list is correctly signalled when calling list.next.
+-- The Lua side then tests whether the memory usage corresponds to the expeted values and checks whether
+-- the list elements contain the expected values.
 
 function arrange()
 

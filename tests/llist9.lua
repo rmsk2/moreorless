@@ -1,5 +1,8 @@
 require (test_dir.."tools")
 
+-- This test verifies that list.destroy frees all previously allocated memory. For this a list
+-- containing three elements is created and then deleted by a call to list.destroy. The Lua
+-- part verifies that all memory has been freed.
 
 function arrange()
 
