@@ -15,6 +15,7 @@ LLEN     .word $FFFF               ; 13
 .include "setup.asm"
 .include "arith16.asm"
 .include "memory.asm"
+.include "search.asm"
 .include "line.asm"
 .include "linked_list.asm"
 

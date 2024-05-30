@@ -25,7 +25,7 @@ FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
 LINES_TXT    .text " Lines | "
 OF_TEXT .text " of "
-BLOCK_FREE_TXT    .text " KB free |"
+BLOCK_FREE_TXT    .text " KB free | "
 TXT_RAM_EXPANSION .text "RAM expansion: "
 FOUND_TXT .text "Present | "
 NOT_FOUND_TXT .text "NOT Present | "
@@ -33,6 +33,8 @@ ENTER_FILE_TXT .text "File (enter to reset): "
 LOADING_FILE_TXT .text "Loading file ... "
 ENTER_DRIVE .text "Enter drive number (0, 1 or 2): "
 ENTER_NEW_LINE .text "Goto Line: "
+ENTER_SRCH_STR .text "Search string: "
+SRCH_TEXT .text "SRCH"
 
 FILE_ALLOWED .text "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./:#+~()!&@[]"
 
@@ -48,6 +50,10 @@ CRSR_RIGHT = $06
 PAGE_DOWN = $62
 GOTO_LINE = $67
 PAGE_UP = $20
+SET_SEARCH = 47
+UNSET_SEARCH = 117
+SEARCH_DOWN = 115
+SEARCH_UP = 83
 
 main
     jsr setup.mmu
@@ -135,11 +141,28 @@ _checkPgDown
     rts
 _checkPgUp
     cmp #PAGE_DOWN
-    bne _checkGotoLine
+    bne _checkSetSearch
     jsr pageUp
     jsr printScreen
     sec
     rts
+_checkSetSearch
+    cmp #SET_SEARCH
+    bne _checkUnsetSearch
+    jsr setSearchString
+    sec
+    rts
+_checkUnsetSearch
+    cmp #UNSET_SEARCH
+    bne _checkGotoLine
+    lda #BOOL_FALSE
+    sta editor.STATE.searchPatternSet
+    jsr toProg
+    jsr printFixedProgData
+    jsr progUpdateInt
+    jsr toData
+    sec
+    rts    
 _checkGotoLine
     cmp #GOTO_LINE
     bne _checkF3
@@ -300,6 +323,64 @@ _endReached
 _end
     jsr updateProgData
     rts
+
+
+setSearchString
+    jsr toProg
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString BLANKS_80, len(CURRENT_LINE) + 5
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString ENTER_SRCH_STR, len(ENTER_SRCH_STR)
+
+    #inputStringNonBlocking SEARCH_BUFFER, 64, FILE_ALLOWED, len(FILE_ALLOWED)
+    #load16BitImmediate processSearchString, keyrepeat.FOCUS_VECTOR
+    rts
+
+
+processSearchString
+    jsr txtio.getStringFocusFunc
+    bcc _procEnd
+    jmp _notDone
+_procEnd
+    sta SEARCH_BUFFER.len
+    jsr txtio.cursorOn
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    lda CURSOR_STATE.scrollOn
+    pha
+    stz CURSOR_STATE.scrollOn
+    #printString BLANKS_80, len(BLANKS_80)
+    pla
+    sta CURSOR_STATE.scrollOn
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString CURRENT_LINE, len(CURRENT_LINE)
+
+    lda #BOOL_TRUE
+    sta editor.STATE.searchPatternSet
+    jsr printFixedProgData
+    jsr toData
+_done
+    jsr updateProgData
+    #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
+_notDone
+    sec    
+    rts 
+
 
 
 LINE_NUMBER .text "     "
@@ -532,6 +613,10 @@ _goOn
 
     #printString BLOCK_FREE_TXT, len(BLOCK_FREE_TXT)
 
+    lda editor.STATE.searchPatternSet
+    beq _noPattern
+    #printString SRCH_TEXT, len(SRCH_TEXT)
+_noPattern
     jsr txtio.reverseColor
 
     stz CURSOR_STATE.xPos

@@ -11,6 +11,7 @@ STATE    .word memory.MEM_STATE    ; 3
 .include "arith16.asm"
 .include "memory.asm"
 .include "line.asm"
+.include "search.asm"
 .include "linked_list.asm"
 
 line_1 .text "this is the middle line and it is longer than the others by quite a bit. it still does not stop. it goes on and on and on ..."

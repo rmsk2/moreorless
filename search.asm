@@ -6,8 +6,10 @@ MAX_CHARS_TO_CONSIDER = 80
 START_POS .byte 0
 ; searches whether the text in SEARCH_BUFFER appears in LINE_BUFFER. This routine
 ; uses only simple optimizations. Maybe I will implement the Knuth Morris Pratt
-; algorithm if this turns out to be too slow. Carry is set if the search pattern
-; can be found in the line.
+; algorithm if this turns out to be too slow. On the other hand I don't know whether
+; the asymptotic advantage of that algorithm really comes into play in this case.
+;
+; Carry is set if the search pattern can be found in the line.
 searchText
     ldx #0
     ldy #0

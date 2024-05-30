@@ -1,0 +1,5 @@
+{
+    "Name": "Linked list: Search string",
+    "TestDriverSource": "lsearch1.asm",
+    "TestScript": "lsearch1.lua"
+}

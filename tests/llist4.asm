@@ -12,6 +12,7 @@ PTR1     .dstruct FarPtr_t         ; 5
 .include "arith16.asm"
 .include "memory.asm"
 .include "line.asm"
+.include "search.asm"
 .include "linked_list.asm"
 
 line_1 .text "This is line 1"

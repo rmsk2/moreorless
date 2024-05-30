@@ -697,6 +697,55 @@ _done
     rts
 
 
+SearchParam_t .struct 
+    searchDown .byte BOOL_TRUE
+    callback   .word 0
+    bkpPtr     .dstruct FarPtr_t
+.endstruct
+
+SEARCH_PARAMS .dstruct SearchParam_t
+
+dummyCallback
+    rts
+
+; PUBLIC: Searches for a given string in the specified direction. The string to search
+; is assumed to be in line.SEARCH_BUFFER.
+;
+; carry is set if string was found. If nothing was found LIST.current is reset to the
+; original value.
+searchStr
+    stx SEARCH_PARAMS.callback
+    sta SEARCH_PARAMS.callback + 1
+    sty SEARCH_PARAMS.searchDown
+    ; save current position in list
+    #copyMem2Mem LIST.current, SEARCH_PARAMS.bkpPtr
+    ; check whether the callback is valid and if it is not set a dummy callback
+    #cmp16BitImmediate 0, SEARCH_PARAMS.callback
+    bne _loop
+    #load16BitImmediate dummyCallback, SEARCH_PARAMS.callback
+_loop
+    ; move into desired direction
+    lda SEARCH_PARAMS.searchDown
+    bne _down
+    jsr prev
+    bra _skip
+_down
+    jsr next
+_skip
+    bcs _notFound
+    ; signal that we have moved the current position
+    jsr SEARCH_PARAMS.callback
+    jsr readCurrentLine
+    jsr search.searchText
+    bcc _loop
+    rts
+_notFound
+    ; restore original position if nothing was found
+    #copyMem2Mem SEARCH_PARAMS.bkpPtr, LIST.current
+    clc
+    rts
+
+
 ; PUBLIC: Free all memory used by the list
 destroy
     jsr rewind

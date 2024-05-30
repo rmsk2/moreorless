@@ -15,6 +15,8 @@ test_table = {
     {"test", "test: hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschaut", true},
     {"egal78986", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschaut ist es ein test", false},
     {"test1234", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinsctest1234", true},
+    -- line longer than search string
+    {"test1234", "test", false},
 }
 
 addr_search = de_ref(load_address + 3)

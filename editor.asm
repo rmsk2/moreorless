@@ -1,8 +1,9 @@
 EditState_t .struct 
-    curLine      .word 0
-    curCol       .byte 0
-    col          .byte $12
-    colReversed  .byte $21
+    curLine          .word 0
+    searchPatternSet .byte BOOL_FALSE
+    curCol           .byte 0
+    col              .byte $12
+    colReversed      .byte $21
     ptrScratch   .dstruct FarPtr_t
 .endstruct
 
@@ -74,6 +75,8 @@ init
     sta STATE.col
     lda #$21
     sta STATE.colReversed
+    lda #BOOL_FALSE
+    sta STATE.searchPatternSet
     rts
 
 .endnamespace

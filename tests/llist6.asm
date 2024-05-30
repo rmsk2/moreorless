@@ -16,6 +16,7 @@ CURRENT_PTR .dstruct FarPtr_t         ; 15
 .include "arith16.asm"
 .include "memory.asm"
 .include "line.asm"
+.include "search.asm"
 .include "linked_list.asm"
 
 line_1 .text "this is the middle line and it is longer than the others by quite a bit"

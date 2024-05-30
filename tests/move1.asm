@@ -16,6 +16,7 @@ HEAD          .dstruct FarPtr_t         ; 13
 .include "arith16.asm"
 .include "memory.asm"
 .include "line.asm"
+.include "search.asm"
 .include "linked_list.asm"
 
 
