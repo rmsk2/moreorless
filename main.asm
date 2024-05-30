@@ -14,6 +14,7 @@ jmp main
 .include "memory.asm"
 .include "linked_list.asm"
 .include "line.asm"
+.include "search.asm"
 .include "editor.asm"
 .include "diskio.asm"
 .include "io_help.asm"

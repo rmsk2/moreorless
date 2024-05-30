@@ -1,0 +1,5 @@
+{
+    "Name": "Test string search in lines",
+    "TestDriverSource": "search1.asm",
+    "TestScript": "search1.lua"
+}

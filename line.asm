@@ -23,6 +23,7 @@ LineBuffer_t .struct
 .endstruct
 
 LINE_BUFFER .dstruct LineBuffer_t 
+SEARCH_BUFFER .dstruct LineBuffer_t
 
 line .namespace
 
