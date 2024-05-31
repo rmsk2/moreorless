@@ -296,7 +296,7 @@ signalStartSearch
     rts
 
 
-singalEndSearch
+signalEndSearch
     #saveIoState
     #toTxtMatrix
     lda #$20
@@ -322,7 +322,7 @@ _updateView
     jsr printScreen
     jsr updateProgData    
 _done
-    jsr singalEndSearch
+    jsr signalEndSearch
     rts
 
 
@@ -342,7 +342,7 @@ _updateView
     jsr printScreen
     jsr updateProgData    
 _done
-    jsr singalEndSearch
+    jsr signalEndSearch
     rts
 
 
@@ -421,7 +421,7 @@ setSearchString
     jsr txtio.cursorSet
     #printString ENTER_SRCH_STR, len(ENTER_SRCH_STR)
 
-    #inputStringNonBlocking SEARCH_BUFFER, 64, FILE_ALLOWED, len(FILE_ALLOWED)
+    #inputStringNonBlocking SEARCH_BUFFER, 64, FILE_ALLOWED + 26, len(FILE_ALLOWED) - 26
     #load16BitImmediate processSearchString, keyrepeat.FOCUS_VECTOR
     rts
 

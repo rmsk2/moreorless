@@ -25,8 +25,17 @@ _compare
     ; remove this when side scrolling works
     cpy #MAX_CHARS_TO_CONSIDER
     beq _notFound
-    lda SEARCH_BUFFER, x
-    cmp LINE_BUFFER, y
+    ; convert uppercase letters to lowercase
+    lda LINE_BUFFER, y
+    cmp #$5b
+    bcs _doComp
+    cmp #$41
+    bcc _doComp
+    ; we have an uppercase letter => convert it to lower case
+    clc
+    adc #32    
+_doComp
+    cmp SEARCH_BUFFER, x
     beq _next
     ldx #0
     inc START_POS

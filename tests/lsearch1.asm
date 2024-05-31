@@ -34,9 +34,11 @@ LEN_ARRAY .byte len(line_2), len(line_3), len(line_4), len(line_5), len(line_6),
 LINE_COUNT .byte 0
 
 
+
 countCallback
     inc CALL_COUNT
     rts
+
 
 main
     jsr setup.mmu
@@ -51,6 +53,7 @@ _l1
     #memCopy line_1, LINE_BUFFER.buffer, len(line_1)
     lda #len(line_1)
     sta LINE_BUFFER.len
+    jsr line.toLower
     jsr list.setCurrentLine
     bcc _addLines
     jmp _doneError
@@ -78,9 +81,10 @@ _continueAdding
     sta memory.MEM_CPY.length
     stz memory.MEM_CPY.length + 1
     jsr memory.memCpy
+    #CALL_X_PROT line.toLower
     #CALL_X_PROT list.insertAfter
     bcs _doneError
-    #CALL_X_PROT list.next
+    #CALL_X_PROT list.next    
     #CALL_X_PROT list.setCurrentLine
     bcs _doneError
     inx

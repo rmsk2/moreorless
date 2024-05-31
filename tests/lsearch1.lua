@@ -7,11 +7,11 @@ iterations = 0
 
 test_table = {
     -- sesarch text, initial pos, search direction, end count, found?
-    {"THIS IS THE FOURTH", 0, down, 3, true},
-    {"LONGER THAN", 6, up, 5, true},
+    {"this is the fourth", 0, down, 3, true},
+    {"longer than", 6, up, 5, true},
     -- this text is beyond the 80 byte mark => it should not be found
-    {"GOES ON AND ON", 6, up, 6, false},    
-    {"7 THIS", 2, down, 4, true},
+    {"goes on and on", 6, up, 6, false},    
+    {"7 this", 2, down, 4, true},
 }
 
 addr_search = de_ref(load_address + 10)

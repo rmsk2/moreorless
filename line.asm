@@ -27,6 +27,26 @@ SEARCH_BUFFER .dstruct LineBuffer_t
 
 line .namespace
 
+toLower
+    ldx #0
+_loop    
+    cpx LINE_BUFFER.len
+    beq _done
+    lda LINE_BUFFER.buffer, x
+    cmp #$5b
+    bcs _next
+    cmp #$41
+    bcc _next
+    ; we have an uppercase letter => convert it to lower case
+    clc
+    adc #32
+    sta LINE_BUFFER.buffer, x
+_next
+    inx
+    bra _loop
+_done
+    rts
+
 
 init_module
     lda #0
