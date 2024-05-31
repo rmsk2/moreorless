@@ -36,7 +36,7 @@ ENTER_NEW_LINE .text "Goto Line: "
 ENTER_SRCH_STR .text "Search string: "
 SRCH_TEXT .text "SRCH"
 
-FILE_ALLOWED .text "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-./:#+~()!&@[]"
+FILE_ALLOWED .text "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 0123456789_-./:#+~()!&@[]"
 
 CRLF = $0D
 KEY_EXIT = $71
@@ -148,10 +148,22 @@ _checkPgUp
     rts
 _checkSetSearch
     cmp #SET_SEARCH
-    bne _checkUnsetSearch
+    bne _checkSearchDown
     jsr setSearchString
     sec
     rts
+_checkSearchDown
+    cmp #SEARCH_DOWN
+    bne _checkSearchUp
+    jsr searchDown
+    sec
+    rts
+_checkSearchUp
+    cmp #SEARCH_UP
+    bne _checkUnsetSearch
+    jsr searchUp
+    sec
+    rts    
 _checkUnsetSearch
     cmp #UNSET_SEARCH
     bne _checkGotoLine
@@ -262,6 +274,75 @@ procCrsrDown
     #printLineBuffer
     jsr txtio.leftMost    
 _alreadyBottom
+    rts
+
+
+callbackUp
+    #dec16Bit editor.STATE.curLine
+    rts
+
+
+callbackDown
+    #inc16Bit editor.STATE.curLine
+    rts
+
+
+signalStartSearch
+    #saveIoState
+    #toTxtMatrix
+    lda #$2a
+    sta $C000
+    #restoreIoState
+    rts
+
+
+singalEndSearch
+    #saveIoState
+    #toTxtMatrix
+    lda #$20
+    sta $C000
+    #restoreIoState
+    rts
+
+
+SEARCH_LINE_TEMP .word 0
+searchUp
+    lda editor.STATE.searchPatternSet
+    beq _done
+    #move16Bit editor.STATE.curLine, SEARCH_LINE_TEMP
+    jsr signalStartSearch
+    ldx #<callbackUp
+    lda #>callbackUp
+    ldy #BOOL_FALSE
+    jsr list.searchStr
+    bcs _updateView
+    #move16Bit SEARCH_LINE_TEMP, editor.STATE.curLine
+    bra _done
+_updateView
+    jsr printScreen
+    jsr updateProgData    
+_done
+    jsr singalEndSearch
+    rts
+
+
+searchDown
+    lda editor.STATE.searchPatternSet
+    beq _done
+    #move16Bit editor.STATE.curLine, SEARCH_LINE_TEMP
+    jsr signalStartSearch
+    ldx #<callbackDown
+    lda #>callbackDown
+    ldy #BOOL_TRUE
+    jsr list.searchStr
+    bcs _updateView
+    #move16Bit SEARCH_LINE_TEMP, editor.STATE.curLine
+    bra _done
+_updateView
+    jsr printScreen
+    jsr updateProgData    
+_done
+    jsr singalEndSearch
     rts
 
 
