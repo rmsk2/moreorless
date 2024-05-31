@@ -20,7 +20,7 @@ jmp main
 .include "io_help.asm"
 .include "conv.asm"
 
-PROG_NAME .text "MOREORLESS v1.1"
+PROG_NAME .text "MOREORLESS v1.2"
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
 LINES_TXT    .text " Lines | "
