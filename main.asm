@@ -20,7 +20,8 @@ jmp main
 .include "io_help.asm"
 .include "conv.asm"
 
-PROG_NAME .text "MOREORLESS v1.2"
+PROG_NAME .text "MOREORLESS 1.2.1"
+SPACER .text " - "
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
 LINES_TXT    .text " Lines | "
@@ -643,17 +644,41 @@ BLANKS_80 .text "                                                               
 CURRENT_LINE .text "Current line: "
 INFO_LINE .byte 0
 BLOCK_FREE .word 0
+FIXED_TEMP .byte 0
 printFixedProgData
     jsr txtio.home
     jsr txtio.reverseColor
     #printString BLANKS_80, len(BLANKS_80)
+    lda #1
+    sta INFO_LINE
 
-    stz CURSOR_STATE.yPos
+    lda #len(PROG_NAME) + len(SPACER)
+    clc
+    adc TXT_FILE.nameLen
+    cmp #79
+    bcs _progNameOnly
+    sta FIXED_TEMP
+    sec
+    lda #78
+    sbc FIXED_TEMP
+    lsr
+    clc
+    adc #2
+    bra _centered
+    ; program name and file name together do not fit in a line
+_progNameOnly
     lda #33
+    stz INFO_LINE
+_centered    
     sta CURSOR_STATE.xPos
+    stz CURSOR_STATE.yPos
     jsr txtio.cursorSet
     #printString PROG_NAME, len(PROG_NAME)
-
+    lda INFO_LINE
+    beq _noFileName
+    #printString SPACER, len(SPACER)
+    #printStringLenMem FILE_NAME, TXT_FILE.nameLen
+_noFileName
     stz CURSOR_STATE.xPos
     sec
     lda CURSOR_STATE.yMax
