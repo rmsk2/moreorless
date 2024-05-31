@@ -16,6 +16,8 @@ test_table = {
     {4, 0, 0xFE, 0xFF, "3", false},
     -- offset +32767
     {4, 0, 0xFF, 0x7F, "7", true},
+    -- start and offset are zero
+    {0, 0, 0, 0, "1", false},
 }
 
 

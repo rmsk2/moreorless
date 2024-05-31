@@ -372,6 +372,12 @@ _procEnd
 
     lda #BOOL_TRUE
     sta editor.STATE.searchPatternSet
+
+    lda SEARCH_BUFFER.len
+    bne _patternSet
+    lda #BOOL_FALSE
+    sta editor.STATE.searchPatternSet
+_patternSet
     jsr printFixedProgData
     jsr toData
 _done

@@ -705,6 +705,10 @@ SearchParam_t .struct
 
 SEARCH_PARAMS .dstruct SearchParam_t
 
+searchCallback
+    jmp (SEARCH_PARAMS.callback)
+
+
 dummyCallback
     rts
 
@@ -734,7 +738,7 @@ _down
 _skip
     bcs _notFound
     ; signal that we have moved the current position
-    jsr SEARCH_PARAMS.callback
+    jsr searchCallback
     jsr readCurrentLine
     jsr search.searchText
     bcc _loop

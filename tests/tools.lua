@@ -64,6 +64,12 @@ function contains_flag(f)
 end
 
 
+function get_long_addr(start)
+    local offset = (read_byte(start) + 1 * 256 + read_byte(start)) - PAGE_WINDOW
+    return (read_byte(start+ 2) * PAGE_SIZE) + offset
+
+end
+
 function seg_2_linear(lo, hi, page)
     local offset = (hi * 256 + lo) - PAGE_WINDOW
     return (page * PAGE_SIZE) + offset

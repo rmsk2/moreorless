@@ -89,10 +89,11 @@ _continueAdding
     ; do search
 _doneAdding
     jsr list.rewind
-    ; move to start pos for search
+    ; move to defined start pos for search
     ldx SEARCH_START
-    lda #0
+    lda SEARCH_START + 1
     jsr list.move
+    bcs _doneError
     ; save start position
     #copyMem2Mem list.LIST.current, START_POS
     stz CALL_COUNT
