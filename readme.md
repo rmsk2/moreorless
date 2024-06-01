@@ -30,8 +30,9 @@ document. If it is found the line in which it appeared becomes the first line wh
 the search is in progress a `*` is shown in the upper left corner of the screen.
 
 In essence the basic navigation commands work in the same way as in the UNIX `less` utlility. 
-`Moreorless` uses a single line feed character as a line delimiter. Carriage return characters are 
-ignored.
+`Moreorless` uses a single line feed (LF) or carriage return (CR) character as a line delimiter. The default 
+is LF but this can be changed at program start to CR. When printing a line carriage return characters are 
+always ignored.
 
 The software auto detects the presence of a RAM expansion cartridge and uses the extra RAM if it is
 determined that such a cartridge is in fact present.
@@ -43,7 +44,7 @@ to be slower with a real keyboard vertical scrolling appears to be slower on the
 # Other limitations
 
 - The maximum line length is 224 characters. Any file with lines longer than that will not be loaded
-- All characters which appear in columns 81 or higher are clipped, i.e. there is no horizontal scrolling
+- All characters which appear in columns 81 or higher are clipped, i.e. there is currently no horizontal scrolling
 - Tab characters are not expanded at the moment
 - Due to the data structure selected (see below) there is quite a bit if memory management overhead, i.e.
 wasted memory. `Moreorless` uses roughly twice as much memory as would be needed to only store the file 
@@ -65,6 +66,18 @@ additional 64 KB (eight 8 KB blocks) available which have been excluded as a res
 When a RAM expansion cartridge is present the memory available to `Moreorless` is increased to 640 KB.
 
 # Remarks
+
+## Viewing SuperBASIC programs
+
+SuperBASIC can cope with either LF or CR as a line ending character and CR seems to be the default. So if you 
+can not load a SuperBASIC program into `moreorless` try to switch to the CR line ending at program start. 
+
+SuperBASICs `list` command performs pretty printing when showing a program. I.e. it for instance automatically
+indents certain parts of the program and does syntax highlighting. `moreorless` will not perform any pretty
+printing when showing a BASIC program. On the other hand it allows you to look at the program in a much more 
+comfortable and you can search in the program's text.
+
+## General
 
 As the data structure which represents the file contents in memory is dynamic this could become a native 
 text editor for the Foenix 256 line of computers. But as Foenix retro systems has announced that the F256K

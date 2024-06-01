@@ -20,7 +20,7 @@ jmp main
 .include "io_help.asm"
 .include "conv.asm"
 
-PROG_NAME .text "MOREORLESS 1.2.2"
+PROG_NAME .text "MOREORLESS 1.3.0"
 SPACER .text " - "
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
@@ -36,6 +36,7 @@ ENTER_DRIVE .text "Enter drive number (0, 1 or 2): "
 ENTER_NEW_LINE .text "Goto Line: "
 ENTER_SRCH_STR .text "Search string: "
 SRCH_TEXT .text "SRCH"
+LINE_END_CHAR_TEXT .text "Line end character (LF is default, press c for CR): "
 
 FILE_ALLOWED .text "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 0123456789_-./:#+~()!&@[]"
 
@@ -72,6 +73,7 @@ main
     jsr txtio.clear
 
     jsr enterDrive
+    jsr enterLineEnding
 
 _restart
     jsr keyrepeat.init
@@ -577,6 +579,24 @@ _endReached
     #load16BitImmediate 1, editor.STATE.curLine
 _end
     jsr updateProgData
+    rts
+
+
+enterLineEnding
+    #printString LINE_END_CHAR_TEXT, len(LINE_END_CHAR_TEXT)
+    jsr waitForKey
+    cmp #99
+    bne _done
+    lda #$0D
+    sta LINE_END_CHAR
+    lda #99
+    bra _out
+_done
+    lda #108
+_out
+    jsr txtio.charOut
+    jsr txtio.newLine
+    jsr txtio.newLine
     rts
 
 

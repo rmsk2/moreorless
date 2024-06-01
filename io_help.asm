@@ -1,5 +1,5 @@
 
-LINE_END_CHAR = $0A
+LINE_END_CHAR .byte $0A
 
 printLineBuffer .macro
     #load16BitImmediate LINE_BUFFER.buffer, TXT_PTR3
@@ -182,7 +182,7 @@ _loop
     cpx DATA_AVAILABLE
     beq _notFound
     lda LINE_BUFFER.buffer, x
-    cmp #LINE_END_CHAR
+    cmp LINE_END_CHAR
     beq _found
     inx 
     bra _loop
