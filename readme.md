@@ -1,7 +1,8 @@
 # Moreorless
 
-This is a text viewer for the Foenix F256 family of modern retro computers. It allows to load a text file
-into RAM and to navigate through it in forwards and backwards direction using the following keys:
+This is a text viewer for the Foenix F256 family of modern retro computers. It allows you to load a text file
+(remark: SuperBASIC programs are also text files) into RAM and to navigate through it in forwards and backwards 
+direction using the following keys:
 
 - `Cursor left` and `right` move the cursor horizontally. Whenever the left or right edge of the screen are
 crossed the current line is increased or decreased. When the cursor crosses the right edge in the bottom 
@@ -75,7 +76,7 @@ can not load a SuperBASIC program into `moreorless` try to switch to the CR line
 SuperBASICs `list` command performs pretty printing when showing a program. I.e. it for instance automatically
 indents certain parts of the program and does syntax highlighting. `moreorless` will not perform any pretty
 printing when showing a BASIC program. On the other hand it allows you to look at the program in a much more 
-comfortable and you can search in the program's text.
+comfortable way and you can search in the program's text.
 
 ## General
 
