@@ -20,7 +20,7 @@ jmp main
 .include "io_help.asm"
 .include "conv.asm"
 
-PROG_NAME .text "MOREORLESS 1.2.1"
+PROG_NAME .text "MOREORLESS 1.2.2"
 SPACER .text " - "
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
@@ -320,13 +320,19 @@ searchUp
     #move16Bit SEARCH_LINE_TEMP, editor.STATE.curLine
     bra _done
 _updateView
+    stx FOUND_POS
     jsr printScreen
     jsr updateProgData    
+    lda #0
+    sta CURSOR_STATE.yPos
+    lda FOUND_POS
+    sta CURSOR_STATE.xPos
+    jsr txtio.cursorSet
 _done
     jsr signalEndSearch
     rts
 
-
+FOUND_POS .byte 0
 searchDown
     lda editor.STATE.searchPatternSet
     beq _done
@@ -340,8 +346,14 @@ searchDown
     #move16Bit SEARCH_LINE_TEMP, editor.STATE.curLine
     bra _done
 _updateView
+    stx FOUND_POS
     jsr printScreen
-    jsr updateProgData    
+    jsr updateProgData
+    lda #0
+    sta CURSOR_STATE.yPos
+    lda FOUND_POS
+    sta CURSOR_STATE.xPos
+    jsr txtio.cursorSet
 _done
     jsr signalEndSearch
     rts

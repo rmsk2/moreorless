@@ -18,8 +18,9 @@ bottom of the screen.
 - Pressing `/` allows you to enter a string to search for in the document. If a non empty string is entered 
 `SRCH` is  shown in the status line. If an empty string is entered the current search string is deleted. In
 contrast to `less` the search is not started immediately. You will have to press `s` or `S` explicitly to 
-search forward or backward in the text file. All searches are case insensitive and the search string is 
-**NOT** printed in reverse if it is found in a line.
+search forward or backward in the text file. All searches are case insensitive and instead of printing the found
+string in reverse the cursor is moved to the start position of the search string in the line. Only the first
+occurance of the search string in that line is marked in such a manner.
 - Pressing `u` unsets or deletes the search string. This also makes `SRCH` disappear
 - Pressing `s` searches for the next occurance of the search string when moving towards the end of the 
 document. If it is found the line in which it appeared becomes the first line which is displayed. While

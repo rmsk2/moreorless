@@ -4,19 +4,19 @@ require(test_dir.."tools")
 
 iterations = 0
 test_table = {
-    -- pattern, line, expected result
-    {"test", "dies ein test ist", true},
-    {"test", "hier gibt es nix zu sehen", false},
+    -- pattern, line, expected result, expected pos
+    {"test", "dies ein test ist", true, 9},
+    {"test", "hier gibt es nix zu sehen", false, -1},
     -- the search string is clipped => will not be found
-    {"test", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschaut ist es ein test", false},
+    {"test", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschaut ist es ein test", false, -1},
     -- search string is at end
-    {"test", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschauttest", true},
+    {"test", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschauttest", true, 76},
     -- search string is at beginning
-    {"test", "test: hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschaut", true},
-    {"egal78986", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschaut ist es ein test", false},
-    {"test1234", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinsctest1234", true},
+    {"test", "test: hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschaut", true, 0},
+    {"egal78986", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschaut ist es ein test", false, -1},
+    {"test1234", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinsctest1234", true, 72},
     -- line longer than search string
-    {"test1234", "test", false},
+    {"test1234", "test", false, -1},
 }
 
 addr_search = de_ref(load_address + 3)
@@ -55,6 +55,12 @@ function assert()
 
     if test_table[iterations][3] ~= carry_state then 
         return false, string.format("Problem searching '%s' in '%s'", test_table[iterations][1], test_table[iterations][2])
+    end
+
+    if test_table[iterations][3] == true then
+        if get_xreg() ~= test_table[iterations][4] then
+            return false, string.format("Wrong position. Wanted %d got %d", test_table[iterations][4], get_xreg())
+        end
     end
 
     return true, ""

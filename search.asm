@@ -9,11 +9,16 @@ START_POS .byte 0
 ; algorithm if this turns out to be too slow. On the other hand I don't know whether
 ; the asymptotic advantage of that algorithm really comes into play in this case.
 ;
-; Carry is set if the search pattern can be found in the line.
+; Carry is set if the search pattern can be found in the line  and x is set to the
+; start position of the searched string.
 searchText
+    lda #0
+searchTextInt
+    ; set accu to the desired start pos if you do not want to start the search at the
+    ; beginning of the line and call searchTextInt
+    sta START_POS
     ldx #0
-    ldy #0
-    stz START_POS
+    tay
 _compare
     ; we have exhausted the search string => we have a match
     cpx SEARCH_BUFFER.len
@@ -46,6 +51,7 @@ _next
     iny
     bra _compare
 _found 
+    ldx START_POS
     sec
     rts
 _notFound

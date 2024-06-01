@@ -16,6 +16,4 @@ LEN        .byte LINE_BUFFER_LEN + 1 ; 7
 
 main
     jsr search.searchText
-    ldx SEARCH_BUFFER.len
-    ldy LINE_BUFFER.len
     brk

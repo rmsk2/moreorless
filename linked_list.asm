@@ -716,7 +716,7 @@ dummyCallback
 ; is assumed to be in line.SEARCH_BUFFER.
 ;
 ; carry is set if string was found. If nothing was found LIST.current is reset to the
-; original value.
+; original value. X register contains the start position that was found.
 searchStr
     stx SEARCH_PARAMS.callback
     sta SEARCH_PARAMS.callback + 1
