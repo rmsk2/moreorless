@@ -82,6 +82,28 @@ setCol .macro col
     sta CURSOR_STATE.col
 .endmacro
 
+
+copyPtrToStruct .macro ptr, mem, len
+    ldy #0
+_loop
+    lda (\ptr), y
+    sta \mem, y
+    iny
+    cpy #\len
+    bne _loop
+.endmacro
+
+
+copyStructToPtr .macro mem, ptr, len
+    ldy #0
+_loop
+    lda \mem, y
+    sta (\ptr), y
+    iny
+    cpy #\len
+    bne _loop   
+.endmacro
+
 ; Take a look at key_repeat_test.asm for an example on how to define a screen segment
 
 cursorState_t .struct 
@@ -114,13 +136,7 @@ txtio .namespace
 ; This routine does not return a value.
 ; --------------------------------------------------
 saveCursorState
-    ldy #0
-_loop
-    lda CURSOR_STATE, y
-    sta (TXT_PTR2), y
-    iny
-    cpy #size(cursorState_t)
-    bne _loop
+    #copyStructToPtr CURSOR_STATE, TXT_PTR2, size(cursorState_t)
     rts
 
 
@@ -150,13 +166,7 @@ _off
 ; This routine does not return a value.
 ; --------------------------------------------------
 restoreCursorState
-    ldy #0
-_loop
-    lda (TXT_PTR1), y
-    sta CURSOR_STATE, y
-    iny
-    cpy #size(cursorState_t)
-    bne _loop
+    #copyPtrToStruct TXT_PTR1, CURSOR_STATE, size(cursorState_t)
     rts
 
 
