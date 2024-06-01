@@ -11,6 +11,7 @@ KeyTracking_t .struct
     keyUpDownCount           .byte 0
     lastKeyPressed           .byte 0
     lastKeyReleased          .byte 0
+    metaState                .byte 0
 .endstruct
 
 
@@ -22,6 +23,17 @@ COOKIE_MEASUREMENT_TIMER = $10
 COOKIE_REPEAT_TIMER = $11
 IMPOSSIBLE_KEY = 0
 
+CTRL_RAW  = 2
+ALT_RAW   = 4
+ALTGR_RAW = 5
+FNX_RAW   = 6
+
+SET_CTRL = %00000001
+SET_ALT  = %00000010
+SET_FNX  = %00000100
+CLR_CTRL = %11111110
+CLR_ALT  = %11111101
+CLR_FNX  = %11111011
 
 init
     stz TRACKING.numMeasureTimersInFlight 
@@ -30,6 +42,7 @@ init
     stz TRACKING.keyUpDownCount
     lda #IMPOSSIBLE_KEY
     sta TRACKING.lastKeyReleased
+    stz TRACKING.metaState
     rts
 
 FOCUS_VECTOR .word dummyCallBack
@@ -107,6 +120,33 @@ handleKeyPressEvent
     lda myEvent.key.raw
     jsr testForFKey
     bcs _handleFKey
+    cmp #CTRL_RAW
+    bne _fnx
+    lda TRACKING.metaState
+    ora #SET_CTRL
+    sta TRACKING.metaState
+    bra _done
+_fnx
+    cmp #FNX_RAW
+    bne _alt1
+    lda TRACKING.metaState
+    ora #SET_FNX
+    sta TRACKING.metaState
+    bra _done
+_alt1
+    cmp #ALT_RAW
+    bne _alt2
+    lda TRACKING.metaState
+    ora #SET_ALT
+    sta TRACKING.metaState
+    bra _done
+_alt2
+    cmp #ALTGR_RAW
+    bne _done
+    lda TRACKING.metaState
+    ora #SET_ALT
+    sta TRACKING.metaState
+_done
     sec                                            ; we did not recognize the key. Make another loop iteration in keyEventLoop
     rts
 _handleFKey
@@ -131,6 +171,33 @@ handleKeyReleaseEvent
     lda myEvent.key.raw
     jsr testForFKey
     bcs _handleFKey
+    cmp #CTRL_RAW
+    bne _fnx
+    lda TRACKING.metaState
+    and #CLR_CTRL
+    sta TRACKING.metaState
+    bra _metaEnd
+_fnx
+    cmp #FNX_RAW
+    bne _alt1
+    lda TRACKING.metaState
+    and #CLR_FNX
+    sta TRACKING.metaState
+    bra _metaEnd
+_alt1
+    cmp #ALT_RAW
+    bne _alt2
+    lda TRACKING.metaState
+    and #CLR_ALT
+    sta TRACKING.metaState
+    bra _metaEnd
+_alt2
+    cmp #ALTGR_RAW
+    bne _metaEnd
+    lda TRACKING.metaState
+    and #CLR_ALT
+    sta TRACKING.metaState
+_metaEnd
     rts
 _handleFKey
     ldx myEvent.key.raw
