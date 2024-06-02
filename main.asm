@@ -202,91 +202,53 @@ _nothing
     sec
     rts
 
+.include "change_pos_ops.asm"
 
-procCrsrRight
-    ; turn scrolling off
-    stz CURSOR_STATE.scrollOn
-    stz txtio.HAS_LINE_CHANGED
-    stz txtio.HAS_SCROLLED
-    jsr txtio.right
-    ; turn scrolling on
-    inc CURSOR_STATE.scrollOn
-    lda txtio.HAS_LINE_CHANGED
-    ; if 0 line has not changed
-    beq _doneRight
-    lda txtio.HAS_SCROLLED
-    ; if not zero we scroll one line down
-    beq _lineDown
-    jmp procCrsrDown
-_lineDown    
-    ; only line change
-    jsr list.next
-    bcs _endReached
-    #inc16Bit editor.STATE.curLine
-    jsr updateProgData
-    bra _doneRight
-_endReached
-    ; go one line up again if end of file was reached
-    dec CURSOR_STATE.yPos
+FOUND_POS .byte 0
+searchBoth
+    lda editor.STATE.searchPatternSet
+    beq _done
+    phy
+    jsr signalStartSearch
+    ply
+    jsr searchOffset
+    bcc _done
+    stx FOUND_POS
+    jsr printScreen
+    jsr updateProgData    
+    lda #0
+    sta CURSOR_STATE.yPos
+    lda FOUND_POS
+    sta CURSOR_STATE.xPos
     jsr txtio.cursorSet
-_doneRight
+_done
+    jsr signalEndSearch
     rts
 
 
-procCrsrLeft
-    stz txtio.HAS_LINE_CHANGED
-    jsr txtio.left
-    lda txtio.HAS_LINE_CHANGED
-    beq _doneLeft
-    jsr list.prev
-    bcs _doneLeft
-    #dec16Bit editor.STATE.curLine
+searchUp
+    ldy #BOOL_FALSE
+    jmp searchBoth
+
+searchDown
+    ldy #BOOL_TRUE
+    jmp searchBoth
+
+
+MINUS_YMAX .word 0
+pageUp
+    #move16Bit MINUS_YMAX, MOVE_OFFSET
+    jsr moveOffset
     jsr updateProgData
-_doneLeft
     rts
 
 
-procCrsrUp
-    jsr list.prev
-    bcs _alreadyTop    
-    #dec16Bit editor.STATE.curLine
+pageDown
+    lda CURSOR_STATE.yMax
+    sta MOVE_OFFSET
+    stz MOVE_OFFSET + 1
+    jsr moveOffset
     jsr updateProgData
-    stz txtio.HAS_SCROLLED
-    jsr txtio.up
-    lda txtio.HAS_SCROLLED
-    beq _alreadyTop
-    jsr list.readCurrentLine
-    jsr txtio.leftMost
-    #printLineBuffer
-    jsr txtio.leftMost    
-_alreadyTop  
-    rts
-
-
-procCrsrDown
-    jsr list.next
-    bcs _alreadyBottom    
-    #inc16Bit editor.STATE.curLine
-    jsr updateProgData
-    stz txtio.HAS_SCROLLED
-    jsr txtio.down    
-    lda txtio.HAS_SCROLLED
-    beq _alreadyBottom
-    jsr list.readCurrentLine
-    jsr txtio.leftMost
-    #printLineBuffer
-    jsr txtio.leftMost    
-_alreadyBottom
-    rts
-
-
-callbackUp
-    #dec16Bit editor.STATE.curLine
-    rts
-
-
-callbackDown
-    #inc16Bit editor.STATE.curLine
     rts
 
 
@@ -305,119 +267,6 @@ signalEndSearch
     lda #$20
     sta $C000
     #restoreIoState
-    rts
-
-
-SEARCH_LINE_TEMP .word 0
-searchUp
-    lda editor.STATE.searchPatternSet
-    beq _done
-    #move16Bit editor.STATE.curLine, SEARCH_LINE_TEMP
-    jsr signalStartSearch
-    ldx #<callbackUp
-    lda #>callbackUp
-    ldy #BOOL_FALSE
-    jsr list.searchStr
-    bcs _updateView
-    #move16Bit SEARCH_LINE_TEMP, editor.STATE.curLine
-    bra _done
-_updateView
-    stx FOUND_POS
-    jsr printScreen
-    jsr updateProgData    
-    lda #0
-    sta CURSOR_STATE.yPos
-    lda FOUND_POS
-    sta CURSOR_STATE.xPos
-    jsr txtio.cursorSet
-_done
-    jsr signalEndSearch
-    rts
-
-FOUND_POS .byte 0
-searchDown
-    lda editor.STATE.searchPatternSet
-    beq _done
-    #move16Bit editor.STATE.curLine, SEARCH_LINE_TEMP
-    jsr signalStartSearch
-    ldx #<callbackDown
-    lda #>callbackDown
-    ldy #BOOL_TRUE
-    jsr list.searchStr
-    bcs _updateView
-    #move16Bit SEARCH_LINE_TEMP, editor.STATE.curLine
-    bra _done
-_updateView
-    stx FOUND_POS
-    jsr printScreen
-    jsr updateProgData
-    lda #0
-    sta CURSOR_STATE.yPos
-    lda FOUND_POS
-    sta CURSOR_STATE.xPos
-    jsr txtio.cursorSet
-_done
-    jsr signalEndSearch
-    rts
-
-
-start80x30
-    jsr list.rewind
-    #load16BitImmediate 1, editor.STATE.curLine
-    jsr setup80x30
-    jsr txtio.setMode80x30
-    jsr txtio.cursorOn
-    jsr printScreen
-    jsr updateProgData
-    rts
-
-
-start80x60
-    jsr list.rewind
-    #load16BitImmediate 1, editor.STATE.curLine
-    jsr setup80x60
-    jsr txtio.setMode80x60
-    jsr txtio.cursorOn
-    jsr printScreen
-    jsr updateProgData
-    rts
-
-
-printScreen
-    stz LINE_COUNT
-    jsr txtio.clear
-    jsr txtio.home
-    #copyMem2Mem list.LIST.current, editor.STATE.ptrScratch
-    stz CURSOR_STATE.scrollOn
-_loopLines
-    jsr list.readCurrentLine    
-    #printLineBuffer
-    jsr txtio.newLine
-    jsr list.next
-    bcs _done
-    inc LINE_COUNT
-    lda LINE_COUNT
-    cmp CURSOR_STATE.yMax
-    bne _loopLines
-    jsr list.prev
-_done
-    inc CURSOR_STATE.scrollOn
-    jsr txtio.home
-    #copyMem2Mem editor.STATE.ptrScratch, list.LIST.current
-    rts
-
-
-pageDown
-    ldx CURSOR_STATE.yMax
-    lda #0
-    jsr list.move
-    bcs _endReached
-    #add16BitByte CURSOR_STATE.yMax, editor.STATE.curLine
-    bra _end
-_endReached
-    #move16Bit list.LIST.length, editor.STATE.curLine
-_end
-    jsr updateProgData
     rts
 
 
@@ -484,7 +333,6 @@ _notDone
     rts 
 
 
-
 LINE_NUMBER .text "     "
 LINE_LEN .byte 0
 gotoLine
@@ -507,7 +355,6 @@ gotoLine
     rts
 
 
-TEMP2 .word 0
 processLineNumberEntry
     jsr txtio.getStringFocusFunc
     bcc _procEnd
@@ -543,21 +390,9 @@ _procEnd
     beq _isAllowed
     bcs _done
 _isAllowed
-    #move16Bit conv.ATOW, TEMP2
-    #sub16Bit editor.STATE.curLine, TEMP2
-    ldx TEMP2
-    lda TEMP2 + 1
-    jsr list.move
-    bcs _atEnd
-    #add16Bit TEMP2, editor.STATE.curLine
-    bra _done
-_atEnd
-    lda TEMP2 + 1
-    bpl _forward
-    #load16BitImmediate 1, editor.STATE.curLine
-    bra _done
-_forward
-    #move16Bit list.LIST.length, editor.STATE.curLine
+    #move16Bit conv.ATOW, MOVE_OFFSET
+    #sub16Bit editor.STATE.curLine, MOVE_OFFSET
+    jsr moveOffset
 _done
     jsr updateProgData
     jsr printScreen
@@ -565,21 +400,6 @@ _done
 _notDone
     sec    
     rts 
-
-
-MINUS_YMAX .word 0
-pageUp
-    ldx MINUS_YMAX
-    lda MINUS_YMAX + 1
-    jsr list.move
-    bcs _endReached
-    #add16Bit MINUS_YMAX, editor.STATE.curLine
-    bra _end
-_endReached
-    #load16BitImmediate 1, editor.STATE.curLine
-_end
-    jsr updateProgData
-    rts
 
 
 enterLineEnding
