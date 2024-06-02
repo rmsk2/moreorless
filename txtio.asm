@@ -1,7 +1,9 @@
 CURSOR_X = $D014
 CURSOR_Y = $D016
 CARRIAGE_RETURN = 13
+LINE_FEED = 10
 BACK_SPACE = 8
+CR_STANDIN = $FD
 ; Change to $DE04 when building for a F256 Jr. Rev B using factory settings
 MUL_RES_CO_PROC = $DE10
 
@@ -928,14 +930,15 @@ _printLoop
     cpy PRINT_STR.out_len
     beq _done
     lda (TXT_PTR3), y
-    cmp #CARRIAGE_RETURN
-    ; ignore CR/LF
-    beq _nextChar
+    cmp ALT_LINE_END_CHAR
+    ; ignore CR
+    bne _print
+    lda #CR_STANDIN
+_print
     jsr charOut
     ; Check if last character caused a wrap around
     lda CURSOR_STATE.xPos
     beq _doClip
-_nextChar
     iny
     bra _printLoop 
 _doClip

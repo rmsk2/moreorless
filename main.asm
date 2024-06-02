@@ -20,8 +20,9 @@ jmp main
 .include "io_help.asm"
 .include "conv.asm"
 
-PROG_NAME .text "MOREORLESS 1.3.0"
-SPACER .text ", Col "
+PROG_NAME .text "MOREORLESS 1.4.0"
+SPACER_COL .text ", Col "
+SPACER .text " - "
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
 LINES_TXT    .text " Lines | "
@@ -409,6 +410,8 @@ enterLineEnding
     bne _done
     lda #$0D
     sta LINE_END_CHAR
+    lda #$0A
+    sta ALT_LINE_END_CHAR
     lda #99
     bra _out
 _done
@@ -614,7 +617,7 @@ progUpdateInt
     jsr txtio.cursorSet
     #move16Bit editor.STATE.curLine, txtio.WORD_TEMP
     jsr txtio.printWordDecimal
-    #printString SPACER, len(SPACER)
+    #printString SPACER_COL, len(SPACER_COL)
     lda DATA_CURSOR
     ina
     sta txtio.WORD_TEMP

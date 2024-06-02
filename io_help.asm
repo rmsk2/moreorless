@@ -1,5 +1,6 @@
 
 LINE_END_CHAR .byte $0A
+ALT_LINE_END_CHAR .byte $0D
 
 printLineBuffer .macro
     #load16BitImmediate LINE_BUFFER.buffer, TXT_PTR3
