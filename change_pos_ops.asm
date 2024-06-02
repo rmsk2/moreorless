@@ -16,8 +16,7 @@ procCrsrRight2
     jsr list.next
     bcs _endReached
     #inc16Bit editor.STATE.curLine
-    jsr updateProgData
-    jsr txtio.right
+    jsr txtio.right    
     bra _endReached
 _bottomRight
     ; Case 1.2: We are in the last column and in the last row => we are at the bottom right corner
@@ -42,14 +41,14 @@ _lineEndReached
     ; Case 2.2.1 We are the end of a line which is not the last line
     jsr list.next
     bcs _endReached
-    #inc16Bit editor.STATE.curLine
-    jsr updateProgData
+    #inc16Bit editor.STATE.curLine    
     jsr txtio.newLine
     bra _endReached
 _logicalBottomRight
     ; Case 2.2.2 We are at the end of the last line an are in the last row
     jmp _bottomRight
 _endReached
+    jsr updateProgData
     lda CURSOR_STATE.xPos
     sta editor.STATE.navigateCol
     rts
@@ -69,11 +68,17 @@ _leftEnd
     ; we are not at the first line 
     jsr procCrsrUp2
     jsr list.getLineLength
+    cmp CURSOR_STATE.xMax
+    bcc _lineLenOK
+    lda CURSOR_STATE.xMax
+    dea
+_lineLenOK
     sta CURSOR_STATE.xPos
     jsr txtio.cursorSet
 _done
     lda CURSOR_STATE.xPos
     sta editor.STATE.navigateCol
+    jsr updateProgData
     rts
 
 
@@ -102,7 +107,6 @@ procCrsrUp2
     jsr list.prev                                 ; carry can not be set
     #dec16Bit editor.STATE.curLine
     jsr list.readCurrentLine
-    jsr updateProgData    
     lda CURSOR_STATE.yPos
     sta OLD_YPOS
     jsr txtio.up
@@ -112,9 +116,10 @@ procCrsrUp2
     ; we are at the top line, we have scrolled
     jsr txtio.leftMost
     #printLineBuffer
-_notAtTop    
+_notAtTop
     jsr moveToNavigatePos
 _done
+    jsr updateProgData    
     rts
 
 
@@ -125,8 +130,7 @@ procCrsrDown2
     ; change line
     jsr list.next                                 ; carry can not be set
     #inc16Bit editor.STATE.curLine
-    jsr list.readCurrentLine
-    jsr updateProgData    
+    jsr list.readCurrentLine    
     lda CURSOR_STATE.yPos
     sta OLD_YPOS
     jsr txtio.down
@@ -139,6 +143,7 @@ procCrsrDown2
 _notAtBottom
     jsr moveToNavigatePos
 _done
+    jsr updateProgData
     rts
 
 

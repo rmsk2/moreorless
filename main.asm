@@ -21,7 +21,7 @@ jmp main
 .include "conv.asm"
 
 PROG_NAME .text "MOREORLESS 1.3.0"
-SPACER .text " - "
+SPACER .text ", Col "
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
 DONE_TXT .text $0d, "Done!", $0d
 LINES_TXT    .text " Lines | "
@@ -214,13 +214,13 @@ searchBoth
     jsr searchOffset
     bcc _done
     stx FOUND_POS
-    jsr printScreen
-    jsr updateProgData    
+    jsr printScreen        
     lda #0
     sta CURSOR_STATE.yPos
     lda FOUND_POS
     sta CURSOR_STATE.xPos
     jsr txtio.cursorSet
+    jsr updateProgData
 _done
     jsr signalEndSearch
     rts
@@ -484,8 +484,10 @@ toData
     jsr txtio.switch
     rts
 
-
+DATA_CURSOR .byte 0
 toProg
+    lda CURSOR_STATE.xPos
+    sta DATA_CURSOR
     #load16BitImmediate CURSOR_STATE_DATA, TXT_PTR2
     #load16BitImmediate CURSOR_STATE_PROG, TXT_PTR1
     jsr txtio.switch    
@@ -493,7 +495,7 @@ toProg
 
 
 BLANKS_80 .text "                                                                                "
-CURRENT_LINE .text "Current line: "
+CURRENT_LINE .text "Ln "
 INFO_LINE .byte 0
 BLOCK_FREE .word 0
 FIXED_TEMP .byte 0
@@ -604,13 +606,19 @@ progUpdateInt
     lda CURSOR_STATE.yMaxMinus1
     sta CURSOR_STATE.yPos
     jsr txtio.cursorSet
-    #printString BLANKS_80, 5
+    #printString BLANKS_80, 15
     lda #len(CURRENT_LINE)
     sta CURSOR_STATE.xPos
     lda CURSOR_STATE.yMaxMinus1
     sta CURSOR_STATE.yPos
     jsr txtio.cursorSet
     #move16Bit editor.STATE.curLine, txtio.WORD_TEMP
+    jsr txtio.printWordDecimal
+    #printString SPACER, len(SPACER)
+    lda DATA_CURSOR
+    ina
+    sta txtio.WORD_TEMP
+    stz txtio.WORD_TEMP + 1
     jsr txtio.printWordDecimal
     rts
 
