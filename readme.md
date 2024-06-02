@@ -4,12 +4,8 @@ This is a text viewer for the Foenix F256 family of modern retro computers. It a
 (remark: SuperBASIC programs are also text files) into RAM and to navigate through it in forwards and backwards 
 direction using the following keys:
 
-- `Cursor left` and `right` move the cursor horizontally. Whenever the left or right edge of the screen are
-crossed the current line is increased or decreased. When the cursor crosses the right edge in the bottom 
-line the view scrolls one line up and a new line (if it exists) is exposed.
-- `Cursor up` and `down` move the cursor one line up or down. When the upper or lower edge of the screen
-would be crossed the whole screen is scrolled up or down and a new line is revealed at the top or the 
-bottom of the screen.
+- `Cursor left` and `right` move the cursor horizontally
+- `Cursor up` and `down` move the cursor one line up or down
 - Pressing the `space bar` moves the view one screen towards the end of the file
 - Pressing `b` moves the view one screen towards the beginning of the file
 - Pressing `F1` resets the view to line one in 80x60 text mode
@@ -32,8 +28,8 @@ the search is in progress a `*` is shown in the upper left corner of the screen.
 
 In essence the basic navigation commands work in the same way as in the UNIX `less` utlility. 
 `Moreorless` uses a single line feed (LF) or carriage return (CR) character as a line delimiter. The default 
-is LF but this can be changed at program start to CR. When printing a line carriage return characters are 
-always ignored.
+is LF but this can be changed at program start to CR. If the alternate line ending character is encountered
+in text it is replaced by a diamond shaped character.
 
 The software auto detects the presence of a RAM expansion cartridge and uses the extra RAM if it is
 determined that such a cartridge is in fact present.
