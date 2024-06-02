@@ -446,6 +446,16 @@ _done
     rts
 
 
+; PUBLIC: This routine returns the length of the line which is represented
+; by the current element.
+getLineLength
+    #SET_MMU_ADDR LIST.current
+    #move16Bit LIST.current, PTR_CURRENT
+    ldy #Line_t.len
+    lda (PTR_CURRENT), y
+    rts
+
+
 ; PUBLIC: This routine copies the data of the line to which LIST.current points
 ; to the line buffer. It changes the MMU config.
 readCurrentLine
