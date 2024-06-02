@@ -114,25 +114,25 @@ processKeyEvent
 _checkUp
     cmp #CRSR_UP
     bne _checkDown
-    jsr procCrsrUp
+    jsr procCrsrUp2
     sec
     rts
 _checkDown
     cmp #CRSR_DOWN
     bne _checkLeft
-    jsr procCrsrDown
+    jsr procCrsrDown2
     sec
     rts
 _checkLeft
     cmp #CRSR_LEFT
     bne _checkRight
-    jsr procCrsrLeft
+    jsr procCrsrLeft2
     sec
     rts
 _checkRight
     cmp #CRSR_RIGHT
     bne _checkPgDown
-    jsr procCrsrRight
+    jsr procCrsrRight2
     sec
     rts
 _checkPgDown

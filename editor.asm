@@ -4,7 +4,8 @@ EditState_t .struct
     curCol           .byte 0
     col              .byte $12
     colReversed      .byte $21
-    ptrScratch   .dstruct FarPtr_t
+    ptrScratch       .dstruct FarPtr_t
+    navigateCol      .byte 0
 .endstruct
 
 MAX_FILE_LENGTH = 100
@@ -18,6 +19,7 @@ editor .namespace
 ALREADY_CREATED .byte 1
 
 ; carry is set if loading file failed
+; ToDo: Expand tab characters to four blanks
 loadFile
     jsr list.create
     bcc _created
@@ -77,6 +79,7 @@ init
     sta STATE.colReversed
     lda #BOOL_FALSE
     sta STATE.searchPatternSet
+    stz STATE.navigateCol
     rts
 
 .endnamespace

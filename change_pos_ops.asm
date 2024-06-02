@@ -2,80 +2,143 @@
 ; ********************** stuff that changes the current list position **********************
 ; ******************************************************************************************
 
-procCrsrRight
-    ; turn scrolling off
-    stz CURSOR_STATE.scrollOn
-    stz txtio.HAS_LINE_CHANGED
-    stz txtio.HAS_SCROLLED
-    jsr txtio.right
-    ; turn scrolling on
-    inc CURSOR_STATE.scrollOn
-    lda txtio.HAS_LINE_CHANGED
-    ; if 0 line has not changed
-    beq _doneRight
-    lda txtio.HAS_SCROLLED
-    ; if not zero we scroll one line down
-    beq _lineDown
-    jmp procCrsrDown
-_lineDown    
-    ; only line change
+CHECK_LINE_LEN .byte 0
+procCrsrRight2
+    lda CURSOR_STATE.xPos
+    ina
+    cmp CURSOR_STATE.xMax
+    bcc _notAtRightEnd
+    ;we are at the right end, i.e. in column 79
+    lda CURSOR_STATE.yPos
+    cmp CURSOR_STATE.yMaxMinus1
+    beq _bottomRight
+    ; Case 1.1: We are in the last column but not in the last row
     jsr list.next
     bcs _endReached
     #inc16Bit editor.STATE.curLine
     jsr updateProgData
-    bra _doneRight
-_endReached
-    ; go one line up again if end of file was reached
-    dec CURSOR_STATE.yPos
+    jsr txtio.right
+    bra _endReached
+_bottomRight
+    ; Case 1.2: We are in the last column and in the last row => we are at the bottom right corner
+    ; goto beginning of line    
+    stz CURSOR_STATE.xPos
     jsr txtio.cursorSet
-_doneRight
-    rts
-
-
-procCrsrLeft
-    stz txtio.HAS_LINE_CHANGED
-    jsr txtio.left
-    lda txtio.HAS_LINE_CHANGED
-    beq _doneLeft
-    jsr list.prev
-    bcs _doneLeft
-    #dec16Bit editor.STATE.curLine
-    jsr updateProgData
-_doneLeft
-    rts
-
-
-procCrsrUp
-    jsr list.prev
-    bcs _alreadyTop    
-    #dec16Bit editor.STATE.curLine
-    jsr updateProgData
-    stz txtio.HAS_SCROLLED
-    jsr txtio.up
-    lda txtio.HAS_SCROLLED
-    beq _alreadyTop
-    jsr list.readCurrentLine
-    jsr txtio.leftMost
-    #printLineBuffer
-    jsr txtio.leftMost    
-_alreadyTop  
-    rts
-
-
-procCrsrDown
+    ; scroll down
+    jmp procCrsrDown2
+_notAtRightEnd
+    ; we are at a column < 79
+    sta CHECK_LINE_LEN
+    jsr list.getLineLength
+    cmp CHECK_LINE_LEN
+    bcc _lineEndReached
+    ; Case 2.1 we are not in the last column and we have not reached the right end of the line => we can move to the right
+    jsr txtio.right
+    bra _endReached
+_lineEndReached
+    lda CURSOR_STATE.yPos
+    cmp CURSOR_STATE.yMaxMinus1
+    beq _logicalBottomRight
+    ; Case 2.2.1 We are the end of a line which is not the last line
     jsr list.next
-    bcs _alreadyBottom    
+    bcs _endReached
     #inc16Bit editor.STATE.curLine
     jsr updateProgData
-    stz txtio.HAS_SCROLLED
-    jsr txtio.down    
-    lda txtio.HAS_SCROLLED
-    beq _alreadyBottom
+    jsr txtio.newLine
+    bra _endReached
+_logicalBottomRight
+    ; Case 2.2.2 We are at the end of the last line an are in the last row
+    jmp _bottomRight
+_endReached
+    lda CURSOR_STATE.xPos
+    sta editor.STATE.navigateCol
+    rts
+
+
+procCrsrLeft2
+    lda CURSOR_STATE.xPos
+    beq _leftEnd
+    ; we are somewhere in the line
+    jsr txtio.left
+    bra _done
+_leftEnd
+    ; we are at the left end of a line
+    ; check whether we are in the first line of the document?
+    #cmp16BitImmediate 1, editor.STATE.curLine
+    beq _done
+    ; we are not at the first line 
+    jsr procCrsrUp2
+    jsr list.getLineLength
+    sta CURSOR_STATE.xPos
+    jsr txtio.cursorSet
+_done
+    lda CURSOR_STATE.xPos
+    sta editor.STATE.navigateCol
+    rts
+
+
+moveToNavigatePos
+    lda editor.STATE.navigateCol
+    cmp LINE_BUFFER.len
+    beq _oldPos
+    bcc _oldPos
+    lda LINE_BUFFER.len
+    sta CURSOR_STATE.xPos
+    jsr txtio.cursorSet
+    bra _done
+_oldPos
+    sta CURSOR_STATE.xPos
+    jsr txtio.cursorSet
+_done
+    rts
+
+
+OLD_YPOS .byte 0
+procCrsrUp2
+    #cmp16BitImmediate 1, editor.STATE.curLine
+    beq _done
+    ; we can go up
+    ; change line
+    jsr list.prev                                 ; carry can not be set
+    #dec16Bit editor.STATE.curLine
     jsr list.readCurrentLine
+    jsr updateProgData    
+    lda CURSOR_STATE.yPos
+    sta OLD_YPOS
+    jsr txtio.up
+    ; check whether we have scrolled up
+    lda OLD_YPOS
+    bne _notAtTop
+    ; we are at the top line, we have scrolled
     jsr txtio.leftMost
     #printLineBuffer
-    jsr txtio.leftMost    
-_alreadyBottom
+_notAtTop    
+    jsr moveToNavigatePos
+_done
+    rts
+
+
+procCrsrDown2
+    #cmp16Bit list.LIST.length, editor.STATE.curLine
+    beq _done
+    ; we can move down
+    ; change line
+    jsr list.next                                 ; carry can not be set
+    #inc16Bit editor.STATE.curLine
+    jsr list.readCurrentLine
+    jsr updateProgData    
+    lda CURSOR_STATE.yPos
+    sta OLD_YPOS
+    jsr txtio.down
+    lda OLD_YPOS
+    cmp CURSOR_STATE.yMaxMinus1
+    bne _notAtBottom
+    ; we are at the bottom line, we have scrolled
+    jsr txtio.leftMost
+    #printLineBuffer
+_notAtBottom
+    jsr moveToNavigatePos
+_done
     rts
 
 
@@ -121,10 +184,12 @@ _down
     lda #>callbackDown
 _search
     jsr list.searchStr
-    bcs _done
+    bcs _found
     #move16Bit SEARCH_LINE_TEMP, editor.STATE.curLine
     clc
-_done
+    rts
+_found
+    stx editor.STATE.navigateCol
     rts
 
 
@@ -144,11 +209,12 @@ _loopLines
     lda LINE_COUNT
     cmp CURSOR_STATE.yMax
     bne _loopLines
-    jsr list.prev
 _done
+    #copyMem2Mem editor.STATE.ptrScratch, list.LIST.current
+    jsr list.readCurrentLine
     inc CURSOR_STATE.scrollOn
     jsr txtio.home
-    #copyMem2Mem editor.STATE.ptrScratch, list.LIST.current
+    jsr moveToNavigatePos
     rts
 
 
@@ -158,6 +224,7 @@ start80x30
     jsr setup80x30
     jsr txtio.setMode80x30
     jsr txtio.cursorOn
+    stz editor.STATE.navigateCol
     jsr printScreen
     jsr updateProgData
     rts
@@ -169,6 +236,7 @@ start80x60
     jsr setup80x60
     jsr txtio.setMode80x60
     jsr txtio.cursorOn
+    stz editor.STATE.navigateCol
     jsr printScreen
     jsr updateProgData
     rts
