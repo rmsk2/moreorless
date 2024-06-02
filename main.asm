@@ -287,6 +287,7 @@ setSearchString
     #printString ENTER_SRCH_STR, len(ENTER_SRCH_STR)
 
     #inputStringNonBlocking SEARCH_BUFFER, 64, FILE_ALLOWED + 26, len(FILE_ALLOWED) - 26
+    #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
     #load16BitImmediate processSearchString, keyrepeat.FOCUS_VECTOR
     rts
 
@@ -328,7 +329,7 @@ _patternSet
     jsr toData
 _done
     jsr updateProgData
-    #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
+    #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
 _notDone
     sec    
     rts 
@@ -352,6 +353,7 @@ gotoLine
     #printString ENTER_NEW_LINE, len(ENTER_NEW_LINE)
 
     #inputStringNonBlocking LINE_NUMBER, 5, txtio.PRBYTE.hex_chars, 10
+    #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
     #load16BitImmediate processLineNumberEntry, keyrepeat.FOCUS_VECTOR
     rts
 
@@ -397,7 +399,7 @@ _isAllowed
 _done
     jsr updateProgData
     jsr printScreen
-    #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
+    #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
 _notDone
     sec    
     rts 

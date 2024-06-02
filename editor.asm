@@ -1,11 +1,11 @@
 EditState_t .struct 
     curLine          .word 0
     searchPatternSet .byte BOOL_FALSE
-    curCol           .byte 0
     col              .byte $12
     colReversed      .byte $21
     ptrScratch       .dstruct FarPtr_t
     navigateCol      .byte 0
+    inputVector      .word 0
 .endstruct
 
 MAX_FILE_LENGTH = 100
