@@ -14,7 +14,7 @@ direction using the following keys:
 - Pressing `g` moves you to the line number which was entered after pressing the key
 - Pressing `/` allows you to enter a string to search for in the document. If a non empty string is entered 
 `SRCH` is  shown in the status line. If an empty string is entered the current search string is deleted. If
-a search string was entered `moreorless` will immediately search for it in formward direction. You can press
+a search string was entered `moreorless` will immediately search for it in forward direction. You can press
  `s` or `S` explicitly to search forward or backward for the next occurance. All searches are case insensitive
 and instead of printing the found string in reverse the cursor is moved to the start position of the search 
 string in the line. Only the first occurance of the search string in that line is marked in such a manner.
