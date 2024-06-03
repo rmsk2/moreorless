@@ -20,7 +20,7 @@ jmp main
 .include "io_help.asm"
 .include "conv.asm"
 
-PROG_NAME .text "MOREORLESS 1.4.0"
+PROG_NAME .text "MOREORLESS 1.4.1"
 SPACER_COL .text ", Col "
 SPACER .text " - "
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
@@ -139,15 +139,13 @@ _checkRight
 _checkPgDown
     cmp #PAGE_UP
     bne _checkPgUp
-    jsr pageDown
-    jsr printScreen
+    jsr pageDown    
     sec
     rts
 _checkPgUp
     cmp #PAGE_DOWN
     bne _checkSetSearch
     jsr pageUp
-    jsr printScreen
     sec
     rts
 _checkSetSearch
@@ -171,12 +169,7 @@ _checkSearchUp
 _checkUnsetSearch
     cmp #UNSET_SEARCH
     bne _checkGotoLine
-    lda #BOOL_FALSE
-    sta editor.STATE.searchPatternSet
-    jsr toProg
-    jsr printFixedProgData
-    jsr progUpdateInt
-    jsr toData
+    jsr unsetSearch
     sec
     rts    
 _checkGotoLine
@@ -227,6 +220,16 @@ _done
     rts
 
 
+unsetSearch
+    lda #BOOL_FALSE
+    sta editor.STATE.searchPatternSet
+    jsr toProg
+    jsr printFixedProgData
+    jsr progUpdateInt
+    jsr toData
+    rts
+
+
 searchUp
     ldy #BOOL_FALSE
     jmp searchBoth
@@ -241,6 +244,7 @@ pageUp
     #move16Bit MINUS_YMAX, MOVE_OFFSET
     jsr moveOffset
     jsr updateProgData
+    jsr printScreen
     rts
 
 
@@ -250,6 +254,7 @@ pageDown
     stz MOVE_OFFSET + 1
     jsr moveOffset
     jsr updateProgData
+    jsr printScreen
     rts
 
 
@@ -330,6 +335,7 @@ _patternSet
 _done
     jsr updateProgData
     #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
+    jsr searchDown
 _notDone
     sec    
     rts 
