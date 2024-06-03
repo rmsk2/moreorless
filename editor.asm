@@ -6,6 +6,7 @@ EditState_t .struct
     ptrScratch       .dstruct FarPtr_t
     navigateCol      .byte 0
     inputVector      .word 0
+    dirty            .byte 0
 .endstruct
 
 MAX_FILE_LENGTH = 100
@@ -80,6 +81,7 @@ init
     lda #BOOL_FALSE
     sta STATE.searchPatternSet
     stz STATE.navigateCol
+    stz STATE.dirty
     rts
 
 .endnamespace

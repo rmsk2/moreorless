@@ -20,6 +20,7 @@ Line_t .struct
 LineBuffer_t .struct
     buffer .fill LINE_BUFFER_LEN + 1                 ; make room for line ending character
     len    .byte 0
+    dirty  .byte 0
 .endstruct
 
 LINE_BUFFER .dstruct LineBuffer_t 
@@ -51,6 +52,7 @@ _done
 init_module
     lda #0
     sta LINE_BUFFER.len
+    stz LINE_BUFFER.dirty
     rts
 
 

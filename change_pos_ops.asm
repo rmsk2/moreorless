@@ -38,14 +38,14 @@ _lineEndReached
     lda CURSOR_STATE.yPos
     cmp CURSOR_STATE.yMaxMinus1
     beq _logicalBottomRight
-    ; Case 2.2.1 We are the end of a line which is not the last line
+    ; Case 2.2.1 We are the end of a line which is not the last row
     jsr list.next
     bcs _endReached
     #inc16Bit editor.STATE.curLine    
     jsr txtio.newLine
     bra _endReached
 _logicalBottomRight
-    ; Case 2.2.2 We are at the end of the last line an are in the last row
+    ; Case 2.2.2 We are at the end of the last line and are in the last row
     jmp _bottomRight
 _endReached
     jsr updateProgData
