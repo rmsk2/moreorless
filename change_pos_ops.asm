@@ -177,7 +177,7 @@ callbackDown
 
 
 SEARCH_LINE_TEMP .word 0
-; y contains direction
+; y contains direction, carry is set if something was found
 searchOffset
     #move16Bit editor.STATE.curLine, SEARCH_LINE_TEMP    
     cpy #BOOL_FALSE
@@ -196,6 +196,42 @@ _search
     rts
 _found
     stx editor.STATE.navigateCol
+    rts
+
+
+SearchState_t .struct 
+    orgLine  .word 0
+    orgCol   .byte 0
+    wasFound .byte 0
+.endstruct
+
+SEARCH_STATE .dstruct SearchState_t
+; y contains direction, accu contains start pos in current line
+; carry is set if something was found
+searchFromPos
+    ; save current state
+    #move16Bit editor.STATE.curLine, SEARCH_STATE.orgLine    
+    sta SEARCH_STATE.orgCol
+
+    ; reset flag which records if we have found something in this call
+    stz SEARCH_STATE.wasFound
+
+    ; set callback for counting lines up or down
+    cpy #BOOL_FALSE
+    bne _down
+    ldx #<callbackUp
+    lda #>callbackUp
+    bra _prepareSearch
+_down
+    ldx #<callbackDown
+    lda #>callbackDown
+
+_prepareSearch
+    ; Before implementing editing we can not be sure whether the data in LINE_BUFFER represents 
+    ; the current line so until then we have to load it explicitly.
+    jsr list.readCurrentLine
+
+    
     rts
 
 
