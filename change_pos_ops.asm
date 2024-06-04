@@ -200,7 +200,6 @@ _found
 
 
 SearchState_t .struct 
-    orgLine  .word 0
     startCol   .byte 0
     wasFound .byte 0
 .endstruct
@@ -211,7 +210,7 @@ SEARCH_STATE .dstruct SearchState_t
 searchFromPos
     ; save current state
     sta SEARCH_STATE.startCol
-    #move16Bit editor.STATE.curLine, SEARCH_STATE.orgLine    
+    #move16Bit editor.STATE.curLine, SEARCH_LINE_TEMP
     
     ; reset flag which records if we have found something in this call
     stz SEARCH_STATE.wasFound
