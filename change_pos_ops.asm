@@ -184,11 +184,11 @@ searchOffset
     bne _down
     ldx #<callbackUp
     lda #>callbackUp
-    bra searchNextLine
+    bra _search
 _down
     ldx #<callbackDown
     lda #>callbackDown
-searchNextLine
+_search
     jsr list.searchStr
     bcs _found
     #move16Bit SEARCH_LINE_TEMP, editor.STATE.curLine
@@ -201,7 +201,6 @@ _found
 
 SearchState_t .struct 
     startCol   .byte 0
-    wasFound .byte 0
 .endstruct
 
 SEARCH_STATE .dstruct SearchState_t
@@ -210,27 +209,15 @@ SEARCH_STATE .dstruct SearchState_t
 searchFromPos
     ; save current state
     sta SEARCH_STATE.startCol
-    #move16Bit editor.STATE.curLine, SEARCH_LINE_TEMP
-    
-    ; reset flag which records if we have found something in this call
-    stz SEARCH_STATE.wasFound
-
-    ; set callback for counting lines up or down
-    cpy #BOOL_FALSE
-    bne _down
-    ldx #<callbackUp
-    lda #>callbackUp
-    bra _prepareSearch
-_down
-    ldx #<callbackDown
-    lda #>callbackDown
-
-_prepareSearch
     ; Before implementing editing we can not be sure whether the data in LINE_BUFFER represents 
     ; the current line so until then we have to load it explicitly.
     jsr list.readCurrentLine
-
-
+    lda SEARCH_STATE.startCol
+    jsr search.TextFromPos
+    bcs _done
+    jmp searchOffset
+_done
+    stx editor.STATE.navigateCol
     rts
 
 
