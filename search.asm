@@ -11,9 +11,9 @@ START_POS .byte 0
 ;
 ; Carry is set if the search pattern can be found in the line  and x is set to the
 ; start position of the searched string.
-searchText
+TextFromStart
     lda #0
-searchTextInt
+TextFromPos
     ; set accu to the desired start pos if you do not want to start the search at the
     ; beginning of the line and call searchTextInt
     sta START_POS

@@ -750,7 +750,7 @@ _skip
     ; signal that we have moved the current position
     jsr searchCallback
     jsr readCurrentLine
-    jsr search.searchText
+    jsr search.TextFromStart
     bcc _loop
     rts
 _notFound

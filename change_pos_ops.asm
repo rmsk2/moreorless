@@ -177,6 +177,7 @@ callbackDown
 
 
 SEARCH_LINE_TEMP .word 0
+; y contains direction
 searchOffset
     #move16Bit editor.STATE.curLine, SEARCH_LINE_TEMP    
     cpy #BOOL_FALSE
