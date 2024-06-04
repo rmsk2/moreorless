@@ -184,11 +184,11 @@ searchOffset
     bne _down
     ldx #<callbackUp
     lda #>callbackUp
-    bra _search
+    bra searchNextLine
 _down
     ldx #<callbackDown
     lda #>callbackDown
-_search
+searchNextLine
     jsr list.searchStr
     bcs _found
     #move16Bit SEARCH_LINE_TEMP, editor.STATE.curLine
@@ -201,7 +201,7 @@ _found
 
 SearchState_t .struct 
     orgLine  .word 0
-    orgCol   .byte 0
+    startCol   .byte 0
     wasFound .byte 0
 .endstruct
 
@@ -210,9 +210,9 @@ SEARCH_STATE .dstruct SearchState_t
 ; carry is set if something was found
 searchFromPos
     ; save current state
+    sta SEARCH_STATE.startCol
     #move16Bit editor.STATE.curLine, SEARCH_STATE.orgLine    
-    sta SEARCH_STATE.orgCol
-
+    
     ; reset flag which records if we have found something in this call
     stz SEARCH_STATE.wasFound
 
@@ -231,7 +231,7 @@ _prepareSearch
     ; the current line so until then we have to load it explicitly.
     jsr list.readCurrentLine
 
-    
+
     rts
 
 
