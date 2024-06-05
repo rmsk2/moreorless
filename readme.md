@@ -17,7 +17,7 @@ direction using the following keys:
 a search string was entered `moreorless` will immediately search for it in forward direction. You can press
  `s` or `S` explicitly to search forward or backward for the next occurance. All searches are case insensitive
 and instead of printing the found string in reverse the cursor is moved to the start position of the search 
-string in the line. Only the first occurance of the search string in that line is marked in such a manner.
+string in the line.
 - Pressing `u` unsets or deletes the search string. This also makes `SRCH` disappear
 - Pressing `s` searches for the next occurance of the search string when moving towards the end of the 
 document. If it is found the line in which it appeared becomes the first line which is displayed. While

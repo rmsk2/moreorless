@@ -200,23 +200,33 @@ _found
 
 
 SearchState_t .struct 
-    startCol   .byte 0
+    startCol         .byte 0
+    searchDirection  .byte 0
 .endstruct
 
 SEARCH_STATE .dstruct SearchState_t
 ; y contains direction, accu contains start pos in current line
 ; carry is set if something was found
 searchFromPos
-    ; save current state
+    ; save parameters
     sta SEARCH_STATE.startCol
+    sty SEARCH_STATE.searchDirection
     ; Before implementing editing we can not be sure whether the data in LINE_BUFFER represents 
     ; the current line so until then we have to load it explicitly.
     jsr list.readCurrentLine
     lda SEARCH_STATE.startCol
-    jsr search.TextFromPos
+    ldy SEARCH_STATE.searchDirection
+    bne _forward
+    jsr search.TextBackward
+    bra _checkFound
+_forward
+    jsr search.TextForward
+_checkFound
     bcs _done
+    ldy SEARCH_STATE.searchDirection
     jmp searchOffset
 _done
+    ; we found the search string in the current line =Y We are done for now
     stx editor.STATE.navigateCol
     rts
 

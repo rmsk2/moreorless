@@ -750,7 +750,13 @@ _skip
     ; signal that we have moved the current position
     jsr searchCallback
     jsr readCurrentLine
+    lda SEARCH_PARAMS.searchDown
+    bne _fromStart
+    jsr search.TextFromEnd
+    bra _checkFound
+_fromStart
     jsr search.TextFromStart
+_checkFound
     bcc _loop
     rts
 _notFound

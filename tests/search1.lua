@@ -5,7 +5,7 @@ require(test_dir.."tools")
 iterations = 0
 test_table = {
     -- pattern, line, expected result, expected pos
-    {"test", "dies ein test ist", true, 9},
+    {"test", "dies ein test1 test2 ist", true, 9},
     {"test", "hier gibt es nix zu sehen", false, -1},
     -- the search string is clipped => will not be found
     {"test", "hier gibt es nix zu sehen, koennte man meinen, doch wenn man genau hinschaut ist es ein test", false, -1},

@@ -7,6 +7,7 @@ EditState_t .struct
     navigateCol      .byte 0
     inputVector      .word 0
     dirty            .byte 0
+    searchInProgress .byte 0
 .endstruct
 
 MAX_FILE_LENGTH = 100
@@ -82,6 +83,7 @@ init
     sta STATE.searchPatternSet
     stz STATE.navigateCol
     stz STATE.dirty
+    stz STATE.searchInProgress
     rts
 
 .endnamespace

@@ -15,5 +15,5 @@ LEN        .byte LINE_BUFFER_LEN + 1 ; 7
 .include "search.asm"
 
 main
-    jsr search.searchText
+    jsr search.TextFromStart
     brk

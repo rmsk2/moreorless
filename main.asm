@@ -108,6 +108,26 @@ _reset
 LINE_COUNT .byte 0
 
 processKeyEvent
+_checkSetSearch
+    cmp #SET_SEARCH
+    bne _checkSearchDown
+    jsr setSearchString
+    sec
+    rts
+_checkSearchDown
+    cmp #SEARCH_DOWN
+    bne _checkSearchUp
+    jsr searchDown
+    sec
+    rts
+_checkSearchUp
+    cmp #SEARCH_UP
+    bne _noSearch
+    jsr searchUp
+    sec
+    rts  
+_noSearch
+    stz editor.STATE.searchInProgress
     cmp #KEY_EXIT
     bne _checkUp
     clc
@@ -144,28 +164,10 @@ _checkPgDown
     rts
 _checkPgUp
     cmp #PAGE_DOWN
-    bne _checkSetSearch
+    bne _checkUnSetSearch
     jsr pageUp
     sec
-    rts
-_checkSetSearch
-    cmp #SET_SEARCH
-    bne _checkSearchDown
-    jsr setSearchString
-    sec
-    rts
-_checkSearchDown
-    cmp #SEARCH_DOWN
-    bne _checkSearchUp
-    jsr searchDown
-    sec
-    rts
-_checkSearchUp
-    cmp #SEARCH_UP
-    bne _checkUnsetSearch
-    jsr searchUp
-    sec
-    rts    
+    rts  
 _checkUnsetSearch
     cmp #UNSET_SEARCH
     bne _checkGotoLine
@@ -205,8 +207,45 @@ searchBoth
     phy
     jsr signalStartSearch
     ply
+
+    lda editor.STATE.searchInProgress
+    bne _moveFirst
+    lda CURSOR_STATE.xPos
+    jsr searchFromPos
+    bcc _done
+    bcs _found
+_moveFirst
+    ; search is in progress, move one char to left or
+    ; right for next search
+    cpy #BOOL_FALSE
+    bne _forward
+    ; we search backward
+    ldy #BOOL_FALSE
+    lda CURSOR_STATE.xPos
+    ; are we a beginning of line. If yes simply goto next line
+    beq _nextLine
+    ; move to previous char and search from there
+    dea    
+    bra _searchInLine2
+_forward
+    ; are we at maximum x position?
+    lda CURSOR_STATE.xPos
+    cmp #search.MAX_CHARS_TO_CONSIDER-1
+    bne _searchInLine
+    ; at max pos simply goto next line
+    ldy #BOOL_TRUE
+_nextLine
     jsr searchOffset
     bcc _done
+    bcs _found
+_searchInLine
+    ; move one char to the right and search in current line
+    ina
+    ldy #BOOL_TRUE
+_searchInLine2    
+    jsr searchFromPos
+    bcc _done
+_found
     stx FOUND_POS
     jsr printScreen        
     lda #0
@@ -215,6 +254,8 @@ searchBoth
     sta CURSOR_STATE.xPos
     jsr txtio.cursorSet
     jsr updateProgData
+    lda #1
+    sta editor.STATE.searchInProgress
 _done
     jsr signalEndSearch
     rts
