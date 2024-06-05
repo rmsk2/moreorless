@@ -1,0 +1,5 @@
+{
+    "Name": "Test string search backwards",
+    "TestDriverSource": "search2.asm",
+    "TestScript": "search2.lua"
+}
