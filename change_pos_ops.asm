@@ -30,7 +30,7 @@ _bottomRight
 _notAtRightEnd
     ; we are at a column < 79
     sta CHECK_LINE_LEN
-    jsr list.getLineLength
+    lda LINE_BUFFER.len
     cmp CHECK_LINE_LEN
     bcc _lineEndReached
     ; Case 2.1 we are not in the last column and we have not reached the right end of the line => we can move to the right
@@ -69,7 +69,7 @@ _leftEnd
     beq _done
     ; we are not at the first line 
     jsr procCrsrUp2
-    jsr list.getLineLength
+    lda LINE_BUFFER.len
     cmp CURSOR_STATE.xMax
     bcc _lineLenOK
     lda CURSOR_STATE.xMax
