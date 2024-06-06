@@ -108,7 +108,8 @@ _reset
 LINE_COUNT .byte 0
 
 processKeyEvent
-_checkSetSearch
+    ; the three search operations have to be the first which are checked
+    ; this serves the purpose of determining whether a search is in progress.
     cmp #SET_SEARCH
     bne _checkSearchDown
     jsr setSearchString
@@ -127,6 +128,8 @@ _checkSearchUp
     sec
     rts  
 _noSearch
+    ; the user interrupts the search operation. This is recorded
+    ; by clearing editor.STATE.searchInProgress.
     stz editor.STATE.searchInProgress
     cmp #KEY_EXIT
     bne _checkUp
@@ -201,48 +204,53 @@ _nothing
 .include "change_pos_ops.asm"
 
 FOUND_POS .byte 0
+; y contains direction
 searchBoth
+    ; is a search pattern set?
     lda editor.STATE.searchPatternSet
     beq _done
     phy
     jsr signalStartSearch
     ply
-
+    ; is a search in progress, i.e. has the user only executed seach operations
+    ; /sS and nothing else? If yes we have to move to the next character before
+    ; starting the search.
     lda editor.STATE.searchInProgress
     bne _moveFirst
+    ; no search in progress => search from unmodified current cursor position.
     lda CURSOR_STATE.xPos
     jsr searchFromPos
     bcc _done
     bcs _found
 _moveFirst
-    ; search is in progress, move one char to left or
-    ; right for next search
+    ; search is in progress, move one char to left or right before starting next search
     cpy #BOOL_FALSE
     bne _forward
-    ; we search backward
-    ldy #BOOL_FALSE
+    ; we search backward. When doing a backward search we a have an edge case where
+    ; the cursor is on position zero in a given line. In this case we can directly 
+    ; jump to the previous line.
     lda CURSOR_STATE.xPos
-    ; are we a beginning of line. If yes simply goto next line
+    ; are we a beginning of line? If yes simply goto next line
     beq _nextLine
-    ; move to previous char and search from there
+    ; we are not at position zero => move to previous char and search from there
     dea    
-    bra _searchInLine2
+    bra _searchInLineGeneric
 _forward
+    ; we search forward. Here the edge case occurs when we are at the maximum position,
+    ; i.e. at position 79. In this case we can directly move to the next line.
     ; are we at maximum x position?
     lda CURSOR_STATE.xPos
     cmp #search.MAX_CHARS_TO_CONSIDER-1
-    bne _searchInLine
-    ; at max pos simply goto next line
-    ldy #BOOL_TRUE
+    bne _searchInLineForward
+    ; we are at the end of the line => simply goto next line
 _nextLine
     jsr searchOffset
     bcc _done
     bcs _found
-_searchInLine
-    ; move one char to the right and search in current line
+_searchInLineForward
+    ; We are not at the end of the line => move one char to the right and search in current line
     ina
-    ldy #BOOL_TRUE
-_searchInLine2    
+_searchInLineGeneric
     jsr searchFromPos
     bcc _done
 _found

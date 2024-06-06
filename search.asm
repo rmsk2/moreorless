@@ -74,7 +74,7 @@ _compare
     cpy #MAX_CHARS_TO_CONSIDER
     beq _notFound
     ; convert uppercase letters to lowercase
-    lda LINE_BUFFER, y
+    lda LINE_BUFFER.buffer, y
     cmp #$5b
     bcs _doComp
     cmp #$41
@@ -83,7 +83,7 @@ _compare
     clc
     adc #32    
 _doComp
-    cmp SEARCH_BUFFER, x
+    cmp SEARCH_BUFFER.buffer, x
     beq _next
     ldx #0
     clc

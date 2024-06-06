@@ -468,6 +468,7 @@ readCurrentLine
     sta LINE_BUFFER.len
     jsr calcBlkCopyParams
     jsr cpStruct2LineBuffer
+    stz LINE_BUFFER.dirty
     rts
 
 
@@ -623,6 +624,7 @@ _doCopy
     ldy #Line_t.len
     sta (PTR_CURRENT), y
 
+    stz LINE_BUFFER.dirty
     clc
 _done
     rts   

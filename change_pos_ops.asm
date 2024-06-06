@@ -1,3 +1,5 @@
+
+
 ; ******************************************************************************************
 ; ********************** stuff that changes the current list position **********************
 ; ******************************************************************************************
@@ -13,7 +15,7 @@ procCrsrRight2
     cmp CURSOR_STATE.yMaxMinus1
     beq _bottomRight
     ; Case 1.1: We are in the last column but not in the last row
-    jsr list.next
+    #changeLine list.next
     bcs _endReached
     #inc16Bit editor.STATE.curLine
     jsr txtio.right    
@@ -39,7 +41,7 @@ _lineEndReached
     cmp CURSOR_STATE.yMaxMinus1
     beq _logicalBottomRight
     ; Case 2.2.1 We are the end of a line which is not the last row
-    jsr list.next
+    #changeLine list.next
     bcs _endReached
     #inc16Bit editor.STATE.curLine    
     jsr txtio.newLine
@@ -104,9 +106,8 @@ procCrsrUp2
     beq _done
     ; we can go up
     ; change line
-    jsr list.prev                                 ; carry can not be set
+    #changeLine list.prev                                 ; carry can not be set
     #dec16Bit editor.STATE.curLine
-    jsr list.readCurrentLine
     lda CURSOR_STATE.yPos
     sta OLD_YPOS
     jsr txtio.up
@@ -128,9 +129,8 @@ procCrsrDown2
     beq _done
     ; we can move down
     ; change line
-    jsr list.next                                 ; carry can not be set
+    #changeLine list.next                                 ; carry can not be set
     #inc16Bit editor.STATE.curLine
-    jsr list.readCurrentLine    
     lda CURSOR_STATE.yPos
     sta OLD_YPOS
     jsr txtio.down
@@ -151,7 +151,7 @@ MOVE_OFFSET .word 0
 moveOffset
     ldx MOVE_OFFSET
     lda MOVE_OFFSET + 1
-    jsr list.move
+    #changeLine list.move
     bcs _atEnd
     #add16Bit MOVE_OFFSET, editor.STATE.curLine
     bra _done
@@ -189,7 +189,7 @@ _down
     ldx #<callbackDown
     lda #>callbackDown
 _search
-    jsr list.searchStr
+    #changeLine list.searchStr
     bcs _found
     #move16Bit SEARCH_LINE_TEMP, editor.STATE.curLine
     clc
@@ -211,11 +211,7 @@ searchFromPos
     ; save parameters
     sta SEARCH_STATE.startCol
     sty SEARCH_STATE.searchDirection
-    ; Before implementing editing we can not be sure whether the data in LINE_BUFFER represents 
-    ; the current line so until then we have to load it explicitly.
-    jsr list.readCurrentLine
-    lda SEARCH_STATE.startCol
-    ldy SEARCH_STATE.searchDirection
+    cpy #0
     bne _forward
     jsr search.TextBackward
     bra _checkFound
@@ -238,10 +234,9 @@ printScreen
     #copyMem2Mem list.LIST.current, editor.STATE.ptrScratch
     stz CURSOR_STATE.scrollOn
 _loopLines
-    jsr list.readCurrentLine    
     #printLineBuffer
     jsr txtio.newLine
-    jsr list.next
+    #changeLine list.next
     bcs _done
     inc LINE_COUNT
     lda LINE_COUNT
@@ -249,6 +244,8 @@ _loopLines
     bne _loopLines
 _done
     #copyMem2Mem editor.STATE.ptrScratch, list.LIST.current
+    ; restore start state this must not be guarded by the
+    ; corresponding macros
     jsr list.readCurrentLine
     inc CURSOR_STATE.scrollOn
     jsr txtio.home
@@ -257,7 +254,7 @@ _done
 
 
 start80x30
-    jsr list.rewind
+    #changeLine list.rewind
     #load16BitImmediate 1, editor.STATE.curLine
     jsr setup80x30
     jsr txtio.setMode80x30
@@ -269,7 +266,7 @@ start80x30
 
 
 start80x60
-    jsr list.rewind
+    #changeLine list.rewind
     #load16BitImmediate 1, editor.STATE.curLine
     jsr setup80x60
     jsr txtio.setMode80x60
