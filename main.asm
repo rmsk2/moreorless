@@ -11,6 +11,7 @@ jmp main
 .include "txtio.asm"
 .include "khelp.asm"
 .include "key_repeat.asm"
+.include "bin_search.asm"
 .include "memory.asm"
 .include "linked_list.asm"
 .include "line.asm"

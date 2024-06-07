@@ -1,0 +1,5 @@
+{
+    "Name": "Binary search I",
+    "TestDriverSource": "binsearch1.asm",
+    "TestScript": "binsearch1.lua"
+}
