@@ -77,8 +77,8 @@ comfortable way and you can search in the program's text.
 ## General
 
 As the data structure which represents the file contents in memory is dynamic I am in the process to extend this
-software to become a (simple) text editor for the Foenix 256 line of computers. Press Alt+e to change into 
-editor mode and observe the progress I make.
+software to be a (simple) text editor for the Foenix 256 line of computers. Press Alt+e to change into editor mode 
+and observe the progress I make.
 
 My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
 the memory managment and linked list functionality.

@@ -106,7 +106,7 @@ _reset
 MEM_SET_SEARCH   .dstruct KeyEntry_t, $002F, setSearchString
 MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0073, searchDown
 MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
-MEM_EXIT         .dstruct KeyEntry_t, $0071, 0
+MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 NUM_COMMANDS .byte 11
 COMMANDS
@@ -171,6 +171,8 @@ _noSearch
     bne _checkCommands
     cmp MEM_EXIT.keyComb
     bne _checkCommands
+    ; handle shutdown properly
+    jsr endProg
     clc
     rts
 _checkCommands
@@ -194,6 +196,11 @@ _default
 
 
 .include "change_pos_ops.asm"
+
+
+endProg
+    jsr printScreen
+    rts
 
 FOUND_POS .byte 0
 ; y contains direction
@@ -792,7 +799,46 @@ toEditor
     #load16BitImmediate insertCharacter, DEFAULT_VEC
     rts
 
-
+SCREEN_LEN .byte 0
 insertCharacter
-    ;jsr txtio.charOut
+    ; insert character into LINE_BUFFER
+    sta ASCII_TEMP
+    #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
+    lda #LINE_BUFFER_LEN
+    sta memory.INS_PARAM.maxLength
+    ldy LINE_BUFFER.len
+    lda CURSOR_STATE.xPos 
+    ldx ASCII_TEMP
+    jsr memory.insertCharacterGrow
+    bcs _done    
+    lda memory.INS_PARAM.curLength
+    sta LINE_BUFFER.len
+    lda LINE_BUFFER.dirty
+    ora #1
+    sta LINE_BUFFER.dirty
+
+    #saveIoState
+
+    ; update text matrix
+    #toTxtMatrix
+    #move16Bit CURSOR_STATE.videoRamPtr, MEM_PTR1
+    lda #search.MAX_CHARS_TO_CONSIDER
+    sec
+    sbc CURSOR_STATE.xPos
+    tay
+    sty SCREEN_LEN
+    lda #0
+    ldx ASCII_TEMP
+    jsr memory.insertCharacterDrop
+    
+    ; update colour matrix
+    #toColorMatrix
+    ldy SCREEN_LEN
+    ldx editor.STATE.col
+    lda #0
+    jsr memory.insertCharacterDrop
+    
+    #restoreIoState
+    jsr procCrsrRight2
+_done
     rts

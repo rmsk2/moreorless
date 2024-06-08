@@ -205,6 +205,118 @@ _done
     rts
 
 
+; This routine shifts the memory area to which MEM_PTR1 points and which has length given in y
+; one position to the right beginning with the position spcified in the accu. The "hole" that
+; is created at this position is filled with a space character. 
+; ***** Beware **** This routine uses self modifying code. I know this is ugly but doing it
+; in the "proper" way would not be nice either.
+vecShiftRight
+    sta SHIFT_HELP
+    dey
+    tya
+    tax
+    dex
+    ; modify the base addresses of the lda, x and the sta, y
+    #move16Bit MEM_PTR1, shftSrcAddr
+    #move16Bit MEM_PTR1, shftTargetAddr
+shftLoop
+    cpy SHIFT_HELP
+    beq shftDone
+    ; After modification: lda srcAddr, x
+    .byte $BD
+shftSrcAddr
+    .word 0
+    ; After modification sta srcAddr, y
+    .byte $99
+shftTargetAddr
+    .word 0
+    dex
+    dey
+    bra shftLoop
+shftDone
+    lda #$20
+    ldy SHIFT_HELP
+    ; we won't overdo it with the self modifiying code
+    sta (MEM_PTR1), y
+    rts
+
+
+InsertParam_t .struct
+    curLength    .byte 0
+    maxLength    .byte 0
+    insertPos    .byte 0
+    data         .byte 0
+.endstruct
+
+INS_PARAM .dstruct InsertParam_t
+
+
+; MEM_PTR1 contains start address, INS_PARAM.maxLength the maximum length, y current length, 
+; accu insert position, x character to insert. Carry is set if growing is not possible.
+insertCharacterGrow
+    stx INS_PARAM.data
+    sty INS_PARAM.curLength
+    sta INS_PARAM.insertPos
+
+    lda INS_PARAM.curLength
+    cmp INS_PARAM.maxLength
+    bcs _done                                        ; => buffer is already full
+    ; there is still room for at least one byte
+    lda INS_PARAM.insertPos
+    cmp INS_PARAM.curLength
+    bcc _notAppend
+    ; we append one character. This also handles the case of a previously empty
+    ; buffer
+    ldy INS_PARAM.curLength
+    lda INS_PARAM.data
+    sta (MEM_PTR1), y
+    ; increase length
+    inc INS_PARAM.curLength
+    bra _doneOK
+_notAppend
+    ; increase length
+    inc INS_PARAM.curLength
+    ; collect parameters for shift routine
+    ldy INS_PARAM.curLength
+    lda INS_PARAM.insertPos
+    jsr memory.vecShiftRight
+    ; fill hole which was created
+    ldy INS_PARAM.insertPos
+    lda INS_PARAM.data
+    sta (MEM_PTR1), y
+_doneOK
+    clc
+_done
+    rts
+
+MAX_LEN_MIN1 .byte 0
+; MEM_PTR1 contains start address, y the fixed length, accu insert position, x character to insert
+insertCharacterDrop
+    stx INS_PARAM.data
+    sty INS_PARAM.maxLength
+    sta INS_PARAM.insertPos
+
+    dey
+    sty MAX_LEN_MIN1
+    lda INS_PARAM.insertPos
+    cmp MAX_LEN_MIN1
+    bcc _notAtEnd 
+    ldy MAX_LEN_MIN1
+    lda INS_PARAM.data
+    sta (MEM_PTR1), y
+    bra _done
+_notAtEnd
+    ldy INS_PARAM.maxLength
+    lda INS_PARAM.insertPos
+    jsr memory.vecShiftRight
+    ; fill hole which was created
+    ldy INS_PARAM.insertPos
+    lda INS_PARAM.data
+    sta (MEM_PTR1), y
+_done
+    rts
+
+
 initPageBytes
     ; page bytes (16-63) for memory from $020000 - $07FFFF
     lda #16
