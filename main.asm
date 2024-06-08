@@ -25,7 +25,7 @@ jmp main
 .include "io_help.asm"
 .include "conv.asm"
 
-PROG_NAME .text "MOREORLESS 1.4.5"
+PROG_NAME .text "MOREORLESS 1.4.9"
 SPACER_COL .text ", Col "
 SPACER .text " - "
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
