@@ -100,7 +100,7 @@ _reset
     rts
 
 ; a key code is a word. The hi byte specifies the state of the meta keys
-; the lo byte the ascii code of the key press
+; and the lo byte the ascii code of the key press
 
 ; Fixed commands which are processed seperately
 MEM_SET_SEARCH   .dstruct KeyEntry_t, $002F, setSearchString
