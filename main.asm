@@ -108,7 +108,7 @@ MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0073, searchDown
 MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, 0
 
-NUM_COMMANDS .byte 10
+NUM_COMMANDS .byte 11
 COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -122,6 +122,7 @@ CMD_GOTO_LINE    .dstruct KeyEntry_t, $0067, gotoLine
 CMD_UNSET_SEACRH .dstruct KeyEntry_t, $0075, unsetSearch
 CMD_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60
 CMD_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30
+CMD_TO_EDITOR    .dstruct KeyEntry_t, $02E5, toEditor
 
 CMD_VEC .word 0
 jmpToHandler
@@ -741,4 +742,41 @@ setup80x30
 
     jsr toData
 
+    rts
+
+; There can be up to 64 commands at the moment
+NUM_EDITOR_COMMANDS = 10
+EDITOR_COMMANDS
+; Non search commands. These have to be sorted by ascending key codes otherwise
+; the binary search fails.
+EDT_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
+EDT_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
+EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
+EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
+; F1
+EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60
+; F3
+EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30
+; FNX + down
+EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown
+; FNX + up
+EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp
+; FNX + g
+EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine
+; FNX + u
+EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch
+
+
+toEditor
+    ; FNX + f
+    #load16BitImmediate $0466, MEM_SET_SEARCH.keyComb
+    ; F5
+    #load16BitImmediate $0085, MEM_SEARCH_DOWN.keyComb
+    ; F7
+    #load16BitImmediate $0087, MEM_SEARCH_UP.keyComb
+    ; ALT + x
+    #load16BitImmediate $02F8, MEM_EXIT.keyComb
+    #load16BitImmediate EDITOR_COMMANDS, KEY_SEARCH_PTR
+    lda #NUM_EDITOR_COMMANDS
+    sta BIN_STATE.numEntries
     rts
