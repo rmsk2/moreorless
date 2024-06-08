@@ -1,6 +1,7 @@
 import sys
 import os
 
+load_address = 0x0300
 start_address = 0x0300
 
 def make_24bit_address(addr):
@@ -8,11 +9,12 @@ def make_24bit_address(addr):
     higher, hi = divmod(help, 256)
     return (lo, hi, higher)
 
-l, h, hh = make_24bit_address(os.path.getsize(sys.argv[1]))
-sl, sh, shh = make_24bit_address(start_address)
+loadl, loadm, loadh = make_24bit_address(load_address)
+lenl, lenm, lenh = make_24bit_address(os.path.getsize(sys.argv[1]))
+startl, startm, starth = make_24bit_address(start_address)
 
-pgz_header = bytes([90, sl, sh, shh, l, h, hh])
-pgz_footer = bytes([sl, sh, shh, 0, 0, 0])
+pgz_header = bytes([90, loadl, loadm, loadh, lenl, lenm, lenh])
+pgz_footer = bytes([startl, startm, starth, 0, 0, 0])
 
 with open(sys.argv[1], "rb") as f:
     data = f.read()

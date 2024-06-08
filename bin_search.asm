@@ -3,8 +3,6 @@ KeyEntry_t .struct val, vector
     addr    .word \vector
 .endstruct
 
-binsearch .namespace
-
 BinState_t .struct
     numEntries .byte 0
     l          .byte 0
@@ -13,7 +11,8 @@ BinState_t .struct
     searchVal  .word 0
 .endstruct
 
-BIN_STATE .dstruct BinState_t
+
+binsearch .namespace
 
 ; upon call KEY_SEARCH_PTR has to be set to the entries. A (lo, keycode) and X (hi, meta keys) 
 ; have to contain the value to search for. Upon exit if the carry is set an entry has been found

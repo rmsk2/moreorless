@@ -1,20 +1,5 @@
 
 
-TimerHelp_t .struct 
-    interval .byte 0
-    cookie   .byte 0
-.endstruct
-
-KeyTracking_t .struct
-    numMeasureTimersInFlight .byte 0
-    numRepeatTimersInFlight  .byte 0
-    keyUpDownCount           .byte 0
-    lastKeyPressed           .byte 0
-    lastKeyReleased          .byte 0
-    metaState                .byte 0
-.endstruct
-
-
 keyrepeat .namespace
 
 MEASUREMENT_TIMEOUT = 30
@@ -49,9 +34,6 @@ init
     rts
 
 FOCUS_VECTOR .word dummyCallBack
-
-TIMER_HELP .dstruct TimerHelp_t
-TRACKING .dstruct KeyTracking_t
 
 makeTimer .macro interval, cookie
     lda #\interval

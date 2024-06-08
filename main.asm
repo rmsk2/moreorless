@@ -1,7 +1,11 @@
 * = $0300
 .cpu "w65c02"
 
+
 jmp main
+; put some data structures in zero page
+.include "zp_data.asm"
+
 
 .include "api.asm"
 .include "zeropage.asm"
@@ -62,7 +66,7 @@ main
     ; initialize key handling code
     #load16BitImmediate COMMANDS, KEY_SEARCH_PTR
     lda NUM_COMMANDS
-    sta binsearch.BIN_STATE.numEntries
+    sta BIN_STATE.numEntries
 
     jsr enterDrive
     jsr enterLineEnding
@@ -124,7 +128,7 @@ jmpToHandler
     jmp (CMD_VEC)
 
 processKeyEvent
-    ldx keyrepeat.TRACKING.metaState
+    ldx TRACKING.metaState
     ; the three search operations have to be the first which are checked
     ; this serves the purpose of determining whether a search is in progress.
     cpx MEM_SET_SEARCH.keyComb + 1
