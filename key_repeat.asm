@@ -23,17 +23,20 @@ COOKIE_MEASUREMENT_TIMER = $10
 COOKIE_REPEAT_TIMER = $11
 IMPOSSIBLE_KEY = 0
 
+SHIFT_RAW = 0
 CTRL_RAW  = 2
 ALT_RAW   = 4
 ALTGR_RAW = 5
 FNX_RAW   = 6
 
-SET_CTRL = %00000001
-SET_ALT  = %00000010
-SET_FNX  = %00000100
-CLR_CTRL = %11111110
-CLR_ALT  = %11111101
-CLR_FNX  = %11111011
+SET_CTRL  = %00000001
+SET_ALT   = %00000010
+SET_FNX   = %00000100
+SET_SHIFT = %00001000
+CLR_CTRL  = %11111110
+CLR_ALT   = %11111101
+CLR_FNX   = %11111011
+CLR_SHIFT = %11110111
 
 init
     stz TRACKING.numMeasureTimersInFlight 
@@ -120,6 +123,13 @@ handleKeyPressEvent
     lda myEvent.key.raw
     jsr testForFKey
     bcs _handleFKey
+    cmp #SHIFT_RAW
+    bne _ctrl
+    lda TRACKING.metaState
+    ora #SET_SHIFT
+    sta TRACKING.metaState
+    bra _done
+_ctrl
     cmp #CTRL_RAW
     bne _fnx
     lda TRACKING.metaState
@@ -171,6 +181,13 @@ handleKeyReleaseEvent
     lda myEvent.key.raw
     jsr testForFKey
     bcs _handleFKey
+    cmp #SHIFT_RAW
+    bne _ctrl
+    lda TRACKING.metaState
+    and #CLR_SHIFT
+    sta TRACKING.metaState
+    bra _done
+_ctrl
     cmp #CTRL_RAW
     bne _fnx
     lda TRACKING.metaState

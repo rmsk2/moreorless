@@ -59,6 +59,7 @@ main
     sta CURSOR_STATE.col 
     jsr txtio.clear
 
+    ; initialize key handling code
     #load16BitImmediate COMMANDS, KEY_SEARCH_PTR
     lda #NUM_COMMANDS
     sta binsearch.BIN_STATE.numEntries
@@ -100,12 +101,13 @@ _reset
 ; Fixed commands which are processed seperately
 MEM_SET_SEARCH   .dstruct KeyEntry_t, $002F, setSearchString
 MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0073, searchDown
-MEM_SEARCH_UP    .dstruct KeyEntry_t, $0053, searchUp
+MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, 0
 
 NUM_COMMANDS = 10
 COMMANDS
-; Non search commands
+; Non search commands. These have to be sorted by ascending key codes otherwise
+; the binary search fails.
 CMD_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
 CMD_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
 CMD_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
