@@ -799,10 +799,17 @@ toEditor
     #load16BitImmediate insertCharacter, DEFAULT_VEC
     rts
 
+
 SCREEN_LEN .byte 0
 insertCharacter
-    ; insert character into LINE_BUFFER
     sta ASCII_TEMP
+    lda CURSOR_STATE.xPos
+    cmp #search.MAX_CHARS_TO_CONSIDER
+    beq _done
+    lda LINE_BUFFER.len
+    cmp #search.MAX_CHARS_TO_CONSIDER
+    beq _done
+    ; insert character into LINE_BUFFER
     #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
     lda #LINE_BUFFER_LEN
     sta memory.INS_PARAM.maxLength
@@ -839,6 +846,9 @@ insertCharacter
     jsr memory.insertCharacterDrop
     
     #restoreIoState
+    lda CURSOR_STATE.xPos
+    cmp #search.MAX_CHARS_TO_CONSIDER-1
+    beq _done
     jsr procCrsrRight2
 _done
     rts
