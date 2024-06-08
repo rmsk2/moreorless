@@ -227,6 +227,7 @@ _done
     rts
 
 
+LINE_COUNT .byte 0
 printScreen
     stz LINE_COUNT
     jsr txtio.clear

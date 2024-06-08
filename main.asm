@@ -43,21 +43,6 @@ LINE_END_CHAR_TEXT .text "Line end character (LF is default, press c for CR): "
 FILE_ALLOWED .text "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 0123456789_-./:#+~()!&@[]"
 
 CRLF = $0D
-KEY_EXIT = $71
-KEY_CLEAR = 12
-SHOW_FILE = $81
-SHOW_FILE_80x30 = $83
-CRSR_UP = $10
-CRSR_DOWN = $0E
-CRSR_LEFT = $02
-CRSR_RIGHT = $06
-PAGE_DOWN = $62
-GOTO_LINE = $67
-PAGE_UP = $20
-SET_SEARCH = 47
-UNSET_SEARCH = 117
-SEARCH_DOWN = 115
-SEARCH_UP = 83
 
 main
     jsr setup.mmu
@@ -73,6 +58,10 @@ main
     lda editor.STATE.col
     sta CURSOR_STATE.col 
     jsr txtio.clear
+
+    #load16BitImmediate COMMANDS, KEY_SEARCH_PTR
+    lda #NUM_COMMANDS
+    sta binsearch.BIN_STATE.numEntries
 
     jsr enterDrive
     jsr enterLineEnding
@@ -105,25 +94,56 @@ _reset
     ; I guess we never get here ....
     rts
 
+; a key code is a word. The hi byte specifies the state of the meta keys
+; the lo byte the ascii code of the key press
 
-LINE_COUNT .byte 0
+; Fixed commands which are processed seperately
+MEM_SET_SEARCH   .dstruct KeyEntry_t, $002F, setSearchString
+MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0073, searchDown
+MEM_SEARCH_UP    .dstruct KeyEntry_t, $0053, searchUp
+MEM_EXIT         .dstruct KeyEntry_t, $0071, 0
+
+NUM_COMMANDS = 10
+COMMANDS
+; Non search commands
+CMD_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
+CMD_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
+CMD_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
+CMD_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
+CMD_PAGE_UP      .dstruct KeyEntry_t, $0020, pageDown
+CMD_PAGE_DOWN    .dstruct KeyEntry_t, $0062, pageUp
+CMD_GOTO_LINE    .dstruct KeyEntry_t, $0067, gotoLine
+CMD_UNSET_SEACRH .dstruct KeyEntry_t, $0075, unsetSearch
+CMD_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60
+CMD_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30
+
+CMD_VEC .word 0
+jmpToHandler
+    jmp (CMD_VEC)
 
 processKeyEvent
+    ldx keyrepeat.TRACKING.metaState
     ; the three search operations have to be the first which are checked
     ; this serves the purpose of determining whether a search is in progress.
-    cmp #SET_SEARCH
+    cpx MEM_SET_SEARCH.keyComb + 1
+    bne _checkSearchDown
+    cmp MEM_SET_SEARCH.keyComb
     bne _checkSearchDown
     jsr setSearchString
     sec
     rts
 _checkSearchDown
-    cmp #SEARCH_DOWN
+    cpx MEM_SEARCH_DOWN.keyComb + 1
+    bne _checkSearchUp
+    cmp MEM_SEARCH_DOWN.keyComb
     bne _checkSearchUp
     jsr searchDown
     sec
     rts
 _checkSearchUp
-    cmp #SEARCH_UP
+    cpx MEM_SEARCH_UP.keyComb + 1
+    bne _noSearch
+    cmp MEM_SEARCH_UP.keyComb
     bne _noSearch
     jsr searchUp
     sec
@@ -132,75 +152,29 @@ _noSearch
     ; the user interrupts the search operation. This is recorded
     ; by clearing editor.STATE.searchInProgress.
     stz editor.STATE.searchInProgress
-    cmp #KEY_EXIT
-    bne _checkUp
+    cpx MEM_EXIT.keyComb + 1
+    bne _checkCommands
+    cmp MEM_EXIT.keyComb
+    bne _checkCommands
     clc
     rts
-_checkUp
-    cmp #CRSR_UP
-    bne _checkDown
-    jsr procCrsrUp2
+_checkCommands
+    jsr binsearch.searchEntry
+    bcc _default
+    iny
+    iny
+    lda (KEY_SEARCH_PTR), y
+    sta CMD_VEC
+    iny
+    lda (KEY_SEARCH_PTR), y
+    sta CMD_VEC + 1
+    jsr jmpToHandler
     sec
     rts
-_checkDown
-    cmp #CRSR_DOWN
-    bne _checkLeft
-    jsr procCrsrDown2
+_default
     sec
     rts
-_checkLeft
-    cmp #CRSR_LEFT
-    bne _checkRight
-    jsr procCrsrLeft2
-    sec
-    rts
-_checkRight
-    cmp #CRSR_RIGHT
-    bne _checkPgDown
-    jsr procCrsrRight2
-    sec
-    rts
-_checkPgDown
-    cmp #PAGE_UP
-    bne _checkPgUp
-    jsr pageDown    
-    sec
-    rts
-_checkPgUp
-    cmp #PAGE_DOWN
-    bne _checkUnSetSearch
-    jsr pageUp
-    sec
-    rts  
-_checkUnsetSearch
-    cmp #UNSET_SEARCH
-    bne _checkGotoLine
-    jsr unsetSearch
-    sec
-    rts    
-_checkGotoLine
-    cmp #GOTO_LINE
-    bne _checkF3
-    jsr gotoLine
-    sec
-    rts
-_checkF3
-    cmp #SHOW_FILE_80x30
-    bne _checkF1
-    jsr start80x30
-    sec
-    rts
-_checkF1
-    cmp #SHOW_FILE
-    beq _show
-    jmp _nothing
-_show    
-    jsr start80x60
-    sec
-    rts
-_nothing
-    sec
-    rts
+
 
 .include "change_pos_ops.asm"
 
