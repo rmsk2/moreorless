@@ -61,7 +61,7 @@ main
 
     ; initialize key handling code
     #load16BitImmediate COMMANDS, KEY_SEARCH_PTR
-    lda #NUM_COMMANDS
+    lda NUM_COMMANDS
     sta binsearch.BIN_STATE.numEntries
 
     jsr enterDrive
@@ -104,7 +104,7 @@ MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0073, searchDown
 MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, 0
 
-NUM_COMMANDS = 10
+NUM_COMMANDS .byte 10
 COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
