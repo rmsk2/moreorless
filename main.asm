@@ -128,7 +128,15 @@ CMD_VEC .word 0
 jmpToHandler
     jmp (CMD_VEC)
 
+DEFAULT_VEC .word nothing
+jmpToDefHandler
+    jmp (DEFAULT_VEC)
+
+nothing
+    rts
+
 processKeyEvent
+    sta ASCII_TEMP
     ldx TRACKING.metaState
     ; the three search operations have to be the first which are checked
     ; this serves the purpose of determining whether a search is in progress.
@@ -179,6 +187,8 @@ _checkCommands
     sec
     rts
 _default
+    lda ASCII_TEMP
+    jsr jmpToDefHandler
     sec
     rts
 
@@ -779,4 +789,10 @@ toEditor
     #load16BitImmediate EDITOR_COMMANDS, KEY_SEARCH_PTR
     lda #NUM_EDITOR_COMMANDS
     sta BIN_STATE.numEntries
+    #load16BitImmediate insertCharacter, DEFAULT_VEC
+    rts
+
+
+insertCharacter
+    ;jsr txtio.charOut
     rts
