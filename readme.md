@@ -76,11 +76,9 @@ comfortable way and you can search in the program's text.
 
 ## General
 
-As the data structure which represents the file contents in memory is dynamic this could become a native 
-text editor for the Foenix 256 line of computers. But as Foenix retro systems has announced that the F256K
-will be followed by the F256K2, which seems to offer vastly more memory, it may be wise to wait and see
-what new possibilities this new machine will bring to the table before starting this endeavour. Nontheless 
-I think this software is useful as it is.
+As the data structure which represents the file contents in memory is dynamic I am in the process to extend this
+software to become a (simple) text editor for the Foenix 256 line of computers. Press Alt+e to change into 
+editor mode and observe the progress I make.
 
 My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
 the memory managment and linked list functionality.
