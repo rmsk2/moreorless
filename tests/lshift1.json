@@ -1,0 +1,5 @@
+{
+    "Name": "Test left sifting a vector",
+    "TestDriverSource": "lshift1.asm",
+    "TestScript": "lshift1.lua"
+}

@@ -762,12 +762,13 @@ setup80x30
     rts
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 10
+NUM_EDITOR_COMMANDS = 11
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
 EDT_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
 EDT_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
+EDT_DELETE       .dstruct KeyEntry_t, $0008, deleteChar
 EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
 EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
 ; F1
@@ -803,12 +804,11 @@ toEditor
 SCREEN_LEN .byte 0
 insertCharacter
     sta ASCII_TEMP
-    lda CURSOR_STATE.xPos
-    cmp #search.MAX_CHARS_TO_CONSIDER
-    beq _done
+    ; do not allow adding a character if the line length is already at
+    ; maximum or bigger
     lda LINE_BUFFER.len
     cmp #search.MAX_CHARS_TO_CONSIDER
-    beq _done
+    bcs _done
     ; insert character into LINE_BUFFER
     #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
     lda #LINE_BUFFER_LEN
@@ -846,9 +846,79 @@ insertCharacter
     jsr memory.insertCharacterDrop
     
     #restoreIoState
+    ; Only move cursor if we are not at the end of a line
     lda CURSOR_STATE.xPos
     cmp #search.MAX_CHARS_TO_CONSIDER-1
     beq _done
     jsr procCrsrRight2
+_done
+    rts
+
+
+deleteChar
+    lda CURSOR_STATE.xPos
+    bne _deleteSingleChar
+    ; ToDo: Handle this properly, i.e. merging the line where the cursor is
+    ; with the line above by appending the contents of line x+1 to line x and
+    ; after that delete line x+1. Line x becomes the new current line.
+    rts
+_deleteSingleChar
+    #saveIoState
+
+    ; do nothing if line length is zero
+    lda LINE_BUFFER.len
+    beq _done
+    ; delete character in line buffer
+    #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
+    ldy LINE_BUFFER.len
+    lda CURSOR_STATE.xPos
+    dea
+    jsr memory.vecShiftLeft
+    ; adapt length and mark as dirty
+    dec LINE_BUFFER.len
+    lda LINE_BUFFER.dirty
+    ora #1
+    sta LINE_BUFFER.dirty
+
+    ; we delete the character left of the cursor => simply decrement current VRAM address
+    #move16Bit CURSOR_STATE.videoRamPtr, MEM_PTR1
+    #dec16Bit MEM_PTR1
+
+    ; update text matrix
+    #toTxtMatrix
+    lda #search.MAX_CHARS_TO_CONSIDER
+    sec
+    sbc CURSOR_STATE.xPos
+    tay
+    iny
+    sty SCREEN_LEN
+    lda #0
+    jsr memory.vecShiftLeft
+    ; check if we have to move in a character which was previously
+    ; invisible due to the line length limit.
+    lda LINE_BUFFER.len
+    cmp #search.MAX_CHARS_TO_CONSIDER
+    bcc _updateColour
+    ; length is here now at least 80, i.e. it was at least 81 before before the
+    ; deletion => move in a new character
+    ldx #search.MAX_CHARS_TO_CONSIDER - 1
+    lda LINE_BUFFER.buffer, x
+    sta (MEM_PTR1), y
+_updateColour
+    ; update colour matrix
+    #toColorMatrix
+    ldy SCREEN_LEN
+    ldx editor.STATE.col
+    lda #0
+    jsr memory.vecShiftLeft
+    lda editor.STATE.col
+    sta (MEM_PTR1), y
+    
+    #restoreIoState
+
+    ; Only move cursor if we are not at the beginning of a line
+    lda CURSOR_STATE.xPos
+    beq _done
+    jsr procCrsrLeft2
 _done
     rts

@@ -86,7 +86,8 @@ Short term goals
 - adding deletion of characters and lines via the delete key
 - adding inserting new lines via the return key
 - allowing to start with an empty document
-- adding a save command.
+- adding a save command
+- replace tab characters at load by four blanks
 
 Midterm goals
 - adding cutting copying and pasting of parts of lines and full lines
