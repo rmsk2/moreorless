@@ -785,6 +785,7 @@ EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine
 ; FNX + u
 EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch
+; SHift + HOME
 EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd
 
 
