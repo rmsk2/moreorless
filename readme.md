@@ -94,7 +94,7 @@ Midterm goals
 - visualize line lengths larger than 80 in UI
 - adding cutting copying and pasting of parts of lines and full lines
 - adding search and replace 
-- makeing sure it works with SuperBASIC.
+- making sure it works with SuperBASIC.
 
 After that possibly
 - adding an undo feature (I have no clear plan on how to achieve this, yet)
