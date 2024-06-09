@@ -94,7 +94,7 @@ Midterm goals
 - makeing sure it works with SuperBASIC.
 
 After that possibly
-- adding an undo feature (I have no clear plan on how to achieve this)
+- adding an undo feature (I have no clear plan on how to achieve this, yet)
 - adding some sort of mouse support
 
 My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
