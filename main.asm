@@ -809,6 +809,9 @@ insertCharacter
     lda LINE_BUFFER.len
     cmp #search.MAX_CHARS_TO_CONSIDER
     bcs _done
+    ; we will have changed the document
+    lda #1
+    sta editor.STATE.dirty
     ; insert character into LINE_BUFFER
     #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
     lda #LINE_BUFFER_LEN
@@ -820,8 +823,8 @@ insertCharacter
     bcs _done    
     lda memory.INS_PARAM.curLength
     sta LINE_BUFFER.len
-    lda LINE_BUFFER.dirty
-    ora #1
+    ; mark line as dirty
+    lda #1
     sta LINE_BUFFER.dirty
 
     #saveIoState
@@ -868,6 +871,11 @@ _deleteSingleChar
     ; do nothing if line length is zero
     lda LINE_BUFFER.len
     beq _done
+
+    ; we will have changed the document
+    lda #1
+    sta editor.STATE.dirty
+
     ; delete character in line buffer
     #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
     ldy LINE_BUFFER.len
@@ -876,8 +884,7 @@ _deleteSingleChar
     jsr memory.vecShiftLeft
     ; adapt length and mark as dirty
     dec LINE_BUFFER.len
-    lda LINE_BUFFER.dirty
-    ora #1
+    lda #1
     sta LINE_BUFFER.dirty
 
     ; we delete the character left of the cursor => simply decrement current VRAM address
