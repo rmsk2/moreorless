@@ -762,10 +762,12 @@ setup80x30
     rts
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 11
+NUM_EDITOR_COMMANDS = 13
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
+; HOME
+EDT_LINE_START   .dstruct KeyEntry_t, $0001, toLineStart
 EDT_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
 EDT_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
 EDT_DELETE       .dstruct KeyEntry_t, $0008, deleteChar
@@ -783,6 +785,7 @@ EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine
 ; FNX + u
 EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch
+EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd
 
 
 toEditor
@@ -798,6 +801,17 @@ toEditor
     lda #NUM_EDITOR_COMMANDS
     sta BIN_STATE.numEntries
     #load16BitImmediate insertCharacter, DEFAULT_VEC
+    rts
+
+
+toLineEnd
+    jsr moveToLineEnd
+    rts
+
+
+toLineStart
+    lda #0
+    jsr moveToPos
     rts
 
 
