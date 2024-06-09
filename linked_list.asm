@@ -456,7 +456,7 @@ getLineLength
     rts
 
 
-; PUBLIC: This routine returns the length of the line which is represented
+; PUBLIC: This routine returns the flags of the line which is represented
 ; by the current element.
 getFlags
     #SET_MMU_ADDR LIST.current
