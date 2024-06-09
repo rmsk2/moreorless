@@ -61,6 +61,8 @@ block number which can be written directly into the corresponding MMU register.
 On an unexpanded system 384 KB (48 8 KB blocks) of RAM are managed by `Moreorless`. There would be an 
 additional 64 KB (eight 8 KB blocks) available which have been excluded as a reserve for future extensions.
 When a RAM expansion cartridge is present the memory available to `Moreorless` is increased to 640 KB.
+I hope I can keep the overall length of the code below 32KB which would allow to keep the 8K block starting 
+at $8000 as a window to map in some sort of  yet unspecified extension code.
 
 # Remarks
 
@@ -74,11 +76,26 @@ indents certain parts of the program and does syntax highlighting. `moreorless` 
 printing when showing a BASIC program. On the other hand it allows you to look at the program in a much more 
 comfortable way and you can search in the program's text.
 
-## General
+## Some plans
 
 As the data structure which represents the file contents in memory is dynamic I am in the process to extend this
 software to be a (simple) text editor for the Foenix 256 line of computers. Press Alt+e to change into editor mode 
-and observe the progress I make. Be warned this is not finished by a long shot.
+and observe the progress I make. Be warned this is not finished by a long shot. This is how I plan to progress:
+
+Short term goals  
+- adding deletion of characters and lines via the delete key
+- adding inserting new lines via the return key
+- allowing to start with an empty document
+- adding a save command.
+
+Midterm goals
+- adding cutting copying and pasting of parts of lines and full lines
+- adding search and replace 
+- makeing sure it works with SuperBASIC.
+
+After that possibly
+- adding an undo feature (I have no clear plan on how to achieve this)
+- adding some sort of mouse support
 
 My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
 the memory managment and linked list functionality.
