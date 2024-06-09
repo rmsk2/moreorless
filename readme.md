@@ -87,9 +87,11 @@ Short term goals
 - adding inserting new lines via the return key
 - allowing to start with an empty document
 - adding a save command
-- replace tab characters at load by four blanks
+- visualize whether document has changed in UI
 
 Midterm goals
+- replace tab characters at load by four blanks
+- visualize line lengths larger than 80 in UI
 - adding cutting copying and pasting of parts of lines and full lines
 - adding search and replace 
 - makeing sure it works with SuperBASIC.

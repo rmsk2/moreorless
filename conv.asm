@@ -39,6 +39,8 @@ MAX_INT_STR .text "65535"
 ; points represents a word that is 65536 or bigger. The carry is set if the
 ; string can be converted to an unsigned word.
 checkMaxWord
+    cmp #0
+    beq _doneError
     cmp #6
     bcs _doneError
     ; here we know the string is 5 characters or shorter

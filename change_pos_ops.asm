@@ -277,6 +277,156 @@ start80x60
     jsr updateProgData
     rts
 
+
+moveToLineEnd
+    lda LINE_BUFFER.len
+; accu holds desired column to which to move the cursor
+moveToPos
+    cmp #0    
+    beq _setPos
+    cmp #search.MAX_CHARS_TO_CONSIDER
+    beq _setPos
+    bcc _setPos
+    lda #search.MAX_CHARS_TO_CONSIDER - 1
+_setPos
+    sta CURSOR_STATE.xPos
+    sta editor.STATE.navigateCol
+    jsr txtio.cursorSet
+    rts
+
+; This routine is intended to redraw the screen in its current state.
+; This is achieved by assuming that the current element in the linked
+; list can be found on the screen in the line specified by the y-position.
+;
+; So in order to redraw the screen the list pointer has to be moved
+; ypos elements backwards, the screen is redrawn with that line as a start 
+; position and finally the current element is moved back to original position,
+; i.e. ypos elements forward.
+;
+; accu contains the line offset into the view of the line under
+; consideration. x has to contain the column to which the cursor
+; is to be moved.
+REFRESH_TEMP .byte 0
+refreshView
+    stx REFRESH_TEMP
+    cmp #0
+    bne _fullRedraw
+    jsr redrawAll
+    lda REFRESH_TEMP
+    jsr moveToPos
+    rts
+_fullRedraw
+    dea
+    eor #$FF
+    sta MOVE_OFFSET
+    lda #$FF
+    sta MOVE_OFFSET + 1
+    #add16BitImmediate 1, MOVE_OFFSET
+    jsr moveOffset
+    jsr redrawAll
+    lda MOVE_OFFSET
+    eor #$FF
+    sta MOVE_OFFSET
+    lda MOVE_OFFSET + 1
+    eor #$FF
+    sta MOVE_OFFSET + 1
+    #add16BitImmediate 1, MOVE_OFFSET
+    jsr moveOffset
+    lda VIEW_POS
+    dea
+    sta CURSOR_STATE.yPos
+    lda REFRESH_TEMP
+    jsr moveToPos
+    rts
+
+
+redrawAll
+    jsr toProg
+    jsr printFixedProgData
+    jsr toData
+    jsr printScreen
+    jsr updateProgData
+    rts
+
+
+LEN1_HELP    .word 0
+OLD_LEN      .byte 0
+VIEW_POS     .byte 0
+IS_LAST_LINE .byte 0
+; Merge the line where the cursor is with the line above by appending the contents of 
+; line x+1 to line x and after that delete line x+1. Line x becomes the new current 
+; line.
+mergeLines
+    lda CURSOR_STATE.yPos
+    sta VIEW_POS
+    ; line 1 can not merge with the one above it, as there is none above it
+    #cmp16BitImmediate 1, editor.STATE.curLine
+    bne _goOn
+    jmp _done
+_goOn
+    jsr list.getFlags
+    sta IS_LAST_LINE
+    ; we are at least in line 2
+    ; save length of current line as 16 bit value
+    lda LINE_BUFFER.len
+    sta LEN1_HELP
+    stz LEN1_HELP + 1
+    #changeLine list.prev
+    ; check if the merged lines are longer than 80 characters. If they are
+    ; we do nothing
+    clc
+    lda LINE_BUFFER.len
+    sta OLD_LEN
+    adc LEN1_HELP
+    sta LEN1_HELP
+    lda LEN1_HELP + 1
+    adc #0
+    sta LEN1_HELP + 1
+    #changeLine list.next
+    #cmp16BitImmediate search.MAX_CHARS_TO_CONSIDER, LEN1_HELP
+    bcs _doMerge
+    ; do nothing, change back to current line
+    jmp _done
+_doMerge
+    ; the combined length of the line is <= 80
+    ; we will have changed the document
+    lda #1
+    sta editor.STATE.dirty
+
+    #memCopy LINE_BUFFER, SCRATCH_BUFFER, size(LineBuffer_t)
+    #changeLine list.remove
+    lda IS_LAST_LINE
+    and #FLAG_IS_LAST
+    bne _appendData
+    ; we have not removed the last line, so we have to move one element up
+    #changeLine list.prev
+_appendData
+    ; we are now at the correct combined line
+    ldx #0
+    ldy LINE_BUFFER.len
+_appendLoop
+    cpx SCRATCH_BUFFER.len
+    beq _appendDone
+    lda SCRATCH_BUFFER.buffer, x
+    sta LINE_BUFFER.buffer, y
+    inx
+    iny
+    bra _appendLoop
+_appendDone    
+    clc
+    lda SCRATCH_BUFFER.len
+    adc LINE_BUFFER.len
+    sta LINE_BUFFER.len
+    jsr list.setCurrentLine
+    stz LINE_BUFFER.dirty
+    #dec16Bit editor.STATE.curLine
+    lda VIEW_POS
+    ldx OLD_LEN
+    jsr refreshView
+_done
+    rts
+
+
 ; ******************************************************************************************
 ; ********************** stuff that changes the current list position **********************
 ; ******************************************************************************************

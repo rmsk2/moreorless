@@ -23,8 +23,9 @@ LineBuffer_t .struct
     dirty  .byte 0
 .endstruct
 
-LINE_BUFFER .dstruct LineBuffer_t 
-SEARCH_BUFFER .dstruct LineBuffer_t
+SCRATCH_BUFFER .dstruct LineBuffer_t
+LINE_BUFFER    .dstruct LineBuffer_t 
+SEARCH_BUFFER  .dstruct LineBuffer_t
 
 line .namespace
 

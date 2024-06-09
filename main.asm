@@ -861,10 +861,7 @@ _done
 deleteChar
     lda CURSOR_STATE.xPos
     bne _deleteSingleChar
-    ; ToDo: Handle this properly, i.e. merging the line where the cursor is
-    ; with the line above by appending the contents of line x+1 to line x and
-    ; after that delete line x+1. Line x becomes the new current line.
-    rts
+    jmp mergeLines
 _deleteSingleChar
     #saveIoState
 
