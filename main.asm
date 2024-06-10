@@ -440,14 +440,14 @@ _procEnd
     #load16BitImmediate LINE_NUMBER, CONV_PTR1
     lda LINE_LEN
     jsr conv.checkMaxWord
-    bcc _done
+    bcc _finish
     jsr conv.atouw    
     #cmp16BitImmediate 0, conv.ATOW
-    beq _done
+    beq _finish
 
     #cmp16Bit conv.ATOW, list.LIST.length
     beq _isAllowed
-    bcs _done
+    bcs _finish
 _isAllowed
     #move16Bit conv.ATOW, MOVE_OFFSET
     #sub16Bit editor.STATE.curLine, MOVE_OFFSET
