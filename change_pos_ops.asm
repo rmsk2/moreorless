@@ -306,17 +306,19 @@ _setPos
 ; accu contains the line offset into the view of the line under
 ; consideration. x has to contain the column to which the cursor
 ; is to be moved.
-REFRESH_TEMP .byte 0
+
+REFRESH_TEMP_Y .byte 0
+REFRESH_TEMP_X .byte 0
 refreshView
-    stx REFRESH_TEMP
+    sta REFRESH_TEMP_Y
+    stx REFRESH_TEMP_X
     cmp #0
     bne _fullRedraw
     jsr redrawAll
-    lda REFRESH_TEMP
+    lda REFRESH_TEMP_X
     jsr moveToPos
     rts
 _fullRedraw
-    dea
     eor #$FF
     sta MOVE_OFFSET
     lda #$FF
@@ -332,10 +334,9 @@ _fullRedraw
     sta MOVE_OFFSET + 1
     #add16BitImmediate 1, MOVE_OFFSET
     jsr moveOffset
-    lda VIEW_POS
-    dea
+    lda REFRESH_TEMP_Y
     sta CURSOR_STATE.yPos
-    lda REFRESH_TEMP
+    lda REFRESH_TEMP_X
     jsr moveToPos
     rts
 
@@ -421,6 +422,9 @@ _appendDone
     stz LINE_BUFFER.dirty
     #dec16Bit editor.STATE.curLine
     lda VIEW_POS
+    beq _noDecrement
+    dea
+_noDecrement
     ldx OLD_LEN
     jsr refreshView
 _done
