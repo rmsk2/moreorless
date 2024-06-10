@@ -434,6 +434,8 @@ _procEnd
 
     jsr progUpdateInt
     jsr toData
+    lda LINE_LEN
+    beq _finish
 
     #load16BitImmediate LINE_NUMBER, CONV_PTR1
     lda LINE_LEN
@@ -453,6 +455,7 @@ _isAllowed
 _done
     jsr updateProgData
     jsr printScreen
+_finish
     #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
 _notDone
     sec    
