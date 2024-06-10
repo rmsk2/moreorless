@@ -595,6 +595,8 @@ _centered
     #printString SPACER, len(SPACER)
     #printStringLenMem FILE_NAME, TXT_FILE.nameLen
 _noFileName
+    jsr showDocumentState
+
     stz CURSOR_STATE.xPos
     sec
     lda CURSOR_STATE.yMax
@@ -819,9 +821,32 @@ toLineStart
     rts
 
 
+showDocumentState
+    lda editor.STATE.dirty
+    bne _dirty
+    jmp markDocumentAsClean
+_dirty
+    jmp markDocumentAsDirty
+
+
+markDocumentAsClean
+    stz editor.STATE.dirty
+    #saveIoState
+    #toTxtMatrix
+    lda #$20
+    sta $C000 + 79
+    #restoreIoState
+    rts
+
+
 markDocumentAsDirty
     lda #1
     sta editor.STATE.dirty
+    #saveIoState
+    #toTxtMatrix
+    lda #$2a
+    sta $C000 + 79
+    #restoreIoState
     rts
 
 
