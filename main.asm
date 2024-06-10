@@ -819,6 +819,12 @@ toLineStart
     rts
 
 
+markDocumentAsDirty
+    lda #1
+    sta editor.STATE.dirty
+    rts
+
+
 SCREEN_LEN .byte 0
 insertCharacter
     sta ASCII_TEMP
@@ -828,8 +834,7 @@ insertCharacter
     cmp #search.MAX_CHARS_TO_CONSIDER
     bcs _done
     ; we will have changed the document
-    lda #1
-    sta editor.STATE.dirty
+    jsr markDocumentAsDirty
     ; insert character into LINE_BUFFER
     #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
     lda #LINE_BUFFER_LEN
@@ -887,9 +892,7 @@ _deleteSingleChar
     lda LINE_BUFFER.len
     beq _done
 
-    ; we will have changed the document
-    lda #1
-    sta editor.STATE.dirty
+    jsr markDocumentAsDirty
 
     ; delete character in line buffer
     #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1

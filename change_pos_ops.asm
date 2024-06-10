@@ -391,8 +391,7 @@ _goOn
 _doMerge
     ; the combined length of the line is <= 80
     ; we will have changed the document
-    lda #1
-    sta editor.STATE.dirty
+    jsr markDocumentAsDirty
 
     #memCopy LINE_BUFFER, SCRATCH_BUFFER, size(LineBuffer_t)
     #changeLine list.remove
