@@ -296,17 +296,17 @@ _setPos
 
 ; This routine is intended to redraw the screen in its current state.
 ; This is achieved by assuming that the current element in the linked
-; list can be found on the screen in the line specified by the y-position.
+; list can be found on the screen in the line specified by the y-position
+; of the cursor.
 ;
 ; So in order to redraw the screen the list pointer has to be moved
 ; ypos elements backwards, the screen is redrawn with that line as a start 
 ; position and finally the current element is moved back to original position,
 ; i.e. ypos elements forward.
 ;
-; accu contains the line offset into the view of the line under
+; accu contains the current y-position in the view of the line under
 ; consideration. x has to contain the column to which the cursor
 ; is to be moved.
-
 REFRESH_TEMP_Y .byte 0
 REFRESH_TEMP_X .byte 0
 refreshView
