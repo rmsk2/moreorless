@@ -83,11 +83,8 @@ software to be a (simple) text editor for the Foenix 256 line of computers. Pres
 and observe the progress I make. Be warned this is not finished by a long shot. This is how I plan to progress:
 
 Short term goals  
-- adding deletion of characters and lines via the delete key
-- adding inserting new lines via the return key
 - allowing to start with an empty document
 - adding a save command
-- visualize whether document has changed in UI
 
 Midterm goals
 - replace tab characters at load by four blanks
