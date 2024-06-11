@@ -25,7 +25,7 @@ res_table = {
     {5, 0, false},
     {3, 0, false},
     {1200, 4, true},
-    {1, 0, false},
+    {0, 0, false},
     {1, 0, false}
 }
 

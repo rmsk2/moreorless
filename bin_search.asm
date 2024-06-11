@@ -56,11 +56,14 @@ _next
     bcs _bigger
     lda BIN_STATE.m
     ina
+    beq _notFound
     sta BIN_STATE.l
     bra _loop
 _bigger
     lda BIN_STATE.m
     dea
+    cmp #$FF
+    beq _notFound
     sta BIN_STATE.r
     bra _loop
 _found
