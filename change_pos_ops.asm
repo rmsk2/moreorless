@@ -294,19 +294,17 @@ _setPos
     jsr txtio.cursorSet
     rts
 
-; This routine is intended to redraw the screen in its current state.
-; This is achieved by assuming that the current element in the linked
-; list can be found on the screen in the line specified by the y-position
-; of the cursor.
+; This routine redraws the screen in such a way that the current element of the 
+; linked list appears at the y-position given in the accu. 
 ;
 ; So in order to redraw the screen the list pointer has to be moved
 ; ypos elements backwards, the screen is redrawn with that line as a start 
 ; position and finally the current element is moved back to original position,
 ; i.e. ypos elements forward.
 ;
-; accu contains the current y-position in the view of the line under
-; consideration. x has to contain the column to which the cursor
-; is to be moved.
+; When calling this subroutine the accu has to contain the y-position where the
+; current element should appear in the view. x has to contain the column to which 
+; the cursor is to be moved.
 REFRESH_TEMP_Y .byte 0
 REFRESH_TEMP_X .byte 0
 refreshView
@@ -429,6 +427,81 @@ _noDecrement
 _done
     rts
 
+
+SPLIT_POS .byte 0
+CUR_Y_POS .byte 0
+NEW_Y_POS .byte 0
+splitLines
+    jsr markDocumentAsDirty
+    jsr list.insertAfter    
+    bcc _insOK 
+    jmp _outOfMemory
+
+_insOK
+    lda CURSOR_STATE.yPos
+    sta CUR_Y_POS
+    lda CURSOR_STATE.xPos
+    sta SPLIT_POS
+
+    cmp LINE_BUFFER.len
+    beq _newEmptyLine
+
+    ldy SPLIT_POS
+    ldx #0
+_loop
+    cpy LINE_BUFFER.len
+    beq _doneSplit
+    lda LINE_BUFFER.buffer, y
+    sta SCRATCH_BUFFER.buffer, x
+    inx
+    iny
+    bra _loop
+_doneSplit
+    stx SCRATCH_BUFFER.len
+    lda SPLIT_POS
+    sta LINE_BUFFER.len
+    jsr list.setCurrentLine
+    bcc _memOK
+    jmp _outOfMemory
+_memOK
+    jsr list.next
+    ldy #0
+    ldx #0
+_loopCopy
+    cpy SCRATCH_BUFFER.len
+    beq _doneCopy
+    lda SCRATCH_BUFFER.buffer, x
+    sta LINE_BUFFER.buffer, y
+    inx
+    iny
+    bra _loopCopy
+_doneCopy
+    lda SCRATCH_BUFFER.len
+    sta LINE_BUFFER.len
+    jsr list.setCurrentLine
+    bcs _outOfMemory
+    bra _prepareRedraw
+_newEmptyLine
+    #changeLine list.next
+_prepareRedraw
+    #inc16Bit editor.STATE.curLine
+    lda CUR_Y_POS
+    cmp CURSOR_STATE.yMaxMinus1
+    beq _noInc
+    ina
+_noInc
+    sta NEW_Y_POS
+    ldx #0
+    jsr refreshView
+    lda #0
+    sta CURSOR_STATE.xPos
+    lda NEW_Y_POS
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    jsr updateProgData
+    rts
+_outOfMemory
+    jmp (OUT_OF_MEMORY)
 
 ; ******************************************************************************************
 ; ********************** stuff that changes the current list position **********************

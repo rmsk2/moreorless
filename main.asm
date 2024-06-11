@@ -767,7 +767,7 @@ setup80x30
     rts
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 13
+NUM_EDITOR_COMMANDS = 14
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -776,6 +776,8 @@ EDT_LINE_START   .dstruct KeyEntry_t, $0001, toLineStart
 EDT_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
 EDT_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
 EDT_DELETE       .dstruct KeyEntry_t, $0008, deleteChar
+; Return
+EDT_LINE_SPLIT   .dstruct KeyEntry_t, $000D, splitLines
 EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
 EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
 ; F1
