@@ -24,6 +24,7 @@ LineBuffer_t .struct
 .endstruct
 
 SCRATCH_BUFFER .dstruct LineBuffer_t
+BASIC_LINE_NR  .text "      "
 LINE_BUFFER    .dstruct LineBuffer_t 
 SEARCH_BUFFER  .dstruct LineBuffer_t
 

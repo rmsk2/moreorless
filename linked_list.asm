@@ -342,9 +342,9 @@ rewind
 ;   return false
 ; }
 ;
-; PUBLIC: Make next element of this element the new current element
+; PUBLIC: Make previous element of this element the new current element
 ; Upon return the carry is set if the current element is already the 
-; last element.
+; first element.
 prev
     #SET_MMU_ADDR LIST.current                                         ; set MMU
     #move16Bit LIST.current, PTR_CURRENT                               ; initialize indirect address
@@ -426,9 +426,9 @@ _done
 ;   return false
 ; }
 ;
-; PUBLIC: Make previous element of this element the new current element
+; PUBLIC: Make next element of this element the new current element
 ; Upon return the carry is set if the current element is already the 
-; first element.
+; last element.
 next
     #SET_MMU_ADDR LIST.current                                         ; set MMU
     #move16Bit LIST.current, PTR_CURRENT                               ; initialize indirect address

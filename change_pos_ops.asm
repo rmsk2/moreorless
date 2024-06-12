@@ -315,6 +315,7 @@ refreshView
     jsr redrawAll
     lda REFRESH_TEMP_X
     jsr moveToPos
+    jsr updateProgData
     rts
 _fullRedraw
     eor #$FF
@@ -336,6 +337,7 @@ _fullRedraw
     sta CURSOR_STATE.yPos
     lda REFRESH_TEMP_X
     jsr moveToPos
+    jsr updateProgData
     rts
 
 

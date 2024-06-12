@@ -24,8 +24,9 @@ jmp main
 .include "diskio.asm"
 .include "io_help.asm"
 .include "conv.asm"
+.include "basic_support.asm"
 
-PROG_NAME .text "MOREORLESS 1.4.9"
+PROG_NAME .text "MOREORLESS 1.9.5"
 SPACER_COL .text ", Col "
 SPACER .text " - "
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
@@ -43,6 +44,10 @@ ENTER_NEW_LINE .text "Goto Line: "
 ENTER_SRCH_STR .text "Search string: "
 SRCH_TEXT .text "SRCH"
 LINE_END_CHAR_TEXT .text "Line end character (LF is default, press c for CR): "
+ENTER_FILE_NAME .text "File name: "
+SAVING_FILE .text "Saving file ... "
+TXT_ERROR .text "error"
+TXT_EXIT_WARN .text "There are unsaved changes. Enter a non empty string to exit anyway: "
 
 FILE_ALLOWED .text "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 0123456789_-./:#+~()!&@[]"
 
@@ -58,15 +63,14 @@ main
     jsr memory.init
     jsr line.init_module
     jsr editor.init
+    jsr basic.init
 
     lda editor.STATE.col
     sta CURSOR_STATE.col 
     jsr txtio.clear
 
     ; initialize key handling code
-    #load16BitImmediate COMMANDS, KEY_SEARCH_PTR
-    lda NUM_COMMANDS
-    sta BIN_STATE.numEntries
+    jsr toEditor
 
     jsr enterDrive
     jsr enterLineEnding
@@ -75,7 +79,7 @@ _restart
     jsr keyrepeat.init
     jsr enterFileName
     bcc _l2
-    jmp _reset
+    bra _newDocument
 _l2
     jsr txtio.newLine
     jsr txtio.newLine
@@ -84,6 +88,9 @@ _l2
     bcc _l1
     #printString FILE_ERROR, len(FILE_ERROR)
     jmp _restart
+_newDocument
+    jsr list.create
+    bcs _reset
 _l1
     jsr start80x60
     jsr keyrepeat.init
@@ -108,21 +115,6 @@ MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0073, searchDown
 MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
-NUM_COMMANDS .byte 11
-COMMANDS
-; Non search commands. These have to be sorted by ascending key codes otherwise
-; the binary search fails.
-CMD_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
-CMD_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
-CMD_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
-CMD_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
-CMD_PAGE_UP      .dstruct KeyEntry_t, $0020, pageDown
-CMD_PAGE_DOWN    .dstruct KeyEntry_t, $0062, pageUp
-CMD_GOTO_LINE    .dstruct KeyEntry_t, $0067, gotoLine
-CMD_UNSET_SEACRH .dstruct KeyEntry_t, $0075, unsetSearch
-CMD_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60
-CMD_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30
-CMD_TO_EDITOR    .dstruct KeyEntry_t, $02E5, toEditor
 
 CMD_VEC .word 0
 jmpToHandler
@@ -173,7 +165,6 @@ _noSearch
     bne _checkCommands
     ; handle shutdown properly
     jsr endProg
-    clc
     rts
 _checkCommands
     jsr binsearch.searchEntry
@@ -197,10 +188,6 @@ _default
 
 .include "change_pos_ops.asm"
 
-
-endProg
-    jsr printScreen
-    rts
 
 FOUND_POS .byte 0
 ; y contains direction
@@ -387,6 +374,71 @@ _done
 _notDone
     sec    
     rts 
+
+
+LEN_DUMMY = 9
+DUMMY_TEXT .fill LEN_DUMMY
+DUMMY_LEN .byte 0 
+endProg
+    lda editor.STATE.dirty
+    beq _doneAndLeave
+
+    jsr toProg
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString BLANKS_80, len(CURRENT_LINE) + 5
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString TXT_EXIT_WARN, len(TXT_EXIT_WARN)
+
+    #inputStringNonBlocking DUMMY_TEXT, LEN_DUMMY, FILE_ALLOWED, len(FILE_ALLOWED)
+    #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
+    #load16BitImmediate processExitTest, keyrepeat.FOCUS_VECTOR
+    sec
+    rts
+_doneAndLeave
+    clc
+    rts
+
+
+processExitTest
+    jsr txtio.getStringFocusFunc
+    bcc _procEnd
+    jmp _notDone
+_procEnd
+    sta DUMMY_LEN
+    jsr txtio.cursorOn
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    lda CURSOR_STATE.scrollOn
+    pha
+    stz CURSOR_STATE.scrollOn
+    #printString BLANKS_80, len(BLANKS_80)
+    pla
+    sta CURSOR_STATE.scrollOn
+
+    lda DUMMY_LEN
+    beq _doNothing
+    ; ToDo: Change if there is a better solution to cleanly
+    ; exit this program.
+    jsr sys64738
+
+_doNothing
+    jsr toData
+    jsr updateProgData
+    #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
+_notDone
+    sec    
+    rts
 
 
 LINE_NUMBER .text "     "
@@ -665,17 +717,16 @@ updateProgData
 
 
 progUpdateInt
-    lda #len(CURRENT_LINE)
-    sta CURSOR_STATE.xPos
+    stz CURSOR_STATE.xPos
     lda CURSOR_STATE.yMaxMinus1
     sta CURSOR_STATE.yPos
     jsr txtio.cursorSet
-    #printString BLANKS_80, 15
-    lda #len(CURRENT_LINE)
-    sta CURSOR_STATE.xPos
+    #printString BLANKS_80, 78 - 15
+    stz CURSOR_STATE.xPos
     lda CURSOR_STATE.yMaxMinus1
     sta CURSOR_STATE.yPos
     jsr txtio.cursorSet
+    #printString CURRENT_LINE, len(CURRENT_LINE)
     #move16Bit editor.STATE.curLine, txtio.WORD_TEMP
     jsr txtio.printWordDecimal
     #printString SPACER_COL, len(SPACER_COL)
@@ -767,7 +818,7 @@ setup80x30
     rts
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 14
+NUM_EDITOR_COMMANDS = 16
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -790,6 +841,10 @@ EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown
 EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp
 ; FNX + g
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine
+; FNX + r
+EDT_BASIC_RENUM  .dstruct KeyEntry_t, $0472, basicAutoNum
+; FNX + s
+EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveDocument
 ; FNX + u
 EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch
 ; SHift + HOME
@@ -973,4 +1028,153 @@ _updateColour
     beq _done
     jsr procCrsrLeft2
 _done
+    rts
+
+
+basicAutoNum
+    jsr toProg
+
+    ; clear last line
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString BLANKS_80, len(CURRENT_LINE) + 5
+
+    ; reset to position 0 in last line and print message
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString ENTER_FILE_NAME, len(ENTER_FILE_NAME)
+
+    ; setup callbacks for key presses
+    #inputStringNonBlocking basic.BASIC_NAME, 78 - len(ENTER_FILE_NAME), FILE_ALLOWED, len(FILE_ALLOWED)
+    #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
+    #load16BitImmediate doAutoNum, keyrepeat.FOCUS_VECTOR
+    rts
+
+
+doAutoNum
+    jsr txtio.getStringFocusFunc
+    bcc _procEnd
+    jmp _notDone
+_procEnd
+    ; save length
+    sta basic.BASIC_FILE.nameLen
+    jsr txtio.cursorOn
+
+    ; clear last line
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    lda CURSOR_STATE.scrollOn
+    pha
+    stz CURSOR_STATE.scrollOn
+    #printString BLANKS_80, len(BLANKS_80)
+    pla
+    sta CURSOR_STATE.scrollOn
+
+    ; check if a file name was entered
+    lda basic.BASIC_FILE.nameLen
+    beq _doNothing
+
+    ; print saving file message
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString SAVING_FILE, len(SAVING_FILE)
+
+    ; create outout file
+    jsr basic.autoRenumber
+    bcc _saveOK
+    #printString TXT_ERROR, len(TXT_ERROR)
+    jsr toData
+    bra _finished
+_saveOK
+    jsr printFixedProgData
+    ; jump to here if user entered an emtpy file name
+_doNothing
+    jsr toData
+_done
+    jsr updateProgData
+_finished
+    ; reinitialize keyrepeat module. If we do not do this key repeat
+    ; will stop working. I guess the reason is that quite a lot of messages
+    ; are missed during file operations
+    jsr keyrepeat.init
+    ; restore key press callback
+    #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
+_notDone
+    sec    
+    rts    
+
+
+saveDocument
+    jsr toProg
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString BLANKS_80, len(CURRENT_LINE) + 5
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString ENTER_FILE_NAME, len(ENTER_FILE_NAME)
+
+    #inputStringNonBlocking FILE_NAME, 78 - len(ENTER_FILE_NAME), FILE_ALLOWED, len(FILE_ALLOWED)
+    #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
+    #load16BitImmediate processSaveFile, keyrepeat.FOCUS_VECTOR
+    rts
+
+
+processSaveFile
+    jsr txtio.getStringFocusFunc
+    bcc _procEnd
+    jmp _notDone
+_procEnd
+    sta TXT_FILE.nameLen
+    jsr txtio.cursorOn
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    lda CURSOR_STATE.scrollOn
+    pha
+    stz CURSOR_STATE.scrollOn
+    #printString BLANKS_80, len(BLANKS_80)
+    pla
+    sta CURSOR_STATE.scrollOn
+
+    lda TXT_FILE.nameLen
+    beq _doNothing
+
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString SAVING_FILE, len(SAVING_FILE)
+
+    jsr editor.saveFile
+    bcc _saveOK
+    #printString TXT_ERROR, len(TXT_ERROR)
+    jsr toData
+    bra _finished
+_saveOK
+    jsr printFixedProgData
+_doNothing
+    jsr toData
+_done
+    jsr updateProgData
+_finished
+    jsr keyrepeat.init
+    #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
+_notDone
+    sec    
     rts
