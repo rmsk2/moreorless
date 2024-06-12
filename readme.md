@@ -1,32 +1,40 @@
 # Moreorless
 
-This is a text viewer for the Foenix F256 family of modern retro computers. It allows you to load a text file
-(remark: SuperBASIC programs are also text files) into RAM and to navigate through it in forwards and backwards 
-direction using the following keys:
+This is a simple text editor and viewer for the Foenix F256 family of modern retro computers. It allows you to load 
+a text file (remark: SuperBASIC programs are also text files) into RAM and to navigate through it in forwards and backwards 
+direction as well as editing the loaded file. The following commands are supported (Remark: Use the `Windows` key instead
+of `Foenix` when using a PS/2 keyboard.)
 
 - `Cursor left` and `right` move the cursor horizontally
 - `Cursor up` and `down` move the cursor one line up or down
-- Pressing the `space bar` moves the view one screen towards the end of the file
-- Pressing `b` moves the view one screen towards the beginning of the file
+- Pressing `Foenix+Cursor down` moves the view one screen towards the end of the file
+- Pressing `Foenix+Cursor up` moves the view one screen towards the beginning of the file
 - Pressing `F1` resets the view to line one in 80x60 text mode
 - Pressing `F3` resets the view to line one in 80x30 text mode
-- Pressing `q` leaves the program by causing a soft reset
-- Pressing `g` moves you to the line number which was entered after pressing the key
-- Pressing `/` allows you to enter a string to search for in the document. If a non empty string is entered 
+- Pressing `Alt+x` leaves the program by causing a soft reset
+- Pressing `Foenix+g` moves you to the line number which was entered after pressing the key
+- Pressing `Foenix+f` allows you to enter a string to search for in the document. If a non empty string is entered 
 `SRCH` is  shown in the status line. If an empty string is entered the current search string is deleted. If
 a search string was entered `moreorless` will immediately search for it in forward direction. You can press
- `s` or `S` explicitly to search forward or backward for the next occurance. All searches are case insensitive
+ `F5` or `F7` explicitly to search forward or backward for the next occurance. All searches are case insensitive
 and instead of printing the found string in reverse the cursor is moved to the start position of the search 
 string in the line.
-- Pressing `u` unsets or deletes the search string. This also makes `SRCH` disappear
-- Pressing `s` searches for the next occurance of the search string when moving towards the end of the 
+- Pressing `Foenix+u` unsets or deletes the search string. This also makes `SRCH` disappear
+- Pressing `F5` searches for the next occurance of the search string when moving towards the end of the 
 document. If it is found the line in which it appeared becomes the first line which is displayed. While
 the search is in progress a `*` is shown in the upper left corner of the screen.
-- Pressing `S` searches for the next occurance of the search string when moving towards the start of the 
+- Pressing `F7` searches for the next occurance of the search string when moving towards the start of the 
 document. If it is found the line in which it appeared becomes the first line which is displayed. While
 the search is in progress a `*` is shown in the upper left corner of the screen.
-
-In essence the basic navigation commands work in the same way as in the UNIX `less` utlility. 
+- Pressing `delete` can be used to delete single characters and merge lines and thereby deleting a line
+- Pressing `Return` can be used to split a line in two lines, i.e. it creates a new line below the current one.
+- `Foenix+s` can be used to save the current state of the edited text
+- `Foenix+r` creates a new file from the current state of the edited text by automatically prefixing each line with
+a line number. This can be used to edit BASIC programs without line numbers and adding them while writing the
+file to SD card or an IEC drive.
+- `Home` and `Shift+Home` can be used to move the cursor to the begin ir end of the line
+- When any other key is pressed the corresponding character is inserted at the current cursor position
+ 
 `Moreorless` uses a single line feed (LF) or carriage return (CR) character as a line delimiter. The default 
 is LF but this can be changed at program start to CR. If the alternate line ending character is encountered
 in text it is replaced by a diamond shaped character.
@@ -66,32 +74,30 @@ at $8000 as a window to map in some sort of  yet unspecified extension code.
 
 # Remarks
 
-## Viewing SuperBASIC programs
+## Viewing and editing SuperBASIC programs
 
 SuperBASIC can cope with either LF or CR as a line ending character and CR seems to be the default. So if you 
 can not load a SuperBASIC program into `moreorless` try to switch to the CR line ending at program start. 
 
 SuperBASICs `list` command performs pretty printing when showing a program. I.e. it for instance automatically
 indents certain parts of the program and does syntax highlighting. `moreorless` will not perform any pretty
-printing when showing a BASIC program. On the other hand it allows you to look at the program in a much more 
-comfortable way and you can search in the program's text.
+printing when showing or editing a BASIC program. On the other hand it allows you to look at and edit the program 
+in a much more comfortable way and you can search in the program's text. Additonally you can add your own indentation
+when editing the source code.
 
 ## Some plans
 
 As the data structure which represents the file contents in memory is dynamic I am in the process to extend this
-software to be a (simple) text editor for the Foenix 256 line of computers. Press Alt+e to change into editor mode 
-and observe the progress I make. Be warned this is not finished by a long shot. This is how I plan to progress:
+software to be a practically usable text editor for the Foenix 256 line of computers. Be warned this is not finished 
+by a long shot. This is how I plan to progress:
 
 Short term goals  
-- allowing to start with an empty document
-- adding a save command
+- adding cutting copying and pasting of parts of lines and full lines
+- adding search and replace 
 
 Midterm goals
 - replace tab characters at load by four blanks
 - visualize line lengths larger than 80 in UI
-- adding cutting copying and pasting of parts of lines and full lines
-- adding search and replace 
-- making sure it works with SuperBASIC.
 
 After that possibly
 - adding an undo feature (I have no clear plan on how to achieve this, yet)
