@@ -26,7 +26,10 @@ jmp main
 .include "conv.asm"
 .include "basic_support.asm"
 
-PROG_NAME .text "MOREORLESS 1.9.5"
+TXT_STARS .text "****************"
+PROG_NAME .text "MOREORLESS 1.9.6"
+AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
+GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
 SPACER .text " - "
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
@@ -37,13 +40,14 @@ BLOCK_FREE_TXT    .text " KB free | "
 TXT_RAM_EXPANSION .text "RAM expansion: "
 FOUND_TXT .text "Present | "
 NOT_FOUND_TXT .text "NOT Present | "
-ENTER_FILE_TXT .text "File (enter to reset): "
+MSG_FILE_LOAD .text "Enter name of file to load. Press return to start with an empty document", $0D
+ENTER_FILE_TXT .text "File: "
 LOADING_FILE_TXT .text "Loading file ... "
 ENTER_DRIVE .text "Enter drive number (0, 1 or 2): "
 ENTER_NEW_LINE .text "Goto Line: "
 ENTER_SRCH_STR .text "Search string: "
 SRCH_TEXT .text "SRCH"
-LINE_END_CHAR_TEXT .text "Line end character (LF is default, press c for CR): "
+LINE_END_CHAR_TEXT .text "Select line end character (press c for CR, press any other key for LF): "
 ENTER_FILE_NAME .text "File name: "
 SAVING_FILE .text "Saving file ... "
 TXT_ERROR .text "error"
@@ -71,6 +75,20 @@ main
 
     ; initialize key handling code
     jsr toEditor
+
+    #printString TXT_STARS, len(TXT_STARS)
+    lda #$20
+    jsr txtio.charOut
+    #printString PROG_NAME, len(PROG_NAME)
+    lda #$20
+    jsr txtio.charOut
+    #printString TXT_STARS, len(TXT_STARS)
+    jsr txtio.newLine
+    jsr txtio.newLine
+    #printString AUTHOR_TEXT, len(AUTHOR_TEXT)
+    #printString GITHUB_URL, len(GITHUB_URL)
+    jsr txtio.newLine
+    jsr txtio.newLine
 
     jsr enterDrive
     jsr enterLineEnding
@@ -564,6 +582,8 @@ _selected
 
 
 enterFileName
+    #printString MSG_FILE_LOAD, len(MSG_FILE_LOAD)
+    jsr txtio.newLine
     #printString ENTER_FILE_TXT, len(ENTER_FILE_TXT)
     jsr txtio.reverseColor
     #inputStringNonBlocking FILE_NAME, 79 - len(ENTER_FILE_TXT), FILE_ALLOWED, len(FILE_ALLOWED)
