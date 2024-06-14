@@ -357,7 +357,7 @@ _doneOK
 _done
     rts
 
-MAX_LEN_MIN1 .byte 0
+
 ; This routine assumes a buffer at MEM_PTR1 which has a given length. It allows to insert a new
 ; element at the beginning of the buffer. All other elements are shifted one position to the right.
 ; the last element is dropped in such a way that the specified length does not change. Length has 
