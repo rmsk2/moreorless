@@ -11,7 +11,7 @@ of `Foenix` when using a PS/2 keyboard.)
 - Pressing `Foenix+Cursor up` moves the view one screen towards the beginning of the file
 - Pressing `F1` resets the view to line one in 80x60 text mode
 - Pressing `F3` resets the view to line one in 80x30 text mode
-- Pressing `Alt+x` leaves the program by causing a soft reset
+- Pressing `Alt+x` leaves the program and restarts BASIC
 - Pressing `Foenix+g` moves you to the line number which was entered after pressing the key
 - Pressing `Foenix+f` allows you to enter a string to search for in the document. If a non empty string is entered 
 `SRCH` is  shown in the status line. If an empty string is entered the current search string is deleted. If
@@ -29,7 +29,7 @@ the search is in progress a `*` is shown in the upper left corner of the screen.
 - Pressing `delete` can be used to delete single characters and merge lines and thereby deleting a line
 - Pressing `Return` can be used to split a line in two lines, i.e. it creates a new line below the current one.
 - `Foenix+s` can be used to save the current state of the edited text
-- `Foenix+r` creates a new file from the current state of the edited text by automatically prefixing each line with
+- `Alt+b` creates a new file from the current state of the edited text by automatically prefixing each line with
 a line number. This can be used to edit BASIC programs without line numbers and adding them while writing the
 file to SD card or an IEC drive.
 - `Home` and `Shift+Home` can be used to move the cursor to the begin ir end of the line

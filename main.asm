@@ -101,31 +101,11 @@ _l1
     jsr txtio.clear
     jsr txtio.init80x60
     #printString DONE_TXT, len(DONE_TXT)
-_reset    
-    jsr sys64738
+_reset
+    jmp exitToBasic
     ; I guess we never get here ....
     rts
 
-; a key code is a word. The hi byte specifies the state of the meta keys
-; and the lo byte the ascii code of the key press
-
-; Fixed commands which are processed seperately
-MEM_SET_SEARCH   .dstruct KeyEntry_t, $002F, setSearchString
-MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0073, searchDown
-MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
-MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
-
-
-CMD_VEC .word 0
-jmpToHandler
-    jmp (CMD_VEC)
-
-DEFAULT_VEC .word nothing
-jmpToDefHandler
-    jmp (DEFAULT_VEC)
-
-nothing
-    rts
 
 processKeyEvent
     sta ASCII_TEMP
@@ -186,6 +166,62 @@ _default
     rts
 
 
+CMD_VEC .word 0
+jmpToHandler
+    jmp (CMD_VEC)
+
+DEFAULT_VEC .word nothing
+jmpToDefHandler
+    jmp (DEFAULT_VEC)
+
+nothing
+    rts
+
+
+; a key code is a word. The hi byte specifies the state of the meta keys
+; and the lo byte the ascii code of the key press
+
+; Fixed commands which are processed seperately
+MEM_SET_SEARCH   .dstruct KeyEntry_t, $002F, setSearchString
+MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0073, searchDown
+MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
+MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
+
+; There can be up to 64 commands at the moment
+NUM_EDITOR_COMMANDS = 16
+EDITOR_COMMANDS
+; Non search commands. These have to be sorted by ascending key codes otherwise
+; the binary search fails.
+EDT_LINE_START   .dstruct KeyEntry_t, $0001, toLineStart           ; HOME
+EDT_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
+EDT_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
+EDT_DELETE       .dstruct KeyEntry_t, $0008, deleteChar            ; delete
+EDT_LINE_SPLIT   .dstruct KeyEntry_t, $000D, splitLines            ; Return
+EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
+EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
+EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60            ; F1
+EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30            ; F3
+EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
+EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down
+EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp                ; FNX + up
+EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine              ; FNX + g
+EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveDocument          ; FNX + s
+EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch           ; FNX + u
+EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; SHift + HOME
+
+
+toEditor
+    #load16BitImmediate $0466, MEM_SET_SEARCH.keyComb              ; FNX + f
+    #load16BitImmediate $0085, MEM_SEARCH_DOWN.keyComb             ; F5
+    #load16BitImmediate $0087, MEM_SEARCH_UP.keyComb               ; F7
+    #load16BitImmediate $02F8, MEM_EXIT.keyComb                    ; ALT + x
+    #load16BitImmediate EDITOR_COMMANDS, KEY_SEARCH_PTR
+    lda #NUM_EDITOR_COMMANDS
+    sta BIN_STATE.numEntries
+    #load16BitImmediate insertCharacter, DEFAULT_VEC
+    rts
+
+
 .include "change_pos_ops.asm"
 
 
@@ -199,7 +235,7 @@ searchBoth
     jsr signalStartSearch
     ply
     ; is a search in progress, i.e. has the user only executed seach operations
-    ; /sS and nothing else? If yes we have to move to the next character before
+    ; and nothing else? If yes we have to move to the next character before
     ; starting the search.
     lda editor.STATE.searchInProgress
     bne _moveFirst
@@ -314,21 +350,25 @@ signalEndSearch
 setSearchString
     jsr toProg
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString BLANKS_80, len(CURRENT_LINE) + 5
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString ENTER_SRCH_STR, len(ENTER_SRCH_STR)
 
     #inputStringNonBlocking SEARCH_BUFFER, 64, FILE_ALLOWED + 26, len(FILE_ALLOWED) - 26
     #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
     #load16BitImmediate processSearchString, keyrepeat.FOCUS_VECTOR
+    rts
+
+
+print80Blanks
+    lda CURSOR_STATE.scrollOn
+    pha
+    stz CURSOR_STATE.scrollOn
+    #printString BLANKS_80, len(BLANKS_80)
+    pla
+    sta CURSOR_STATE.scrollOn
     rts
 
 
@@ -340,21 +380,10 @@ _procEnd
     sta SEARCH_BUFFER.len
     jsr txtio.cursorOn
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
-    lda CURSOR_STATE.scrollOn
-    pha
-    stz CURSOR_STATE.scrollOn
-    #printString BLANKS_80, len(BLANKS_80)
-    pla
-    sta CURSOR_STATE.scrollOn
+    jsr toLeftLastLine
+    jsr print80Blanks
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString CURRENT_LINE, len(CURRENT_LINE)
 
     lda #BOOL_TRUE
@@ -385,16 +414,10 @@ endProg
 
     jsr toProg
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString BLANKS_80, len(CURRENT_LINE) + 5
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString TXT_EXIT_WARN, len(TXT_EXIT_WARN)
 
     #inputStringNonBlocking DUMMY_TEXT, LEN_DUMMY, FILE_ALLOWED, len(FILE_ALLOWED)
@@ -415,22 +438,13 @@ _procEnd
     sta DUMMY_LEN
     jsr txtio.cursorOn
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
-    lda CURSOR_STATE.scrollOn
-    pha
-    stz CURSOR_STATE.scrollOn
-    #printString BLANKS_80, len(BLANKS_80)
-    pla
-    sta CURSOR_STATE.scrollOn
+    jsr toLeftLastLine
+    jsr print80Blanks
 
     lda DUMMY_LEN
     beq _doNothing
-    ; ToDo: Change if there is a better solution to cleanly
-    ; exit this program.
-    jsr sys64738
+
+    jmp exitToBasic
 
 _doNothing
     jsr toData
@@ -446,16 +460,10 @@ LINE_LEN .byte 0
 gotoLine
     jsr toProg
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString BLANKS_80, len(CURRENT_LINE) + 5
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString ENTER_NEW_LINE, len(ENTER_NEW_LINE)
 
     #inputStringNonBlocking LINE_NUMBER, 5, txtio.PRBYTE.hex_chars, 10
@@ -472,16 +480,10 @@ _procEnd
     sta LINE_LEN
     jsr txtio.cursorOn
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString BLANKS_80, len(CURRENT_LINE) + 7
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString CURRENT_LINE, len(CURRENT_LINE)
 
     jsr progUpdateInt
@@ -605,6 +607,14 @@ toProg
     #load16BitImmediate CURSOR_STATE_DATA, TXT_PTR2
     #load16BitImmediate CURSOR_STATE_PROG, TXT_PTR1
     jsr txtio.switch    
+    rts
+
+
+toLeftLastLine
+    stz CURSOR_STATE.xPos
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
     rts
 
 
@@ -817,55 +827,6 @@ setup80x30
 
     rts
 
-; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 16
-EDITOR_COMMANDS
-; Non search commands. These have to be sorted by ascending key codes otherwise
-; the binary search fails.
-; HOME
-EDT_LINE_START   .dstruct KeyEntry_t, $0001, toLineStart
-EDT_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
-EDT_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
-EDT_DELETE       .dstruct KeyEntry_t, $0008, deleteChar
-; Return
-EDT_LINE_SPLIT   .dstruct KeyEntry_t, $000D, splitLines
-EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
-EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
-; F1
-EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60
-; F3
-EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30
-; FNX + down
-EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown
-; FNX + up
-EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp
-; FNX + g
-EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine
-; FNX + r
-EDT_BASIC_RENUM  .dstruct KeyEntry_t, $0472, basicAutoNum
-; FNX + s
-EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveDocument
-; FNX + u
-EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch
-; SHift + HOME
-EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd
-
-
-toEditor
-    ; FNX + f
-    #load16BitImmediate $0466, MEM_SET_SEARCH.keyComb
-    ; F5
-    #load16BitImmediate $0085, MEM_SEARCH_DOWN.keyComb
-    ; F7
-    #load16BitImmediate $0087, MEM_SEARCH_UP.keyComb
-    ; ALT + x
-    #load16BitImmediate $02F8, MEM_EXIT.keyComb
-    #load16BitImmediate EDITOR_COMMANDS, KEY_SEARCH_PTR
-    lda #NUM_EDITOR_COMMANDS
-    sta BIN_STATE.numEntries
-    #load16BitImmediate insertCharacter, DEFAULT_VEC
-    rts
-
 
 toLineEnd
     jsr moveToLineEnd
@@ -919,7 +880,7 @@ insertCharacter
     jsr markDocumentAsDirty
     ; insert character into LINE_BUFFER
     #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
-    lda #LINE_BUFFER_LEN
+    lda #search.MAX_CHARS_TO_CONSIDER
     sta memory.INS_PARAM.maxLength
     ldy LINE_BUFFER.len
     lda CURSOR_STATE.xPos 
@@ -942,7 +903,6 @@ insertCharacter
     sbc CURSOR_STATE.xPos
     tay
     sty SCREEN_LEN
-    lda #0
     ldx ASCII_TEMP
     jsr memory.insertCharacterDrop
     
@@ -950,7 +910,6 @@ insertCharacter
     #toColorMatrix
     ldy SCREEN_LEN
     ldx editor.STATE.col
-    lda #0
     jsr memory.insertCharacterDrop
     
     #restoreIoState
@@ -1035,17 +994,11 @@ basicAutoNum
     jsr toProg
 
     ; clear last line
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString BLANKS_80, len(CURRENT_LINE) + 5
 
     ; reset to position 0 in last line and print message
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString ENTER_FILE_NAME, len(ENTER_FILE_NAME)
 
     ; setup callbacks for key presses
@@ -1065,26 +1018,15 @@ _procEnd
     jsr txtio.cursorOn
 
     ; clear last line
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
-    lda CURSOR_STATE.scrollOn
-    pha
-    stz CURSOR_STATE.scrollOn
-    #printString BLANKS_80, len(BLANKS_80)
-    pla
-    sta CURSOR_STATE.scrollOn
+    jsr toLeftLastLine
+    jsr print80Blanks
 
     ; check if a file name was entered
     lda basic.BASIC_FILE.nameLen
     beq _doNothing
 
     ; print saving file message
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString SAVING_FILE, len(SAVING_FILE)
 
     ; create outout file
@@ -1098,7 +1040,6 @@ _saveOK
     ; jump to here if user entered an emtpy file name
 _doNothing
     jsr toData
-_done
     jsr updateProgData
 _finished
     ; reinitialize keyrepeat module. If we do not do this key repeat
@@ -1115,16 +1056,10 @@ _notDone
 saveDocument
     jsr toProg
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString BLANKS_80, len(CURRENT_LINE) + 5
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString ENTER_FILE_NAME, len(ENTER_FILE_NAME)
 
     #inputStringNonBlocking FILE_NAME, 78 - len(ENTER_FILE_NAME), FILE_ALLOWED, len(FILE_ALLOWED)
@@ -1141,24 +1076,13 @@ _procEnd
     sta TXT_FILE.nameLen
     jsr txtio.cursorOn
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
-    lda CURSOR_STATE.scrollOn
-    pha
-    stz CURSOR_STATE.scrollOn
-    #printString BLANKS_80, len(BLANKS_80)
-    pla
-    sta CURSOR_STATE.scrollOn
+    jsr toLeftLastLine
+    jsr print80Blanks
 
     lda TXT_FILE.nameLen
     beq _doNothing
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    jsr toLeftLastLine
     #printString SAVING_FILE, len(SAVING_FILE)
 
     jsr editor.saveFile
@@ -1170,7 +1094,6 @@ _saveOK
     jsr printFixedProgData
 _doNothing
     jsr toData
-_done
     jsr updateProgData
 _finished
     jsr keyrepeat.init

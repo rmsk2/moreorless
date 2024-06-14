@@ -59,14 +59,12 @@ saveFile
     ; initialize FileState struct
 
     ; resest EOF state
-    ldy #FileState_t.eofReached
     lda #EOF_NOT_REACHED
-    sta (FILEIO_PTR1), y
+    sta TXT_FILE.eofReached
 
     ; set mode to write
-    ldy #FileState_t.mode
     lda #MODE_WRITE
-    sta (FILEIO_PTR1), y
+    sta TXT_FILE.mode
 
     ; open file for writing
     jsr disk.waitOpen
@@ -83,18 +81,15 @@ _lineLoop
     lda LINE_END_CHAR
     sta LINE_BUFFER.buffer, y
     ; set data buffer
-    ldy #FileState_t.dataPtr
     lda #<LINE_BUFFER.buffer
-    sta (FILEIO_PTR1), y
-    iny
+    sta TXT_FILE.dataPtr
     lda #>LINE_BUFFER.buffer
-    sta (FILEIO_PTR1), y
+    sta TXT_FILE.dataPtr + 1
     ; set data buffer length
-    ldy #FileState_t.dataLen
     lda LINE_BUFFER.len
     ; increment length because of line ending character
     ina
-    sta (FILEIO_PTR1), y
+    sta TXT_FILE.dataLen
     ; write block
     jsr disk.waitWriteBlock
     bcs _errorClose

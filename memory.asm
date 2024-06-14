@@ -205,10 +205,11 @@ _done
     rts
 
 
-; This routine shifts the memory area to which MEM_PTR1 points and which has length given in y
-; one position to the right beginning with the position spcified in the accu. The "hole" that
+; This routine shifts the memory area to which MEM_PTR1 points and which has the length given in y
+; one position to the right beginning with the position specified in the accu. The "hole" that
 ; is created at this position is filled with a space character. Upon return y is set to the
-; position of the "hole" that was created. Length has to be at least two for this code to work.
+; position of the "hole" that was created. The last element in the buffer is overwritten and lost.
+; Length has to be at least two for this code to work.
 ;
 ; ***** Beware **** This routine uses self modifying code. I know this is ugly but doing it
 ; in the "proper" way would not be nice either.
@@ -245,7 +246,7 @@ shftDone
 
 DELETE_POS_HELP .byte 0
 ; This routine shifts the memory area to which MEM_PTR1 points and which has the length given in y
-; one position to the left beginning with the position spcified in the accu. The "hole" that
+; one position to the left beginning with the position specified in the accu. The "hole" that
 ; is created at the end is filled with a space character. Upon return y is set to the
 ; position of the "hole" that was created. Length has to be at least two for this code to work.
 ;
@@ -307,21 +308,31 @@ InsertParam_t .struct
 
 INS_PARAM .dstruct InsertParam_t
 
-
+; This routine inserts a new character into a segment of memory that starts at the address
+; specified by MEM_PTR1 which has an overall length of INS_PARAM.maxLength bytes of which 
+; INS_PARAM.curLength are already used. A new element is only inserted if there is room left
+; in the buffer. All current length values including 0 and 1 are supported. When a character is 
+; inserted only the currently used elements of the buffer are shifted.
+;
 ; MEM_PTR1 contains start address, INS_PARAM.maxLength the maximum length, y current length, 
 ; accu insert position, x character to insert. Carry is set if growing is not possible.
+; If the buffer could be grown, then INS_PARAM.curLength holds the new length und y contains
+; the offset of the filled hole.
 insertCharacterGrow
+    ; save call parameters
     stx INS_PARAM.data
     sty INS_PARAM.curLength
     sta INS_PARAM.insertPos
 
+    ; check whether we have room for the extra character
     lda INS_PARAM.curLength
     cmp INS_PARAM.maxLength
     bcs _done                                        ; => buffer is already full
     ; there is still room for at least one byte
+    ; Is insert pos smaller than current length?
     lda INS_PARAM.insertPos
     cmp INS_PARAM.curLength
-    bcc _notAppend
+    bcc _notAppend                                   ; => yes, do insert not append
     ; we append one character. This also handles the case of a previously empty
     ; buffer
     ldy INS_PARAM.curLength
@@ -347,29 +358,30 @@ _done
     rts
 
 MAX_LEN_MIN1 .byte 0
-; MEM_PTR1 contains start address, y the fixed length, accu insert position, x character to insert
+; This routine assumes a buffer at MEM_PTR1 which has a given length. It allows to insert a new
+; element at the beginning of the buffer. All other elements are shifted one position to the right.
+; the last element is dropped in such a way that the specified length does not change. Length has 
+; to be at least one.
+;
+; MEM_PTR1 contains start address, y the length, x character to insert. 
 insertCharacterDrop
+    ; save parameters
     stx INS_PARAM.data
     sty INS_PARAM.maxLength
-    sta INS_PARAM.insertPos
 
     dey
-    sty MAX_LEN_MIN1
-    lda INS_PARAM.insertPos
-    cmp MAX_LEN_MIN1
-    bcc _notAtEnd 
-    ldy MAX_LEN_MIN1
-    lda INS_PARAM.data
-    sta (MEM_PTR1), y
+    bne _lengtAtLeast2
+    ; length is one => simply replace the char at position 0. There are no other chars.
+    txa
+    sta (MEM_PTR1)
     bra _done
-_notAtEnd
+_lengtAtLeast2
     ldy INS_PARAM.maxLength
-    lda INS_PARAM.insertPos
+    lda #0
     jsr memory.vecShiftRight
     ; fill hole which was created
-    ldy INS_PARAM.insertPos
     lda INS_PARAM.data
-    sta (MEM_PTR1), y
+    sta (MEM_PTR1)
 _done
     rts
 

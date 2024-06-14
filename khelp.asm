@@ -131,6 +131,13 @@ _doProc
     rts
 
 
+exitToBasic
+    lda #65
+    sta kernel.args.run.block_id
+    jsr kernel.RunBlock
+    rts
+
+
 ; See chapter 17 of the system manual. Section 'Software reset'
 sys64738
     lda #$DE

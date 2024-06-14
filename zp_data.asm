@@ -15,13 +15,13 @@ TimerHelp_t .struct
 
 ; put some well used data structures into the zero page
 ;
-; * = $30
+; * = $40
+.virtual $40
 ; length 6 bytes
-.virtual $30
 BIN_STATE  .dstruct BinState_t
 ; length 6 bytes
 TRACKING   .dstruct KeyTracking_t
 ; length 2 bytes
 TIMER_HELP .dstruct TimerHelp_t
-; $3E
+; $4E
 .endvirtual

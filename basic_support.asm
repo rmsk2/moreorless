@@ -3,10 +3,12 @@ basic .namespace
 BASIC_NAME .fill MAX_FILE_LENGTH
 BASIC_FILE .dstruct FileState_t, 177, BASIC_NAME, len(BASIC_NAME), BASIC_LINE_NR, LINE_BUFFER_LEN + 1 + size(BASIC_LINE_NR), MODE_WRITE, DEVICE_NUM
 
+STEPPING_WIDTH = 5
+
 LINE_NUMBER  .word 0
 COUNT_DIGITS .byte 0
 generateLineNr
-    #inc16Bit LINE_NUMBER
+    #add16BitImmediate STEPPING_WIDTH, LINE_NUMBER
     stz COUNT_DIGITS
     #load16BitImmediate 10, $DE04
     lda LINE_NUMBER 
