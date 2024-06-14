@@ -370,12 +370,12 @@ insertCharacterDrop
     sty INS_PARAM.maxLength
 
     dey
-    bne _lengtAtLeast2
+    bne _lengthAtLeast2
     ; length is one => simply replace the char at position 0. There are no other chars.
     txa
     sta (MEM_PTR1)
     bra _done
-_lengtAtLeast2
+_lengthAtLeast2
     ldy INS_PARAM.maxLength
     lda #0
     jsr memory.vecShiftRight
