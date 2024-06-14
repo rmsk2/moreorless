@@ -26,13 +26,14 @@ the search is in progress a `*` is shown in the upper left corner of the screen.
 - Pressing `F7` searches for the next occurance of the search string when moving towards the start of the 
 document. If it is found the line in which it appeared becomes the first line which is displayed. While
 the search is in progress a `*` is shown in the upper left corner of the screen.
-- Pressing `delete` can be used to delete single characters and merge lines and thereby deleting a line
-- Pressing `Return` can be used to split a line in two lines, i.e. it creates a new line below the current one.
+- Pressing `delete` can be used to delete single characters and to merge a line with the one above and thereby
+deleting the current line
+- Pressing `Return` can be used to split a line in two lines, i.e. it creates a new line below the current one
 - `Foenix+s` can be used to save the current state of the edited text
 - `Alt+b` creates a new file from the current state of the edited text by automatically prefixing each line with
 a line number. This can be used to edit BASIC programs without line numbers and adding them while writing the
 file to SD card or an IEC drive.
-- `Home` and `Shift+Home` can be used to move the cursor to the begin ir end of the line
+- `Home` and `Shift+Home` can be used to move the cursor to the start or the end of a line
 - When any other key is pressed the corresponding character is inserted at the current cursor position
  
 `Moreorless` uses a single line feed (LF) or carriage return (CR) character as a line delimiter. The default 
@@ -49,7 +50,10 @@ to be slower with a real keyboard vertical scrolling appears to be slower on the
 # Other limitations
 
 - The maximum line length is 224 characters. Any file with lines longer than that will not be loaded
-- All characters which appear in columns 81 or higher are clipped, i.e. there is currently no horizontal scrolling
+- All characters which appear in columns 81 or higher are clipped, i.e. there is currently no horizontal scrolling.
+Additonally `moreorless` does not allow to add characters to lines which are already longer than 80 characters but 
+they can be split via `return` and they can shortened by pressing the `delete` key. A file that was only edited with
+`moreorless` will therefore never have lines with more than 80 characters.
 - Tab characters are not expanded at the moment
 - Due to the data structure selected (see below) there is quite a bit if memory management overhead, i.e.
 wasted memory. `Moreorless` uses roughly twice as much memory as would be needed to only store the file 
@@ -83,13 +87,17 @@ SuperBASICs `list` command performs pretty printing when showing a program. I.e.
 indents certain parts of the program and does syntax highlighting. `moreorless` will not perform any pretty
 printing when showing or editing a BASIC program. On the other hand it allows you to look at and edit the program 
 in a much more comfortable way and you can search in the program's text. Additonally you can add your own indentation
-when editing the source code.
+when editing the source code. 
+
+`moreorless` allows you to create BASIC programs in a more or less usable (pun intended) editor. When you press 
+`Alt+b` you can write the current contents of the file to the selected drive while `moreorless` adds the line 
+numbers automatically. If you refrain from using `goto` and `gosub` you can therefore write BASIC programs without 
+using the built in screen editor.
 
 ## Some plans
 
-As the data structure which represents the file contents in memory is dynamic I am in the process to extend this
-software to be a practically usable text editor for the Foenix 256 line of computers. Be warned this is not finished 
-by a long shot. This is how I plan to progress:
+I am in the process to extend this software to make it a better text editor. Be warned this is not finished by a 
+long shot. This is how I plan to progress:
 
 Short term goals  
 - adding cutting copying and pasting of parts of lines and full lines
