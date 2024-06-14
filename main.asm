@@ -115,13 +115,13 @@ _l1
     #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
     jsr keyrepeat.keyEventLoop
 
-    jsr restoreEvents
     jsr txtio.clear
     jsr txtio.init80x60
     #printString DONE_TXT, len(DONE_TXT)
 _reset
-    jmp exitToBasic
+    jsr exitToBasic
     ; I guess we never get here ....
+    jsr sys64738
     rts
 
 
@@ -462,7 +462,10 @@ _procEnd
     lda DUMMY_LEN
     beq _doNothing
 
-    jmp exitToBasic
+    jsr exitToBasic
+    ; I guess we never get here ....
+    jsr sys64738
+    rts
 
 _doNothing
     jsr toData
