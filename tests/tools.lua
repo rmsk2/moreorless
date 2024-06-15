@@ -23,6 +23,29 @@ mask_bits = {
 MAX_PAGES = #reference_pages
 MAX_BLOCK_POS = MAX_PAGES * 256
 
+-- copy the string given in str to the address addr in the simulator's
+-- memory
+function copy_string(str, addr)
+    local ctr = 0
+    local i
+    for i = 1, #str do
+        local c = str:sub(i,i)
+        write_byte(addr + ctr, string.byte(c))
+        ctr = ctr + 1
+    end
+end
+
+function read_string(addr, len)
+    local i
+    local s = ""
+
+    for i = addr, addr + len - 1, 1 do
+        s = s .. string.char(read_byte(i))
+    end
+
+    return s
+end
+
 -- read word stored at the given address
 function de_ref(ptr_addr)
     local hi_addr = read_byte(ptr_addr + 1)

@@ -28,12 +28,7 @@ function arrange()
 
     -- write search string
     local str = test_table[iterations][1]
-    local ctr = 0
-    for i = 1, #str do
-        local c = str:sub(i,i)
-        write_byte(addr_search + ctr, string.byte(c))
-        ctr = ctr + 1
-    end
+    copy_string(str, addr_search)
     write_byte(addr_search + buf_len, #str)    
 
     -- set search direction
