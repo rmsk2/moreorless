@@ -1,0 +1,5 @@
+{
+    "Name": "Test inserting characters into a line II",
+    "TestDriverSource": "inschar2.asm",
+    "TestScript": "inschar2.lua"
+}

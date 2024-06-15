@@ -1,6 +1,8 @@
 require("string")
 require (test_dir.."tools")
 
+-- This code tests whether memory.insertCharacterGrow works as intended by feeding several inputs
+-- to the routine and checking that the input buffer and its length are modified as expected.
 
 iterations = 0
 test_table = {
@@ -25,6 +27,7 @@ function arrange()
     
     copy_string(dat, buffer_addr)
 
+    -- insert a blank character
     set_xreg(0x20)
     set_yreg(#dat)
     set_accu(test_table[iterations][2])
@@ -61,3 +64,4 @@ function assert()
 
     return true, ""
 end
+
