@@ -162,10 +162,10 @@ clear
     beq _done
     jsr toClip
     jsr list.destroy
+    jsr toDocument
     #copyMem2Mem NIL, CLIP.head
     #copyMem2Mem NIL, CLIP.current
-    #load16BitImmediate 0, CLIP.length
-    jsr toDocument
+    #load16BitImmediate 0, CLIP.length    
 _done
     rts
 
