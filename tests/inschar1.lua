@@ -36,10 +36,12 @@ function assert()
             return false, "Error: Carry was set"
         end    
     else
+        -- here we expect an error
         if not contains_flag("C") then
             return false, "Error: Carry was clear"
         end
 
+        -- we can not test more than an error occurred
         return true, ""    
     end
 
