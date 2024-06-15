@@ -25,6 +25,7 @@ jmp main
 .include "io_help.asm"
 .include "conv.asm"
 .include "basic_support.asm"
+.include "copy_cut.asm"
 
 TXT_STARS .text "****************"
 PROG_NAME .text "MOREORLESS 1.9.6"
@@ -65,6 +66,7 @@ main
     jsr txtio.cursorOn
 
     jsr memory.init
+    jsr clip.init
     jsr line.init_module
     jsr editor.init
     jsr basic.init

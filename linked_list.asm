@@ -326,6 +326,13 @@ _doneOK
     rts
 
 
+SET_PTR  .dstruct FarPtr_t
+; PUBLIC: Set LIST.current to value given in SET_PTR
+setTo
+    #copyMem2Mem SET_PTR, LIST.current
+    rts
+
+
 ; PUBLIC: Set head as current element
 rewind
     #copyMem2Mem LIST.head, LIST.current
