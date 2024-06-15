@@ -16,37 +16,6 @@ FILE_NAME .fill MAX_FILE_LENGTH
 
 TXT_FILE .dstruct FileState_t, 76, FILE_NAME, len(FILE_NAME), LINE_BUFFER.buffer, LINE_BUFFER_LEN + 1, MODE_READ, DEVICE_NUM
 
-OUT_OF_MEMORY .word panic
-; ToDo: Think about a global out of memory handler
-panic
-    rts
-
-
-changeLine .macro func
-    pha
-    phx
-    phy
-    lda LINE_BUFFER.dirty
-    beq _call
-    jsr list.setCurrentLine
-    bcc _call
-    ply
-    plx
-    pla
-    jmp (OUT_OF_MEMORY)
-_call
-    ply
-    plx
-    pla
-    jsr \func
-    php
-    phx    
-    jsr list.readCurrentLine
-    plx
-    plp
-_done
-.endmacro
-
 
 editor .namespace
 

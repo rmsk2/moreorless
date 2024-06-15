@@ -186,6 +186,27 @@ mul8x8BitCoproc .macro oper1, oper2, oper3
 .endmacro
 
 
+copyPtrToStruct .macro ptr, mem, len
+    ldy #0
+_loop
+    lda (\ptr), y
+    sta \mem, y
+    iny
+    cpy #\len
+    bne _loop
+.endmacro
+
+
+copyStructToPtr .macro mem, ptr, len
+    ldy #0
+_loop
+    lda \mem, y
+    sta (\ptr), y
+    iny
+    cpy #\len
+    bne _loop   
+.endmacro
+
 ModN_t .struct
     arg1 .word 0
     arg2 .word 0

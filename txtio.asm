@@ -84,28 +84,6 @@ setCol .macro col
     sta CURSOR_STATE.col
 .endmacro
 
-
-copyPtrToStruct .macro ptr, mem, len
-    ldy #0
-_loop
-    lda (\ptr), y
-    sta \mem, y
-    iny
-    cpy #\len
-    bne _loop
-.endmacro
-
-
-copyStructToPtr .macro mem, ptr, len
-    ldy #0
-_loop
-    lda \mem, y
-    sta (\ptr), y
-    iny
-    cpy #\len
-    bne _loop   
-.endmacro
-
 ; Take a look at key_repeat_test.asm for an example on how to define a screen segment
 
 cursorState_t .struct 

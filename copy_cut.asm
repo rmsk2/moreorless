@@ -90,7 +90,7 @@ copySegment
     clc
     rts
 _doWork
-    ; save current list state. Will use that if an error occurred
+    ; save current list state
     #copyMem2Mem list.LIST.current, CPCT_PARMS.old
     ; clear current clipboard list
     jsr clear

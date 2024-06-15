@@ -7,6 +7,37 @@ List_t .struct
     length  .word 0
 .endstruct
 
+OUT_OF_MEMORY .word panic
+; ToDo: Think about a global out of memory handler
+panic
+    rts
+
+
+changeLine .macro func
+    pha
+    phx
+    phy
+    lda LINE_BUFFER.dirty
+    beq _call
+    jsr list.setCurrentLine
+    bcc _call
+    ply
+    plx
+    pla
+    jmp (OUT_OF_MEMORY)
+_call
+    ply
+    plx
+    pla
+    jsr \func
+    php
+    phx    
+    jsr list.readCurrentLine
+    plx
+    plp
+_done
+.endmacro
+
 
 list .namespace
 
