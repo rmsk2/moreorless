@@ -3,9 +3,10 @@
 
 jmp main
 
-CLIP_LEN     .word clip.CLIP.length ; 3
-CLIP_HEAD    .word clip.CLIP.head   ; 5
-STATE        .word memory.MEM_STATE ; 7
+CLIP_LEN     .word clip.CLIP.length  ; 3
+CLIP_HEAD    .word clip.CLIP.head    ; 5
+STATE        .word memory.MEM_STATE  ; 7
+ORG_LIST     .word list.LIST.head    ; 9
 
 
 .include "zeropage.asm"
