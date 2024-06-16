@@ -142,25 +142,60 @@ _genericError
     rts
 
 
-; when we do a cut we do not have to copy elements. We simply have to adapt the
-; next and prev pointers in the start and end elements of the cut. The part of the
-; list which was cut out becomes the new clipboard contents. In essence this routine
-; can not fail as we do not perform any memory allocations.
-
-
-; This routine deletes CPCT_PARAMS.len lines from the document starting with the one given in
-; CPCT_PARAMS.start from the document and makes them the new clipboard. The length of the
-; deleted segment has to be specified in CPCT_PARAMS.len.
+; This routine deletes CPCT_PARMS.len lines from the document starting with the one given in
+; CPCT_PARMS.start from the document and makes them the new clipboard. 
 ;
-; carry is set upon return if an error (i.e. out of memory) occurred. After the call the current 
-; document list pointer is set to the element preceeding the first element of the cut. If that does
-; not exist (because the cut starts at line 1) the new current pointer is the one following the
-; last element of the cut.
+; After the call the current document list pointer is set to the element preceeding the first element 
+; of the cut. If that does not exist (because the cut starts at element 1) the new current pointer is 
+; the one following the last element of the cut. You must not remove all elements from the list as a
+; document always contains at least one line.
+;
+; Carry is set upon return if an error. Which can only happen when parameters are wrong. In essence
+; this routine can nor fail, as it does not perform any memory allocations.
+LEN_TEMP .word 0
 cutSegement
+    cmp16BitImmediate 0, CPCT_PARMS.len
+    bne _checkMaxLen
+    ; Length has to be at least one
+    sec
+    rts
+_checkMaxLen
+    #cmp16Bit CPCT_PARMS.len, list.LIST.length
+    bcc _doCut
+    ; we can not cut all lines from the document. A document has to have at least one line (which 
+    ; on the other hand can be empty)
+    rts
+_doCut
+    ; free current clipboard contents
+    jsr clear
+    ; move to start element
+    #copyMem2Mem CPCT_PARMS.start, list.SET_PTR
+    #changeLine list.setTo
+    ; calculate offset for list.split => offset is length - 1
+    #move16Bit CPCT_PARMS.len, LEN_TEMP
+    #dec16Bit LEN_TEMP
+    ldx LEN_TEMP
+    lda LEN_TEMP + 1
+    ; due to the checks above this call can not fail
+    jsr list.split
+    ; make sure data of current line is in LINE_BUFFER
+    jsr list.readCurrentLine
+    ; setup CLIP structure
+    #copyMem2Mem list.SPLIT_RESULT.start, CLIP.head
+    #copyMem2Mem list.SPLIT_RESULT.start, CLIP.current
+    #move16Bit list.SPLIT_RESULT.splitLen, CLIP.length
     rts
 
 
+; Pastes the clipboard below the current line of the document. Carry is set if this routine fails
+; (due to running out of memory).
 pasteSegment
+    ; nothing todo if len is zero
+    #cmp16BitImmediate 0, CLIP.length
+    bne _doWork
+    clc
+    rts
+_doWork    
     rts
 
 

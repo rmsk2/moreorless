@@ -1,0 +1,5 @@
+{
+    "Name": "Testing copy III",
+    "TestDriverSource": "ccopy3.asm",
+    "TestScript": "ccopy3.lua"
+}
