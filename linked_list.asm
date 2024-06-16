@@ -191,7 +191,10 @@ SPLIT_RESULT .dstruct Split_t
 ; After the call the current document list pointer is set to the element preceeding the first element 
 ; of the cut. If that does not exist (because the cut starts at element 1) the new current pointer is 
 ; the one following the last element of the cut. You must not remove all elements from the list as a
-; document always contains at least one line.
+; document always contains at least one line. 
+;
+; SPLIT_RESULT.start and end point to the start and end of the removed sublist. SPLIT_RESULT.splitLen 
+; contains the length of the sublist.
 ;
 ; Carry is set upon return if a split is not possible. Otherwise it is clear.
 split
