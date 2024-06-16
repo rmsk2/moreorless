@@ -7,6 +7,8 @@ CLIP_LEN     .word clip.CLIP.length  ; 3
 CLIP_HEAD    .word clip.CLIP.head    ; 5
 STATE        .word memory.MEM_STATE  ; 7
 ORG_LIST     .word list.LIST.head    ; 9
+START_POS    .word 0                 ; 11
+LEN_SELECT   .word 0                 ; 13
 
 
 .include "zeropage.asm"
@@ -84,13 +86,17 @@ _continueAdding
 
     
 _doneAdding
-    ; move to element 0, 1, 2
+    ; move to start pos
     jsr list.rewind
+_loopPos
+    #cmp16BitImmediate 0, START_POS
+    beq _doCopy
     jsr list.next
-    jsr list.next
-    ; copy from here overall 3 elements
+    #dec16Bit START_POS
+    bra _loopPos
+_doCopy    
     #copyMem2Mem list.LIST.current, clip.CPCT_PARMS.start
-    #load16BitImmediate 3, clip.CPCT_PARMS.len
+    #move16Bit LEN_SELECT, clip.CPCT_PARMS.len
     jsr clip.copySegment
     brk    
 _doneError

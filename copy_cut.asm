@@ -148,6 +148,10 @@ cutSegement
     rts
 
 
+pasteSegment
+    rts
+
+
 new
     jsr toClip
     jsr list.create
