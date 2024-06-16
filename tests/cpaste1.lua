@@ -12,7 +12,7 @@ end
 function assert()
     -- parse whole memory.MEM_STATE struct
     local state = get_mem_state(addr_mem_state)
-    local used_blocks = 28
+    local used_blocks = 25
 
     local carry_set = contains_flag("C")
 
@@ -23,10 +23,10 @@ function assert()
     local h = parse_allocated_block(read_byte(addr_clip_head), read_byte(addr_clip_head+1), read_byte(addr_clip_head+2))
     local o = parse_allocated_block(read_byte(addr_org_list), read_byte(addr_org_list+1), read_byte(addr_org_list+2))
 
-    print_whole_list(o)
-    print("###################################")
-    print_whole_list(h)
-    print("==============================================================")
+    -- print_whole_list(o)
+    -- print("###################################")
+    -- print_whole_list(h)
+    -- print("==============================================================")
 
     -- verify number of freee blocks
     if state["numFreeBlocks"] ~= (state["numBlocks"] - used_blocks) then

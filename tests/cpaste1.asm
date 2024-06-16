@@ -102,11 +102,13 @@ _doneAdding
     jsr list.rewind
     jsr list.next
     jsr list.next
+    jsr list.readCurrentLine
     #copyMem2Mem list.LIST.current, clip.CPCT_PARMS.start
     #load16BitImmediate 2, clip.CPCT_PARMS.len
     jsr clip.cutSegement
     #move16Bit clip.CLIP.length, LEN2
     jsr list.rewind
+    jsr list.readCurrentLine
     jsr clip.pasteSegment
     php
     #move16Bit list.LIST.length, OLD_LEN
