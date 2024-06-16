@@ -173,6 +173,189 @@ _doneOK
     rts
 
 
+Split_t .struct 
+    start      .dstruct FarPtr_t
+    end        .dstruct FarPtr_t
+    splitLen   .word 0
+    forward    .byte 0
+    flagsFirst .byte 0
+    flagsLast  .byte 0
+.endstruct
+
+SPLIT_RESULT .dstruct Split_t
+; PUBLIC: This routine removes the sublist which is bounded by the current list element and the element
+; that can be reached by moving the current pointer using the signend offset given in accu (hi) and x (lo) 
+; from the list. The removed elements remain intact and are not freed. This is intended to support cutting 
+; lines from a document.
+;
+; After the call the current document list pointer is set to the element preceeding the first element 
+; of the cut. If that does not exist (because the cut starts at element 1) the new current pointer is 
+; the one following the last element of the cut. You must not remove all elements from the list as a
+; document always contains at least one line.
+;
+; Carry is set upon return if a split is not possible. Otherwise it is clear.
+split
+    ; store parameters
+    sta MOVE_HELP.offsetH
+    sta SPLIT_RESULT.splitLen + 1
+    stx MOVE_HELP.offsetL
+    stx SPLIT_RESULT.splitLen
+    ; offset 0 is valid, it represents a cut length of 1.
+    ; check if number of elements to cut >= overall length of list
+    lda SPLIT_RESULT.splitLen + 1
+    bpl _checkLen
+    ; negate to get absolute value
+    #twosComplement16 SPLIT_RESULT.splitLen
+_checkLen
+    ; the length of the cut is one more that the offset
+    #inc16Bit SPLIT_RESULT.splitLen
+    #cmp16Bit SPLIT_RESULT.splitLen, LIST.length
+    bcc _doProcess
+    ; Caller wants to cut more elements than exist (or all) => not possible
+    ; a document always has to contain at least one element. Here the
+    ; carry is set.
+    rts
+_doProcess
+    ; length of cut is less than current list length
+    ; set direction to forward
+    lda #BOOL_TRUE
+    sta SPLIT_RESULT.forward
+    ; check if offset is negative
+    lda MOVE_HELP.offsetH
+    bpl _offsetPositive                                   ; => no, it is positive
+    ; set direction to backward
+    lda #BOOL_FALSE
+    sta SPLIT_RESULT.forward
+    ; current element is last element in cut
+    #copyMem2Mem LIST.current, SPLIT_RESULT.end
+    bra _goOn
+_offsetPositive
+    ; current element is first element in cut
+    #copyMem2Mem LIST.current, SPLIT_RESULT.start
+_goOn
+    lda MOVE_HELP.offsetH
+    ldx MOVE_HELP.offsetL
+    ; move to other bounding element
+    jsr move
+    lda SPLIT_RESULT.forward
+    bne _forward
+    ; we have moved backward => this is the start element of the cut
+    #copyMem2Mem LIST.current, SPLIT_RESULT.start
+    bra _goOn2
+_forward
+    ; we have moved forward => this is the last element of the cut
+    #copyMem2Mem LIST.current, SPLIT_RESULT.end    
+_goOn2
+    ; Here we know the bounding elements of the cut. Now we have to remove
+    ; these and all in between (if they exist) from the list and set the flags 
+    ; current and head of the modified list as well as the flags on the removed 
+    ; list.
+    #copyMem2Mem SPLIT_RESULT.start, SET_PTR
+    jsr setTo
+    jsr getFlags
+    sta SPLIT_RESULT.flagsFirst
+    #copyMem2Mem SPLIT_RESULT.end, SET_PTR
+    jsr setTo
+    jsr getFlags
+    sta SPLIT_RESULT.flagsLast
+    
+    lda SPLIT_RESULT.flagsFirst
+    and #FLAG_IS_FIRST
+    beq _notFirst
+    ; first element of cut is first element of list. Note that due to the
+    ; fact that the cut is smaller than the list this means that this element
+    ; can not also be the last element in the list. Also note that the first
+    ; element in the cut can only be the last element of the list if the cut
+    ; length is one and thereore the first and the last element of the cut are
+    ; the same. This case is correctly handled with the following test.
+    #SET_MMU_ADDR SPLIT_RESULT.end
+    #move16Bit SPLIT_RESULT.end, PTR_TEMP
+    ; copy next ptr of last element in cut. This is the new head of the list
+    ; and the new current element
+    #copyPtr2Mem PTR_TEMP, Line_t.next, OLD_NEXT
+    #SET_MMU_ADDR OLD_NEXT
+    #move16Bit OLD_NEXT, PTR_OLD_NEXT
+    ; make the prev of the new head nil
+    #copyMem2Ptr NIL, PTR_OLD_NEXT, Line_t.prev
+    ; set flags of this element accordingly
+    lda #FLAG_IS_FIRST
+    ldy #Line_t.flags
+    sta (PTR_OLD_NEXT), y
+    ; set head and new current element
+    #copyMem2Mem OLD_NEXT, LIST.head
+    #copyMem2Mem OLD_NEXT, LIST.current
+    jmp _makeCutValidList
+_notFirst
+    lda SPLIT_RESULT.flagsLast
+    and #FLAG_IS_LAST
+    beq _notLast
+    ; last element of cut is last element in list. Note that due to the
+    ; fact that the cut is smaller than the list this means that this element
+    ; can not also be the first element in the list.
+    #SET_MMU_ADDR SPLIT_RESULT.start
+    #move16Bit SPLIT_RESULT, PTR_TEMP
+    ; get prev of first element of cut this is the last element of the new list.
+    ; This is also the new current element of the list
+    #copyPtr2Mem PTR_TEMP, Line_t.prev, OLD_PREV
+    #SET_MMU_ADDR OLD_PREV
+    #move16Bit OLD_PREV, PTR_OLD_PREV
+    #copyMem2Ptr NIL, PTR_OLD_NEXT, Line_t.next
+    ; set flags
+    lda #FLAG_IS_LAST
+    ldy #Line_t.flags
+    sta (PTR_OLD_PREV), y
+    ; set new current element
+    #copyMem2Mem OLD_PREV, LIST.current
+    jmp _makeCutValidList
+_notLast
+    ; the cut does not contain the first or the last element of the list, therefore
+    ; we do not have to fiddle with the flags
+
+    ; copy prev of start element of cut to OLD_PREV
+    #SET_MMU_ADDR SPLIT_RESULT.start
+    #move16Bit SPLIT_RESULT.start, PTR_TEMP
+    #copyPtr2Mem PTR_TEMP, Line_t.prev, OLD_PREV
+    ; copy next of end element of cut to OLD_NEXT
+    #SET_MMU_ADDR SPLIT_RESULT.end
+    #move16Bit SPLIT_RESULT.end, PTR_TEMP
+    #copyPtr2Mem PTR_TEMP, Line_t.next, OLD_NEXT
+    ; set next of OLD_PREV to OLD_NEXT
+    #SET_MMU_ADDR OLD_PREV
+    #move16Bit OLD_PREV, PTR_OLD_PREV
+    #copyMem2Ptr OLD_NEXT, PTR_OLD_PREV, Line_t.next
+    ; set prev of OLD_NEXT to OLD_PREV
+    #SET_MMU_ADDR OLD_NEXT
+    #move16Bit OLD_NEXT, PTR_OLD_NEXT
+    #copyMem2Ptr OLD_PREV, PTR_OLD_NEXT, Line_t.prev
+    ; set current to element preceeding the split
+    #copyMem2Mem OLD_PREV, LIST.current
+_makeCutValidList
+    ; adapt length of original list
+    #sub16Bit SPLIT_RESULT.splitLen, LIST.length
+    ; set flags on first element of cut.
+    #SET_MMU_ADDR SPLIT_RESULT.start
+    #move16Bit SPLIT_RESULT.start, PTR_TEMP
+    ldy #Line_t.flags
+    ; overwrite existing flags.
+    lda #FLAG_IS_FIRST
+    sta (PTR_TEMP),y
+    ; set prev of first element to NIL
+    #copyMem2Ptr NIL, PTR_TEMP, Line_t.prev
+
+    ; set flags on last element of cut
+    #SET_MMU_ADDR SPLIT_RESULT.end
+    #move16Bit SPLIT_RESULT.end, PTR_TEMP
+    ldy #Line_t.flags
+    lda (PTR_TEMP), y
+    ; last and first could be equal => use ora
+    ora #FLAG_IS_LAST
+    sta (PTR_TEMP), y
+    ; set next of last element to NIL
+    #copyMem2Ptr NIL, PTR_TEMP, Line_t.next
+    clc
+    rts
+
+
 ; func (l *List) InsertBefore() {
 ; 	newItem := NewLine(0)
 ;
@@ -422,13 +605,7 @@ move
     bpl _positive
     ; Sign is negative => change sign by computing the two's complement
     ; we are moving towards the beginning of the list
-    lda #$FF
-    eor MOVE_HELP.offsetL
-    sta MOVE_HELP.offsetL
-    lda #$FF
-    eor MOVE_HELP.offsetH
-    sta MOVE_HELP.offsetH
-    #add16BitImmediate 1, MOVE_HELP.offsetL
+    #twosComplement16 MOVE_HELP
     bra _doMove
 _positive
     ; set direction to forward, i.e. we move to the end of the list

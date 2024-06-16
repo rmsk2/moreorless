@@ -45,7 +45,6 @@ toDocument
 CopyCutParam_t .struct
     old       .dstruct FarPtr_t 
     start     .dstruct FarPtr_t
-    remaining .dstruct FarPtr_t
     len       .word 0
     ctr       .word 0
 .endstruct
@@ -79,8 +78,10 @@ nextClipLine
     jsr list.next
     jsr toDocument
     rts
-    
 
+; This routine copies CPCT_PARAMS.len lines from the document starting with the one given in
+; CPCT_PARAMS.start to the clipboard.
+;
 ; carry is set upon return if an error (i.e. out of memory) occurred. The current document 
 ; list pointer is restored to the value it had before the call.
 copySegment
@@ -141,10 +142,21 @@ _genericError
     rts
 
 
+; when we do a cut we do not have to copy elements. We simply have to adapt the
+; next and prev pointers in the start and end elements of the cut. The part of the
+; list which was cut out becomes the new clipboard contents. In essence this routine
+; can not fail as we do not perform any memory allocations.
+
+
+; This routine deletes CPCT_PARAMS.len lines from the document starting with the one given in
+; CPCT_PARAMS.start from the document and makes them the new clipboard. The length of the
+; deleted segment has to be specified in CPCT_PARAMS.len.
+;
+; carry is set upon return if an error (i.e. out of memory) occurred. After the call the current 
+; document list pointer is set to the element preceeding the first element of the cut. If that does
+; not exist (because the cut starts at line 1) the new current pointer is the one following the
+; last element of the cut.
 cutSegement
-    ; when we do a cut we do not have to copy elements. We simply have to adapt the
-    ; next and prev pointers in the start and end elements of the cut. The part of the
-    ; list which was cut out becomes the new clipboard contents.
     rts
 
 
@@ -162,7 +174,7 @@ new
 
 
 clear
-    lda CLIP.head.page
+    #IS_NIL_ADDR CLIP.head
     beq _done
     jsr toClip
     jsr list.destroy

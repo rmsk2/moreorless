@@ -175,6 +175,17 @@ _unequal2
 .endmacro
 
 
+twosComplement16 .macro memAddr
+    lda \memAddr
+    eor #$FF
+    sta \memAddr
+    lda \memAddr+1
+    eor #$FF
+    sta \memAddr+1
+    #add16BitImmediate 1, \memAddr
+.endmacro
+
+
 mul8x8BitCoproc .macro oper1, oper2, oper3
     lda \oper1
     sta $DE00
