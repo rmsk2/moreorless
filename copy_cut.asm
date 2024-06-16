@@ -154,7 +154,7 @@ _genericError
 ; this routine can nor fail, as it does not perform any memory allocations.
 LEN_TEMP .word 0
 cutSegement
-    cmp16BitImmediate 0, CPCT_PARMS.len
+    #cmp16BitImmediate 0, CPCT_PARMS.len
     bne _checkMaxLen
     ; Length has to be at least one
     sec
@@ -188,14 +188,48 @@ _doCut
 
 
 ; Pastes the clipboard below the current line of the document. Carry is set if this routine fails
-; (due to running out of memory).
+; (due to running out of memory). The current element after the paste is set to the last line
+; pasted
 pasteSegment
     ; nothing todo if len is zero
     #cmp16BitImmediate 0, CLIP.length
     bne _doWork
     clc
     rts
-_doWork    
+_doWork
+    ; make sure we save last changes to the current line of the document, i.e. we copy
+    ; the data from LINE_BUFFER into the document
+    jsr list.setCurrentLine
+    ; switch to CLIP as the current list element
+    jsr toClip
+    ; goto first element and fill LINE_BUFFER
+    jsr list.rewind
+    jsr list.readCurrentLine
+_pasteLoop
+    ; copy clipboard data to document    
+    jsr toDocument
+    ; add new line to document
+    jsr list.insertAfter
+    bcs _doneError
+    ; move to that line
+    jsr list.next
+    ; copy data from LINE_BUFFER into this line
+    jsr list.setCurrentLine
+    bcs _doneError
+    ; switch back to clipboard
+    jsr toClip
+    jsr list.next
+    bcc _oneMoreLine
+    ; we have reached the end of the clipboard => we are done
+    jsr toDocument
+    bra _doneOK
+_oneMoreLine    
+    ; fill LINE_BUFFER with clipboard data
+    jsr list.readCurrentLine
+    bra _pasteLoop
+_doneOK
+    clc
+_doneError
     rts
 
 
