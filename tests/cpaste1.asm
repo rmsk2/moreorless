@@ -98,7 +98,7 @@ _doneAdding
     #copyMem2Mem list.LIST.current, clip.CPCT_PARMS.start
     #load16BitImmediate 3, clip.CPCT_PARMS.len
     jsr clip.copySegment
-    ; then cut the lines 2, 3 and 4
+    ;then cut the lines 2, 3 and 4
     jsr list.rewind
     jsr list.next
     jsr list.next

@@ -128,7 +128,8 @@ _nextLine
 _done
     ; restore list pointer to the value which we saw at the begining
     #copyMem2Mem CPCT_PARMS.old, list.SET_PTR
-    #changeLine list.setTo
+    jsr list.setTo
+    jsr list.readCurrentLine
     clc
     rts
 _outOfMemory
@@ -137,7 +138,8 @@ _outOfMemory
 _genericError
     ; restore list pointer to the value which we saw at the begining
     #copyMem2Mem CPCT_PARMS.old, list.SET_PTR
-    #changeLine list.setTo
+    jsr list.setTo
+    jsr list.readCurrentLine
     sec
     rts
 
@@ -222,6 +224,7 @@ _pasteLoop
     bcc _oneMoreLine
     ; we have reached the end of the clipboard => we are done
     jsr toDocument
+    jsr list.readCurrentLine
     bra _doneOK
 _oneMoreLine    
     ; fill LINE_BUFFER with clipboard data
@@ -248,6 +251,7 @@ clear
     jsr toClip
     jsr list.destroy
     jsr toDocument
+    jsr list.readCurrentLine
     #copyMem2Mem NIL, CLIP.head
     #copyMem2Mem NIL, CLIP.current
     #load16BitImmediate 0, CLIP.length    
