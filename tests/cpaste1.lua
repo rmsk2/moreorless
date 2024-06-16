@@ -1,11 +1,19 @@
 require (test_dir.."tools")
 
+seq = ""
+
 addr_clip_len = de_ref(load_address + 3)
 addr_clip_head = de_ref(load_address + 5)
 addr_mem_state = de_ref(load_address + 7)
 addr_org_list = de_ref(load_address + 13)
 
 function arrange()
+    seq = ""
+end
+
+
+function add_to_seq(b)
+    seq = seq .. string.sub(b.data, 1, 1)
 end
 
 
@@ -22,6 +30,12 @@ function assert()
 
     local h = parse_allocated_block(read_byte(addr_clip_head), read_byte(addr_clip_head+1), read_byte(addr_clip_head+2))
     local o = parse_allocated_block(read_byte(addr_org_list), read_byte(addr_org_list+1), read_byte(addr_org_list+2))
+
+    iterate_whole_list(o, add_to_seq)
+
+    if seq ~= "1342567" then
+        return false, string.format("Wrong sequence: %s", seq)
+    end
 
     -- print_whole_list(o)
     -- print("###################################")

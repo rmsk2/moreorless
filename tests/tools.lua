@@ -135,17 +135,21 @@ function print_allocated_block(b)
     print("    ", b["data"])
 end
 
-
-function print_whole_list(b)
+function iterate_whole_list(b, iter)
     done = false
 
     while not done do
-        print_allocated_block(b)
+        iter(b)
         done = (b.flags == 2) or (b.flags == 3)
         if not done then
             b = parse_allocated_block(b.next[1], b.next[2], b.next[3])        
         end
     end
+end
+
+
+function print_whole_list(b)
+    iterate_whole_list(b, print_allocated_block)
 end
 
 
