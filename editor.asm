@@ -1,3 +1,12 @@
+
+MarkState_t .struct 
+    line    .word 0
+    xPos    .byte 0
+    isValid .byte 0
+    element .dstruct FarPtr_t
+.endstruct
+
+
 EditState_t .struct 
     curLine          .word 0
     searchPatternSet .byte BOOL_FALSE
@@ -8,6 +17,7 @@ EditState_t .struct
     inputVector      .word 0
     dirty            .byte 0
     searchInProgress .byte 0
+    mark             .dstruct MarkState_t
 .endstruct
 
 MAX_FILE_LENGTH = 100
@@ -150,6 +160,7 @@ init
     stz STATE.navigateCol
     stz STATE.dirty
     stz STATE.searchInProgress
+    stz STATE.mark.isValid
     rts
 
 .endnamespace

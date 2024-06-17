@@ -34,6 +34,9 @@ deleting the current line
 a line number. This can be used to edit BASIC programs without line numbers and adding them while writing the
 file to SD card or an IEC drive.
 - `Home` and `Shift+Home` can be used to move the cursor to the start or the end of a line
+- Pressing `Foenix+m` sets a mark which determines the start position of copy and paste operations. That a mark
+is set is visualized by an `M` in the top right corner of the screen. As soon as the document is changed the mark 
+is invalidated and the `M` disappears
 - When any other key is pressed the corresponding character is inserted at the current cursor position
  
 `Moreorless` uses a single line feed (LF) or carriage return (CR) character as a line delimiter. The default 

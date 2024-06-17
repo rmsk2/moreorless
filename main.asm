@@ -28,7 +28,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 1.9.6"
+PROG_NAME .text "MOREORLESS 1.9.7"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -208,7 +208,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 16
+NUM_EDITOR_COMMANDS = 17
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -225,6 +225,7 @@ EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
 EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down
 EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp                ; FNX + up
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine              ; FNX + g
+EDT_SET_MARK     .dstruct KeyEntry_t, $046D, setMark               ; FNX + m
 EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveDocument          ; FNX + s
 EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch           ; FNX + u
 EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; SHift + HOME
@@ -243,6 +244,17 @@ toEditor
 
 
 .include "change_pos_ops.asm"
+
+
+setMark
+    #move16Bit editor.STATE.curLine, editor.STATE.mark.line
+    lda CURSOR_STATE.xPos
+    sta editor.STATE.mark.xPos
+    lda #BOOL_TRUE
+    sta editor.STATE.mark.isValid
+    #copyMem2Mem list.LIST.current, editor.STATE.mark.element
+    jsr showDocumentState
+    rts
 
 
 FOUND_POS .byte 0
@@ -658,7 +670,7 @@ printFixedProgData
     lda #len(PROG_NAME) + len(SPACER)
     clc
     adc TXT_FILE.nameLen
-    cmp #79
+    cmp #77
     bcs _progNameOnly
     sta FIXED_TEMP
     sec
@@ -865,31 +877,41 @@ toLineStart
 
 
 showDocumentState
+    #saveIoState
+    #toTxtMatrix
+    lda editor.STATE.mark.isValid
+    beq _invalid
+    lda #$4D
+    sta $C000 + 78
+    bra _cont
+_invalid
+    lda #$20
+    sta $C000 + 78
+_cont
     lda editor.STATE.dirty
     bne _dirty
-    jmp markDocumentAsClean
+    lda #$20
+    sta $C000 + 79
+    bra _end
 _dirty
-    jmp markDocumentAsDirty
+    lda #$2a
+    sta $C000 + 79
+_end    
+    #restoreIoState
+    rts
 
 
 markDocumentAsClean
     stz editor.STATE.dirty
-    #saveIoState
-    #toTxtMatrix
-    lda #$20
-    sta $C000 + 79
-    #restoreIoState
+    jsr showDocumentState
     rts
 
 
 markDocumentAsDirty
     lda #1
     sta editor.STATE.dirty
-    #saveIoState
-    #toTxtMatrix
-    lda #$2a
-    sta $C000 + 79
-    #restoreIoState
+    stz editor.STATE.mark.isValid
+    jsr showDocumentState
     rts
 
 
