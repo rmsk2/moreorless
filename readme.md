@@ -37,6 +37,8 @@ file to SD card or an IEC drive.
 - Pressing `Foenix+m` sets a mark which determines the start position of copy and paste operations. That a mark
 is set is visualized by an `M` in the top right corner of the screen. As soon as the document is changed the mark 
 is invalidated and the `M` disappears
+- Pressing `Foenix+c` copies all the lines between the current line and the marked line into the clipboard
+- Pressing `Alt+c` clears the clipboard
 - When any other key is pressed the corresponding character is inserted at the current cursor position
  
 `Moreorless` uses a single line feed (LF) or carriage return (CR) character as a line delimiter. The default 

@@ -51,6 +51,7 @@ CopyCutParam_t .struct
 
 CPCT_PARMS .dstruct CopyCutParam_t
 
+
 copyClipLine
     jsr toClip
     ; set data in current node of clipboard list

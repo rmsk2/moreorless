@@ -208,7 +208,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 17
+NUM_EDITOR_COMMANDS = 19
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -222,8 +222,10 @@ EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
 EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60            ; F1
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30            ; F3
 EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
+EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02E3, clearClip             ; ALT + c
 EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down
 EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp                ; FNX + up
+EDT_COPY_LINE    .dstruct KeyEntry_t, $0463, copyLines             ; FNX + c
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine              ; FNX + g
 EDT_SET_MARK     .dstruct KeyEntry_t, $046D, setMark               ; FNX + m
 EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveDocument          ; FNX + s
@@ -254,6 +256,45 @@ setMark
     sta editor.STATE.mark.isValid
     #copyMem2Mem list.LIST.current, editor.STATE.mark.element
     jsr showDocumentState
+    rts
+
+
+LINE_HELP .byte 0
+copyLines
+    lda editor.STATE.mark.isValid
+    bne _isValid
+    jmp _done
+_isValid
+    #cmp16Bit editor.STATE.mark.line, editor.STATE.curLine
+    bcc _markBefore
+    #move16Bit editor.STATE.mark.line, LINE_HELP
+    #sub16Bit editor.STATE.curLine, LINE_HELP
+    #copyMem2Mem list.LIST.current, clip.CPCT_PARMS.start
+    bra _doCopy
+_markBefore
+    #move16Bit editor.STATE.curLine, LINE_HELP
+    #sub16Bit editor.STATE.mark.line, LINE_HELP
+    #copyMem2Mem editor.STATE.mark.element, clip.CPCT_PARMS.start
+_doCopy
+    #inc16Bit LINE_HELP
+    #move16Bit LINE_HELP, clip.CPCT_PARMS.len
+    jsr clip.copySegment
+    bcs _error
+    stz editor.STATE.mark.isValid
+    jsr toProg
+    jsr printFixedProgData
+    jsr toData
+_done
+    rts
+_error
+    jmp (OUT_OF_MEMORY)
+
+
+clearClip
+    jsr clip.clear
+    jsr toProg
+    jsr printFixedProgData
+    jsr toData
     rts
 
 
