@@ -28,7 +28,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 1.9.7"
+PROG_NAME .text "MOREORLESS 1.9.8"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -208,7 +208,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 19
+NUM_EDITOR_COMMANDS = 21
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -222,7 +222,7 @@ EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
 EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60            ; F1
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30            ; F3
 EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
-EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02E3, clearClip             ; ALT + c
+EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02EB, clearClip             ; ALT + k
 EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down
 EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp                ; FNX + up
 EDT_COPY_LINE    .dstruct KeyEntry_t, $0463, copyLines             ; FNX + c
@@ -230,6 +230,8 @@ EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine              ; FNX + g
 EDT_SET_MARK     .dstruct KeyEntry_t, $046D, setMark               ; FNX + m
 EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveDocument          ; FNX + s
 EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch           ; FNX + u
+EDT_PASTE_LINES  .dstruct KeyEntry_t, $0476, pasteIntoDocument     ; FNX + v
+EDT_CUT_LINES    .dstruct KeyEntry_t, $0478, cutFromDocument       ; FNX + x
 EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; SHift + HOME
 
 
@@ -252,6 +254,8 @@ setMark
     #move16Bit editor.STATE.curLine, editor.STATE.mark.line
     lda CURSOR_STATE.xPos
     sta editor.STATE.mark.xPos
+    lda CURSOR_STATE.yPos
+    sta editor.STATE.mark.yPos
     lda #BOOL_TRUE
     sta editor.STATE.mark.isValid
     #copyMem2Mem list.LIST.current, editor.STATE.mark.element
@@ -259,7 +263,7 @@ setMark
     rts
 
 
-LINE_HELP .byte 0
+LINE_HELP .word 0
 copyLines
     lda editor.STATE.mark.isValid
     bne _isValid

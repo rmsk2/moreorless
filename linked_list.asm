@@ -283,6 +283,7 @@ _goOn2
     ; set flags of this element accordingly
     lda #FLAG_IS_FIRST
     ldy #Line_t.flags
+    ora (PTR_OLD_NEXT), y
     sta (PTR_OLD_NEXT), y
     ; set head and new current element
     #copyMem2Mem OLD_NEXT, LIST.head
@@ -296,16 +297,17 @@ _notFirst
     ; fact that the cut is smaller than the list this means that this element
     ; can not also be the first element in the list.
     #SET_MMU_ADDR SPLIT_RESULT.start
-    #move16Bit SPLIT_RESULT, PTR_TEMP
+    #move16Bit SPLIT_RESULT.start, PTR_TEMP
     ; get prev of first element of cut this is the last element of the new list.
     ; This is also the new current element of the list
     #copyPtr2Mem PTR_TEMP, Line_t.prev, OLD_PREV
     #SET_MMU_ADDR OLD_PREV
     #move16Bit OLD_PREV, PTR_OLD_PREV
-    #copyMem2Ptr NIL, PTR_OLD_NEXT, Line_t.next
+    #copyMem2Ptr NIL, PTR_OLD_PREV, Line_t.next
     ; set flags
     lda #FLAG_IS_LAST
     ldy #Line_t.flags
+    ora (PTR_OLD_PREV), y
     sta (PTR_OLD_PREV), y
     ; set new current element
     #copyMem2Mem OLD_PREV, LIST.current

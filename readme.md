@@ -37,8 +37,12 @@ file to SD card or an IEC drive.
 - Pressing `Foenix+m` sets a mark which determines the start position of copy and paste operations. That a mark
 is set is visualized by an `M` in the top right corner of the screen. As soon as the document is changed the mark 
 is invalidated and the `M` disappears
-- Pressing `Foenix+c` copies all the lines between the current line and the marked line into the clipboard
-- Pressing `Alt+c` clears the clipboard
+- Pressing `Foenix+c` copies all the lines between the marked line and the current line into the clipboard
+- Pressing `Foenix+x` copies all the lines between the marked line and the current line into the clipboard and deletes
+them from the document
+- Pressunf `Foenix+v` inserts the current clipboard contents (full lines only) into the document starting
+at the current cursor position
+- Pressing `Alt+k` clears the clipboard and frees the associated memory
 - When any other key is pressed the corresponding character is inserted at the current cursor position
  
 `Moreorless` uses a single line feed (LF) or carriage return (CR) character as a line delimiter. The default 
@@ -78,8 +82,6 @@ block number which can be written directly into the corresponding MMU register.
 On an unexpanded system 384 KB (48 8 KB blocks) of RAM are managed by `Moreorless`. There would be an 
 additional 64 KB (eight 8 KB blocks) available which have been excluded as a reserve for future extensions.
 When a RAM expansion cartridge is present the memory available to `Moreorless` is increased to 640 KB.
-I hope I can keep the overall length of the code below 32KB which would allow to keep the 8K block starting 
-at $8000 as a window to map in some sort of  yet unspecified extension code.
 
 # Remarks
 
@@ -105,8 +107,10 @@ I am in the process to extend this software to make it a better text editor. Be 
 long shot. This is how I plan to progress:
 
 Short term goals  
-- adding cutting copying and pasting of parts of lines and full lines
-- adding search and replace 
+- adding cutting copying and pasting of parts of lines
+- adding a possibility to move the visible part of the document up and down without changing the current line
+- adding search and replace
+- use a beep to signal to the user that a command excecution is not possible 
 
 Midterm goals
 - replace tab characters at load by four blanks
@@ -115,6 +119,9 @@ Midterm goals
 After that possibly
 - adding an undo feature (I have no clear plan on how to achieve this, yet)
 - adding some sort of mouse support
+
+I hope I can keep the overall length of the code below 32KB which would allow to keep the 8K block starting 
+at $8000 as a window to map in some sort of yet unspecified extension code.
 
 My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
 the memory managment and linked list functionality.

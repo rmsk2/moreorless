@@ -132,6 +132,7 @@ _doProc
 
 
 exitToBasic
+    jsr txtio.init80x60
     lda #65
     sta kernel.args.run.block_id
     jsr kernel.RunBlock

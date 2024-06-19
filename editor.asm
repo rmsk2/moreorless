@@ -2,6 +2,7 @@
 MarkState_t .struct 
     line    .word 0
     xPos    .byte 0
+    yPos    .byte 0
     isValid .byte 0
     element .dstruct FarPtr_t
 .endstruct

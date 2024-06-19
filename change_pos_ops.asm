@@ -504,6 +504,90 @@ _noInc
 _outOfMemory
     jmp (OUT_OF_MEMORY)
 
+
+LINE_HELP2 .word 0
+LINE_HELP3 .word 0
+PRESS_YPOS .byte 0
+cutFromDocument
+    lda editor.STATE.mark.isValid
+    bne _isValid
+    jmp _done
+_isValid
+    lda CURSOR_STATE.yPos
+    sta PRESS_YPOS
+    #cmp16Bit editor.STATE.mark.line, editor.STATE.curLine
+    bcc _markBefore
+    #move16Bit editor.STATE.mark.line, LINE_HELP2
+    #move16Bit editor.STATE.curLine, LINE_HELP3
+    #sub16Bit editor.STATE.curLine, LINE_HELP2
+    #copyMem2Mem list.LIST.current, clip.CPCT_PARMS.start
+    bra _doCut
+_markBefore
+    lda editor.STATE.mark.yPos
+    sta PRESS_YPOS
+    #move16Bit editor.STATE.curLine, LINE_HELP2
+    #move16Bit editor.STATE.mark.line, LINE_HELP3
+    #sub16Bit editor.STATE.mark.line, LINE_HELP2
+    #copyMem2Mem editor.STATE.mark.element, clip.CPCT_PARMS.start
+_doCut
+    #inc16Bit LINE_HELP2
+    #cmp16Bit LINE_HELP2, list.LIST.length
+    bcs _done
+    #move16Bit LINE_HELP2, clip.CPCT_PARMS.len
+    jsr clip.cutSegement                                          ; can not fail in this context
+    jsr markDocumentAsDirty
+
+    #cmp16BitImmediate 1, LINE_HELP3
+    bne _cutNotFromStart
+    #load16BitImmediate 1, editor.STATE.curLine
+    bra _doDraw
+_cutNotFromStart
+    #dec16Bit LINE_HELP3
+    #move16Bit LINE_HELP3, editor.STATE.curLine
+_doDraw
+    lda PRESS_YPOS
+    bne _redrawPart
+    jsr redrawAll
+    bra _done
+_redrawPart
+    dea
+    ldx editor.STATE.navigateCol
+    jsr refreshView
+_done
+    rts
+
+
+YPOS_HELP .word 0
+YMAX_HELP .word 0
+pasteIntoDocument
+    lda CURSOR_STATE.yPos
+    sta YPOS_HELP
+    stz YPOS_HELP + 1
+    lda CURSOR_STATE.yMaxMinus1
+    sta YMAX_HELP
+    #cmp16BitImmediate 0, clip.CLIP.length
+    beq _doNothing
+    jsr markDocumentAsDirty
+    jsr clip.pasteSegment
+    bcs _outOfMemory
+    #add16Bit clip.CLIP.length, editor.STATE.curLine
+    #add16Bit clip.CLIP.length, YPOS_HELP
+    #cmp16Bit YPOS_HELP, YMAX_HELP
+    bcc _redrawPart
+    lda CURSOR_STATE.yMaxMinus1
+    bra _redrawPart2
+_redrawPart
+    lda YPOS_HELP
+_redrawPart2
+    ldx editor.STATE.navigateCol
+    jsr refreshView
+    rts
+_doNothing
+    rts
+_outOfMemory
+    jmp (OUT_OF_MEMORY)
+
+
 ; ******************************************************************************************
 ; ********************** stuff that changes the current list position **********************
 ; ******************************************************************************************
