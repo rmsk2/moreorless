@@ -278,22 +278,27 @@ start80x60
     rts
 
 
+calcLineEnd
+    lda LINE_BUFFER.len
+calcPos
+    cmp #search.MAX_CHARS_TO_CONSIDER
+    bcc _done
+    lda #search.MAX_CHARS_TO_CONSIDER - 1
+_done
+    rts
+
+
 moveToLineEnd
     lda LINE_BUFFER.len
 ; accu holds desired column to which to move the cursor
 moveToPos
-    cmp #0    
-    beq _setPos
-    cmp #search.MAX_CHARS_TO_CONSIDER
-    beq _setPos
-    bcc _setPos
-    lda #search.MAX_CHARS_TO_CONSIDER - 1
-_setPos
+    jsr calcPos
     sta CURSOR_STATE.xPos
     sta editor.STATE.navigateCol
     jsr txtio.cursorSet
     jsr updateProgData
     rts
+
 
 ; This routine redraws the screen in such a way that the current element of the 
 ; linked list appears at the y-position given in the accu. 
@@ -551,7 +556,10 @@ _doDraw
     bra _done
 _redrawPart
     dea
-    ldx editor.STATE.navigateCol
+    pha
+    jsr calcLineEnd
+    tax
+    pla
     jsr refreshView
 _done
     rts
@@ -579,7 +587,10 @@ pasteIntoDocument
 _redrawPart
     lda YPOS_HELP
 _redrawPart2
-    ldx editor.STATE.navigateCol
+    pha
+    jsr calcLineEnd
+    tax
+    pla
     jsr refreshView
     rts
 _doNothing

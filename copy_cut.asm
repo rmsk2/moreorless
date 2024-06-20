@@ -249,6 +249,7 @@ new
 clear
     #IS_NIL_ADDR CLIP.head
     beq _done
+    jsr list.setCurrentLine
     jsr toClip
     jsr list.destroy
     jsr toDocument
