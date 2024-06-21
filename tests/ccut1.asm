@@ -95,7 +95,6 @@ _doneAdding
     ldx #6
     lda #0
     jsr list.move
-    jsr list.next
     jsr list.readCurrentLine
     ; cut last element
     #copyMem2Mem list.LIST.current, clip.CPCT_PARMS.start
