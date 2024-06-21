@@ -208,7 +208,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 21
+NUM_EDITOR_COMMANDS = 23
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -221,6 +221,8 @@ EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
 EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
 EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60            ; F1
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30            ; F3
+EDT_MV_SCR_DOWN  .dstruct KeyEntry_t, $010E, moveWindowDown        ; CTRL + CrsrDown
+EDT_MV_SCR_UP    .dstruct KeyEntry_t, $0110, moveWindowUp          ; CTRL + CrsrUp
 EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
 EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02EB, clearClip             ; ALT + k
 EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down

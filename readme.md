@@ -7,6 +7,10 @@ of `Foenix` when using a PS/2 keyboard.)
 
 - `Cursor left` and `right` move the cursor horizontally
 - `Cursor up` and `down` move the cursor one line up or down
+- Pressing `Control+Cursor up` moves the visible section of the document one line up while
+preserving the current cursor position
+- Pressing `Control+Cursor down` moves the visible section of the document one line down while
+preserving the current cursor position
 - Pressing `Foenix+Cursor down` moves the view one screen towards the end of the file
 - Pressing `Foenix+Cursor up` moves the view one screen towards the beginning of the file
 - Pressing `F1` resets the view to line one in 80x60 text mode
@@ -108,11 +112,12 @@ long shot. This is how I plan to progress:
 
 Short term goals  
 - adding cutting copying and pasting of parts of lines
-- adding a possibility to move the visible part of the document up and down without changing the current line
-- adding search and replace
-- use a beep to signal to the user that a command excecution is not possible 
+- allowing to move one word at a time in a line via Ctrl+Cursor left and right
 
 Midterm goals
+- adding search and replace
+- Allow reuse of an entered file name (save vs save as ...)
+- use a beep to signal to the user that a command excecution is not possible 
 - replace tab characters at load by four blanks
 - visualize line lengths larger than 80 in UI
 

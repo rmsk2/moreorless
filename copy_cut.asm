@@ -153,8 +153,8 @@ _genericError
 ; the one following the last element of the cut. You must not remove all elements from the list as a
 ; document always contains at least one line.
 ;
-; Carry is set upon return if an error. Which can only happen when parameters are wrong. In essence
-; this routine can nor fail, as it does not perform any memory allocations.
+; Carry is set upon return if an error occurred. Which can only happen when parameters are wrong. In 
+; essence this routine can nor fail, as it does not perform any memory allocations.
 LEN_TEMP .word 0
 cutSegement
     #cmp16BitImmediate 0, CPCT_PARMS.len
@@ -187,6 +187,7 @@ _doCut
     #copyMem2Mem list.SPLIT_RESULT.start, CLIP.head
     #copyMem2Mem list.SPLIT_RESULT.start, CLIP.current
     #move16Bit list.SPLIT_RESULT.splitLen, CLIP.length
+    clc
     rts
 
 

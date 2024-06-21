@@ -227,22 +227,37 @@ _done
     rts
 
 
+ovwrWithLineBuffer .macro
+    #load16BitImmediate LINE_BUFFER.buffer, TXT_PTR3
+    lda LINE_BUFFER.len
+    jsr txtio.overwriteStrClipped
+.endmacro
+
+
 LINE_COUNT .byte 0
 printScreen
+    jsr txtio.cursorOff
     stz LINE_COUNT
-    jsr txtio.clear
     jsr txtio.home
     #copyMem2Mem list.LIST.current, editor.STATE.ptrScratch
     stz CURSOR_STATE.scrollOn
 _loopLines
-    #printLineBuffer
+    #ovwrWithLineBuffer
     jsr txtio.newLine
     #changeLine list.next
-    bcs _done
+    bcs _loopUntouchedLines
     inc LINE_COUNT
     lda LINE_COUNT
     cmp CURSOR_STATE.yMax
     bne _loopLines
+    bra _done
+_loopUntouchedLines
+    inc LINE_COUNT
+    lda LINE_COUNT
+    cmp CURSOR_STATE.yMax
+    beq _done
+    jsr txtio.clearLine
+    bra _loopUntouchedLines
 _done
     #copyMem2Mem editor.STATE.ptrScratch, list.LIST.current
     ; restore start state this must not be guarded by the
@@ -251,6 +266,7 @@ _done
     inc CURSOR_STATE.scrollOn
     jsr txtio.home
     jsr moveToNavigatePos
+    jsr txtio.cursorOn
     rts
 
 
@@ -597,6 +613,85 @@ _doNothing
     rts
 _outOfMemory
     jmp (OUT_OF_MEMORY)
+
+
+moveWindowUp
+    #move16Bit editor.STATE.curLine, CUR_LINE
+    lda CURSOR_STATE.xPos
+    sta POS_TEMPX
+    lda CURSOR_STATE.yPos
+    sta POS_TEMPY
+    ; do nothing if we are at the top of the screen
+    lda CURSOR_STATE.yPos
+    bne _l1
+    jmp _done
+_l1
+    sec
+    lda CURSOR_STATE.yMaxMinus1
+    sbc POS_TEMPY    
+    ina
+    sta MOVE_OFFSET
+    stz MOVE_OFFSET + 1
+    #add16Bit MOVE_OFFSET, CUR_LINE
+    #cmp16Bit CUR_LINE, list.LIST.length
+    beq _goOn
+    bcs _done
+_goOn
+    jsr txtio.scrollUp
+    jsr moveOffset
+    lda CURSOR_STATE.yMaxMinus1
+    sta CURSOR_STATE.yPos
+    stz CURSOR_STATE.xpos
+    jsr txtio.cursorSet
+    #printLineBuffer
+    #twosComplement16 MOVE_OFFSET
+    jsr moveOffset
+    lda POS_TEMPY
+    dea
+    sta CURSOR_STATE.yPos
+    lda POS_TEMPX
+    sta CURSOR_STATE.xPos
+    jsr txtio.cursorSet
+_done
+    rts
+
+
+CUR_LINE  .word 0
+POS_TEMPY .byte 0
+POS_TEMPX .byte 0
+moveWindowDown
+    #move16Bit editor.STATE.curLine, CUR_LINE
+    lda CURSOR_STATE.xPos
+    sta POS_TEMPX
+    lda CURSOR_STATE.yPos
+    sta POS_TEMPY
+    ; do nothing if we are at the bottom of the screen
+    cmp CURSOR_STATE.yMaxMinus1
+    bne _l1
+    jmp _done
+_l1
+    lda POS_TEMPY
+    ina
+    sta MOVE_OFFSET
+    stz MOVE_OFFSET + 1
+    #twosComplement16 MOVE_OFFSET
+    #add16Bit MOVE_OFFSET, CUR_LINE
+    #cmp16BitImmediate 0, CUR_LINE
+    beq _done
+    jsr txtio.scrollDown
+    jsr moveOffset
+    jsr txtio.home
+    #printLineBuffer
+    #twosComplement16 MOVE_OFFSET
+    jsr moveOffset
+    lda POS_TEMPY
+    ina
+    sta CURSOR_STATE.yPos
+    lda POS_TEMPX
+    sta CURSOR_STATE.xPos
+    jsr txtio.cursorSet
+_done
+    rts
 
 
 ; ******************************************************************************************

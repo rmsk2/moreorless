@@ -921,7 +921,56 @@ _print
     bra _printLoop 
 _doClip
     ; as clipping occurred we are at the following line, so we have to move
-    ; the cursor on line up unless we are already on the last line. On the last
+    ; the cursor one line up unless we are already on the last line. On the last
+    ; line the cursor simply wraps around as we have turned of scrolling.
+    lda CURSOR_STATE.yPos
+    cmp CURSOR_STATE.yMaxMinus1
+    beq _done
+    dec CURSOR_STATE.yPos
+    #moveCursor
+_done
+    ; restore scrolling "enablement" state
+    pla
+    sta CURSOR_STATE.scrollOn
+    rts
+
+
+; --------------------------------------------------
+; This routine does not return a value.
+; --------------------------------------------------
+overwriteStrClipped
+    sta PRINT_STR.out_len
+    ; save current state of scrolling "enablement"
+    lda CURSOR_STATE.scrollOn
+    pha
+    ; turn off scrolling
+    stz CURSOR_STATE.scrollOn
+    ldy #0
+_printLoop
+    cpy PRINT_STR.out_len
+    beq _fillLine
+    lda (TXT_PTR3), y
+    cmp ALT_LINE_END_CHAR
+    ; ignore CR
+    bne _print
+    lda #CR_STANDIN
+_print
+    jsr charOut
+    ; Check if last character caused a wrap around
+    lda CURSOR_STATE.xPos
+    beq _doClip
+    iny
+    bra _printLoop
+_fillLine
+    cpy #search.MAX_CHARS_TO_CONSIDER
+    beq _doClip
+    lda #$20
+    jsr charOut
+    iny
+    bra _fillLine
+_doClip
+    ; as clipping occurred we are at the following line, so we have to move
+    ; the cursor one line up unless we are already on the last line. On the last
     ; line the cursor simply wraps around as we have turned of scrolling.
     lda CURSOR_STATE.yPos
     cmp CURSOR_STATE.yMaxMinus1
