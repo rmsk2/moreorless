@@ -1,9 +1,9 @@
 # Moreorless
 
 This is a simple text editor and viewer for the Foenix F256 family of modern retro computers. It allows you to load 
-a text file (remark: SuperBASIC programs are also text files) into RAM and to navigate through it in forwards and backwards 
-direction as well as editing the loaded file. The following commands are supported (Remark: Use the `Windows` key instead
-of `Foenix` when using a PS/2 keyboard.)
+a text file (remark: SuperBASIC programs are also text files) into RAM and to navigate through it as well as editing 
+the loaded file. The following commands are supported (Remark: Use the `Windows` key insteadof `Foenix` when using 
+a PS/2 keyboard.)
 
 - `Cursor left` and `right` move the cursor horizontally
 - `Cursor up` and `down` move the cursor one line up or down
@@ -47,10 +47,10 @@ them from the document
 - Pressing `Foenix+v` inserts the current clipboard contents (filled by `Foenix+c` or `Foenix+x`) into the document
 starting at the current cursor position, i.e. the lines are inserted after the current line
 - Pressing `Ctrl+c` copies all the characters *in the current line* which reside between the mark and the cursor 
-position where the `Ctrl+c` was pressed into the clipboard. To reiterate that: The mark has to be set at the same 
+position where `Ctrl+c` was pressed into the clipboard. To reiterate that: The mark has to be set at the same 
 line where `Ctrl+c` was pressed.
 - Pressing `Ctrl+x` copies all the characters *in the current line* which reside between the mark and the cursor 
-position where the `Ctrl+x` was pressed into the clipboard and then deletes them from the document.
+position where `Ctrl+x` was pressed into the clipboard and then deletes them from the document.
 - Pressing `Ctrl+v` inserts the contents of the clipboard (filled by `Ctrl+c` or `Ctrl+x`) at the current
 cursor position
 - Pressing `Alt+k` clears the clipboard and frees the associated memory
@@ -73,12 +73,13 @@ to be slower with a real keyboard vertical scrolling appears to be slower on the
 - In order to spare me the pain to consider a gazillion edge and corner cases I have for the moment decided 
 to split cut, copy and pasting data from and into the document into two different sets of commands. There
 is one set of commands that can be used to copy and paste simple text **but not full lines**. These commands 
-can be accessed through the usual `Ctrl+c`, `Ctrl+x` and `Ctrl+v`. If you want to copy blocks of code or text
-which only consist of **of full lines** you can use `Foenix+c`, `Foenix+x` and `Foenix+v` for that purpose.
-- The maximum line length is 224 characters. Any file with lines longer than that will not be loaded
-- All characters which appear in columns 81 or higher are clipped, i.e. there is currently no horizontal scrolling.
-Additonally `moreorless` does not allow to add characters to lines which are already longer than 80 characters but 
-they can be split via `return` and they can shortened by pressing the `delete` key. A file that was only edited with
+can be accessed through the usual key combinations `Ctrl+c`, `Ctrl+x` and `Ctrl+v`. If you want to copy blocks of 
+code or text which only consist of **of full lines** you can use `Foenix+c`, `Foenix+x` and `Foenix+v` for that
+purpose.
+- The maximum line length is 224 characters. Any file with lines longer than that will not be loaded. All characters 
+which appear in columns 81 or higher are clipped, i.e. there is currently no horizontal scrolling. Additonally 
+`moreorless` does not allow to add characters to lines which are already longer than 80 characters but they can be
+split via `return` and they can shortened by pressing the `delete` key. A file that was only edited with 
 `moreorless` will therefore never have lines with more than 80 characters.
 - Tab characters are not expanded at the moment
 - Due to the data structure selected (see below) there is quite a bit if memory management overhead, i.e.
