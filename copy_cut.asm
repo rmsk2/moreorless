@@ -272,8 +272,16 @@ LineClip_t .struct
 LINE_CLIP .dstruct LineClip_t
 
 lineClipCopy
+    ; save current state of line to linked list
     jsr list.setCurrentLine
-    bcs _outOfMemory
+    bcs outOfMemoryCopy
+lineClipCopyInt
+    lda LINE_BUFFER.len
+    bne _notEmpty
+    ; line is empty => there is noting to copy here
+    stz LINE_CLIP.lenBuffer
+    rts
+_notEmpty
     ldy LINE_CLIP.startPos
     ldx #0
 _loopChars
@@ -286,6 +294,53 @@ _loopChars
     bra _loopChars
 _done
     stx LINE_CLIP.lenBuffer
+_doNothing
+    rts
+outOfMemoryCopy
+    jmp (OUT_OF_MEMORY)
+
+
+lineClipCut
+    ; save current state of line to linked list
+    jsr list.setCurrentLine
+    bcs _outOfMemory
+    lda LINE_CLIP.lenCopy
+    ; lenCopy is 0 => set LINE_CLIP.lenBuffer to zero and do nothing. Via the UI this can never happen
+    bne _testEmpty
+    stz LINE_CLIP.lenBuffer
+    rts
+_testEmpty    
+    lda LINE_BUFFER.len
+    bne _notEmpty
+    ; line is empty => there is noting to cut here. Set LINE_CLIP.lenBuffer to zero.
+    stz LINE_CLIP.lenBuffer
+    rts
+_notEmpty
+    ; lenCopy and length of line are at least one if we get here => copy part of line which is to be deleted. 
+    jsr lineClipCopyInt
+    ; now cut out desired section
+    lda LINE_CLIP.startPos
+    tax
+    clc
+    adc LINE_CLIP.lenCopy
+    tay
+_cutLoop
+    cpy LINE_BUFFER.len
+    beq _cutFinished
+    lda LINE_BUFFER.buffer, y
+    sta LINE_BUFFER.buffer, x
+    inx
+    iny
+    bra _cutLoop
+_cutFinished
+    ; Adapt length of line and save its changed value to the linked list
+    lda LINE_BUFFER.len
+    sec
+    sbc LINE_CLIP.lenCopy
+    sta LINE_BUFFER.len
+    jsr list.setCurrentLine
+    bcs _outOfMemory
+_done
     rts
 _outOfMemory
     jmp (OUT_OF_MEMORY)

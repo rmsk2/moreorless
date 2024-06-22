@@ -208,7 +208,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 24
+NUM_EDITOR_COMMANDS = 25
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -224,6 +224,7 @@ EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30            ; F3
 EDT_COPY_TXT     .dstruct KeyEntry_t, $0103, copyInLine            ; CTRL + c
 EDT_MV_SCR_DOWN  .dstruct KeyEntry_t, $010E, moveWindowDown        ; CTRL + CrsrDown
 EDT_MV_SCR_UP    .dstruct KeyEntry_t, $0110, moveWindowUp          ; CTRL + CrsrUp
+EDT_CUT_TXT      .dstruct KeyEntry_t, $0118, cutInLine             ; CTRL + x
 EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
 EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02EB, clearClip             ; ALT + k
 EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down
@@ -266,39 +267,84 @@ setMark
     rts
 
 
-copyInLine
+CUT_START_POS .byte 0
+CUT_END_POS   .byte 0
+; carry is set if processing should be terminated after the call to this routine
+determineLineCopyCutParams
     ; is mark valid?
     lda editor.STATE.mark.isValid
-    beq _done
+    beq _quit
     ; are we in the same line as the mark?
     lda editor.STATE.mark.yPos
     cmp CURSOR_STATE.yPos
-    bne _done
+    bne _quit
+    ; the mark is valid and we are on the same line as the mark    
     lda editor.STATE.mark.xPos
     cmp CURSOR_STATE.xPos
     bcs _markAfter
     ; mark is left of current pos
     lda editor.STATE.mark.xPos
     sta clip.LINE_CLIP.startPos
+    sta CUT_START_POS
     lda CURSOR_STATE.xPos
+    sta CUT_END_POS
     sec
     sbc editor.STATE.mark.xPos
-    bra _doCopy    
+    bra _finished
 _markAfter
     ; mark is right of current pos
     lda CURSOR_STATE.xPos
     sta clip.LINE_CLIP.startPos
-    sec
+    sta CUT_START_POS
     lda editor.STATE.mark.xPos
+    sta CUT_END_POS
+    sec
     sbc clip.LINE_CLIP.startPos
-_doCopy
+_finished
     ina
     sta clip.LINE_CLIP.lenCopy
+    ; verify that the determined values are plausible
+    ; start position must not be beyond overall length of line
+    lda clip.LINE_CLIP.startPos
+    cmp LINE_BUFFER.len 
+    bcs _quit
+    ; end position must not be beyond overall length of line
+    lda CUT_END_POS
+    cmp LINE_BUFFER.len 
+    bcs _quit
+    rts
+_quit
+    sec
+    rts
+
+
+cutInLine
+    jsr determineLineCopyCutParams
+    bcs _done
+    jsr clip.lineClipCut
+    jsr markDocumentAsDirty
+    stz editor.STATE.mark.isValid
+    jsr toProg
+    jsr printFixedProgData
+    jsr toData
+    jsr txtio.leftMost
+    #ovwrWithLineBuffer
+    lda CUT_START_POS
+    sta editor.STATE.navigateCol
+    jsr moveToNavigatePos
+    jsr updateProgData
+_done
+    rts
+
+
+copyInLine
+    jsr determineLineCopyCutParams
+    bcs _done
     jsr clip.lineClipCopy
     stz editor.STATE.mark.isValid
     jsr toProg
     jsr printFixedProgData
-    jsr toData    
+    jsr toData
 _done
     rts
 
