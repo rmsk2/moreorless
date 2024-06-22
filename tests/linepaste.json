@@ -1,0 +1,5 @@
+{
+    "Name": "Test pasting into line",
+    "TestDriverSource": "linepaste.asm",
+    "TestScript": "linepaste.lua"
+}

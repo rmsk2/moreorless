@@ -1,0 +1,5 @@
+{
+    "Name": "Test cutting from line",
+    "TestDriverSource": "linecut1.asm",
+    "TestScript": "linecut1.lua"
+}

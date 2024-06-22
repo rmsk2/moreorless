@@ -346,6 +346,73 @@ _outOfMemory
     jmp (OUT_OF_MEMORY)
 
 
+CUR_CLIP_POS .byte 0
+INSERT_POS   .byte 0
+ORG_LEN      .byte 0
+; carry is set if inserting LINE_CLIP leads to a line that would be too long. Insert pos is in accu.
+lineClipPaste
+    sta INSERT_POS
+    ; save current state of line to linked list
+    jsr list.setCurrentLine
+    bcs _outOfMemory
+    ; do nothing if LINE_CLIP is empty
+    lda LINE_CLIP.lenBuffer
+    beq _notAllowed
+    ; do nothing if overall length would be beyond 80 characters
+    lda LINE_BUFFER.len
+    sta ORG_LEN
+    clc
+    adc LINE_CLIP.lenBuffer
+    cmp #search.MAX_CHARS_TO_CONSIDER
+    beq _allowed
+    bcs _notAllowed
+_allowed
+    ; increase length of line buffer
+    sta LINE_BUFFER.len
+    lda ORG_LEN
+    cmp INSERT_POS
+    ; We have to move stuff around
+    bne _makeRoom
+    ; This is not an insert, we only append
+    beq _copyNewChars
+_makeRoom
+    ; here the length of the new line is at least two and we have to
+    ; move at least one char out of the way
+    ldy LINE_BUFFER.len
+    dey
+    tya
+    sec
+    sbc LINE_CLIP.lenBuffer
+    tax
+_expandLoop
+    lda LINE_BUFFER.buffer, x
+    sta LINE_BUFFER.buffer, y
+    cpx INSERT_POS
+    beq _copyNewChars
+    dex
+    dey
+    bra _expandLoop
+_copyNewChars
+    ldx #0
+    ldy INSERT_POS
+_copyLoop
+    lda LINE_CLIP.buffer, x
+    sta LINE_BUFFER.buffer, y
+    inx
+    iny
+    cpx LINE_CLIP.lenBuffer
+    bne _copyLoop
+    jsr list.setCurrentLine
+    bcs _outOfMemory
+    clc
+    rts
+_notAllowed
+    sec
+    rts
+_outOfMemory
+    jmp (OUT_OF_MEMORY)
+
+
 init
     #copyMem2Mem NIL, CLIP.head
     #copyMem2Mem NIL, CLIP.current
