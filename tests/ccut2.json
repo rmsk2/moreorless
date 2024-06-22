@@ -1,5 +1,0 @@
-{
-    "Name": "Linked list: Cutting first element",
-    "TestDriverSource": "ccut2.asm",
-    "TestScript": "ccut2.lua"
-}

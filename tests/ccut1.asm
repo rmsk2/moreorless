@@ -8,7 +8,9 @@ CLIP_HEAD    .word clip.CLIP.head   ; 5
 STATE        .word memory.MEM_STATE ; 7
 LEN2         .word 0                ; 9
 OLD_LEN      .word 0                ; 11
-OLD_LIST     .word list.LIST.head   ; 13        
+OLD_LIST     .word list.LIST.head   ; 13
+START_POS    .word 0                ; 15
+CUT_LEN      .word 0                ; 17        
 
 
 .include "zeropage.asm"
@@ -90,15 +92,15 @@ _l5
 
     
 _doneAdding
-    ; move to element 6
+    ; move to specified elements
     jsr list.rewind
-    ldx #6
-    lda #0
+    ldx START_POS
+    lda START_POS + 1
     jsr list.move
     jsr list.readCurrentLine
-    ; cut last element
+    ; cut elements
     #copyMem2Mem list.LIST.current, clip.CPCT_PARMS.start
-    #load16BitImmediate 1, clip.CPCT_PARMS.len
+    #move16Bit CUT_LEN, clip.CPCT_PARMS.len
     jsr clip.cutSegement
     php
     #move16Bit list.LIST.length, OLD_LEN

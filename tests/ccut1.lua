@@ -1,14 +1,34 @@
 require (test_dir.."tools")
 
+iterations = 0
+test_table = {
+    -- start offset, len of cut, len list, len cut, seq
+    {6, 1, 1, 6, "123456"},
+    {0, 1, 1, 6, "234567"},
+    {2, 3, 3, 4, "1267"},
+}
+
+
+function num_iterations()
+    return #test_table
+end
+
+
 seq = ""
 
 addr_clip_len = de_ref(load_address + 3)
 addr_clip_head = de_ref(load_address + 5)
 addr_mem_state = de_ref(load_address + 7)
 addr_org_list = de_ref(load_address + 13)
+addr_start_pos = load_address + 15
+addr_cut_len = load_address + 17
 
 function arrange()
+    set_pc(load_address)
+    iterations = iterations + 1
     seq = ""
+    set_word_at(addr_start_pos, test_table[iterations][1])
+    set_word_at(addr_cut_len, test_table[iterations][2])
 end
 
 
@@ -33,7 +53,7 @@ function assert()
 
     iterate_whole_list(o, add_to_seq)
 
-    if seq ~= "123456" then
+    if seq ~= test_table[iterations][5] then
         return false, string.format("Wrong sequence: %s", seq)
     end
 
@@ -48,12 +68,12 @@ function assert()
     end
 
     local clip_len = read_word(addr_clip_len)
-    if clip_len ~= 1 then
+    if clip_len ~= test_table[iterations][3] then
         return false, string.format("Wrong clipboard length: %d", clip_len)
     end
 
     local list_len = read_word(load_address + 11)
-    if list_len ~= 6 then
+    if list_len ~= test_table[iterations][4] then
         return false, string.format("Wrong list length: %d", list_len)
     end
 

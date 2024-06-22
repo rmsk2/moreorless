@@ -44,7 +44,7 @@ is invalidated and the `M` disappears
 - Pressing `Foenix+c` copies all the lines between the marked line and the current line into the clipboard
 - Pressing `Foenix+x` copies all the lines between the marked line and the current line into the clipboard and deletes
 them from the document
-- Pressunf `Foenix+v` inserts the current clipboard contents (full lines only) into the document starting
+- Pressing `Foenix+v` inserts the current clipboard contents (full lines only) into the document starting
 at the current cursor position
 - Pressing `Alt+k` clears the clipboard and frees the associated memory
 - When any other key is pressed the corresponding character is inserted at the current cursor position
