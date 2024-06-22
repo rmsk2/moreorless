@@ -1,5 +1,5 @@
 {
-    "Name": "Linked list: Cutting last element",
+    "Name": "Linked list: Cutting elements",
     "TestDriverSource": "ccut1.asm",
     "TestScript": "ccut1.lua"
 }
