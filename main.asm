@@ -349,11 +349,27 @@ copyInLine
 _done
     rts
 
-
+ORG_POS .byte 0
 pasteInLine
     lda clip.LINE_CLIP.lenBuffer
     beq _done
-    
+    lda CURSOR_STATE.xPos
+    sta ORG_POS
+    jsr clip.lineClipPaste
+    bcs _done
+    jsr markDocumentAsDirty
+    jsr txtio.leftMost
+    #ovwrWithLineBuffer
+    lda ORG_POS
+    clc
+    adc clip.LINE_CLIP.lenBuffer
+    cmp #search.MAX_CHARS_TO_CONSIDER
+    bne _setCursor
+    lda #search.MAX_CHARS_TO_CONSIDER - 1
+_setCursor    
+    sta editor.STATE.navigateCol
+    jsr moveToNavigatePos
+    jsr updateProgData
 _done
     rts
 
