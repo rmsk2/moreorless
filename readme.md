@@ -44,8 +44,15 @@ is invalidated and the `M` disappears
 - Pressing `Foenix+c` copies all the lines between the marked line and the current line into the clipboard
 - Pressing `Foenix+x` copies all the lines between the marked line and the current line into the clipboard and deletes
 them from the document
-- Pressing `Foenix+v` inserts the current clipboard contents (full lines only) into the document starting
-at the current cursor position
+- Pressing `Foenix+v` inserts the current clipboard contents (filled by `Foenix+c` or `Foenix+x`) into the document
+starting at the current cursor position, i.e. the lines are inserted after the current line
+- Pressing `Ctrl+c` copies all the characters *in the current line* which reside between the mark and the cursor 
+position where the `Ctrl+c` was pressed into the clipboard. To reiterate that: The mark has to be set at the same 
+line where `Ctrl+c` was pressed.
+- Pressing `Ctrl+x` copies all the characters *in the current line* which reside between the mark and the cursor 
+position where the `Ctrl+x` was pressed into the clipboard and then deletes them from the document.
+- Pressing `Ctrl+v` inserts the contents of the clipboard (filled by `Ctrl+c` or `Ctrl+x`) at the current
+cursor position
 - Pressing `Alt+k` clears the clipboard and frees the associated memory
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
@@ -63,6 +70,11 @@ to be slower with a real keyboard vertical scrolling appears to be slower on the
 
 # Other limitations
 
+- In order to spare me the pain to consider a gazillion edge and corner cases I have for the moment decided 
+to split cut, copy and pasting data from and into the document into two different sets of commands. There
+is one set of commands that can be used to copy and paste simple text **but not full lines**. These commands 
+can be accessed through the usual `Ctrl+c`, `Ctrl+x` and `Ctrl+v`. If you want to copy blocks of code or text
+which only consist of **of full lines** you can use `Foenix+c`, `Foenix+x` and `Foenix+v` for that purpose.
 - The maximum line length is 224 characters. Any file with lines longer than that will not be loaded
 - All characters which appear in columns 81 or higher are clipped, i.e. there is currently no horizontal scrolling.
 Additonally `moreorless` does not allow to add characters to lines which are already longer than 80 characters but 
@@ -112,7 +124,6 @@ I am in the process to extend this software to make it a better text editor. Be 
 long shot. This is how I plan to progress:
 
 Short term goals  
-- adding cutting copying and pasting of parts of lines
 - allowing to move one word at a time in a line via Ctrl+Cursor left and right
 
 Midterm goals
@@ -121,6 +132,7 @@ Midterm goals
 - use a beep to signal to the user that a command excecution is not possible 
 - replace tab characters at load by four blanks
 - visualize line lengths larger than 80 in UI
+- Make pressing the tab key insering two spaces
 
 After that possibly
 - adding an undo feature (I have no clear plan on how to achieve this, yet)

@@ -349,6 +349,7 @@ copyInLine
 _done
     rts
 
+
 ORG_POS .byte 0
 pasteInLine
     lda clip.LINE_CLIP.lenBuffer
