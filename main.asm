@@ -208,7 +208,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 23
+NUM_EDITOR_COMMANDS = 24
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -221,6 +221,7 @@ EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
 EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
 EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60            ; F1
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30            ; F3
+EDT_COPY_TXT     .dstruct KeyEntry_t, $0103, copyInLine            ; CTRL + c
 EDT_MV_SCR_DOWN  .dstruct KeyEntry_t, $010E, moveWindowDown        ; CTRL + CrsrDown
 EDT_MV_SCR_UP    .dstruct KeyEntry_t, $0110, moveWindowUp          ; CTRL + CrsrUp
 EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
@@ -262,6 +263,43 @@ setMark
     sta editor.STATE.mark.isValid
     #copyMem2Mem list.LIST.current, editor.STATE.mark.element
     jsr showDocumentState
+    rts
+
+
+copyInLine
+    ; is mark valid?
+    lda editor.STATE.mark.isValid
+    beq _done
+    ; are we in the same line as the mark?
+    lda editor.STATE.mark.yPos
+    cmp CURSOR_STATE.yPos
+    bne _done
+    lda editor.STATE.mark.xPos
+    cmp CURSOR_STATE.xPos
+    bcs _markAfter
+    ; mark is left of current pos
+    lda editor.STATE.mark.xPos
+    sta clip.LINE_CLIP.startPos
+    lda CURSOR_STATE.xPos
+    sec
+    sbc editor.STATE.mark.xPos
+    bra _doCopy    
+_markAfter
+    ; mark is right of current pos
+    lda CURSOR_STATE.xPos
+    sta clip.LINE_CLIP.startPos
+    sec
+    lda editor.STATE.mark.xPos
+    sbc clip.LINE_CLIP.startPos
+_doCopy
+    ina
+    sta clip.LINE_CLIP.lenCopy
+    jsr clip.lineClipCopy
+    stz editor.STATE.mark.isValid
+    jsr toProg
+    jsr printFixedProgData
+    jsr toData    
+_done
     rts
 
 

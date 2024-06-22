@@ -262,10 +262,40 @@ _done
     rts
 
 
+LineClip_t .struct 
+    buffer    .fill search.MAX_CHARS_TO_CONSIDER
+    lenBuffer .byte 0
+    startPos  .byte 0
+    lenCopy   .byte 0
+.endstruct
+
+LINE_CLIP .dstruct LineClip_t
+
+lineClipCopy
+    jsr list.setCurrentLine
+    bcs _outOfMemory
+    ldy LINE_CLIP.startPos
+    ldx #0
+_loopChars
+    cpx LINE_CLIP.lenCopy
+    beq _done
+    lda LINE_BUFFER.buffer, y
+    sta LINE_CLIP, x
+    inx
+    iny
+    bra _loopChars
+_done
+    stx LINE_CLIP.lenBuffer
+    rts
+_outOfMemory
+    jmp (OUT_OF_MEMORY)
+
+
 init
     #copyMem2Mem NIL, CLIP.head
     #copyMem2Mem NIL, CLIP.current
     #load16BitImmediate 0, CLIP.length
+    stz LINE_CLIP.lenBuffer
     rts
 
 
