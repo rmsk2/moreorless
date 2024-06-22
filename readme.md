@@ -48,10 +48,11 @@ them from the document
 at the current cursor position
 - Pressing `Alt+k` clears the clipboard and frees the associated memory
 - When any other key is pressed the corresponding character is inserted at the current cursor position
- 
-`Moreorless` uses a single line feed (LF) or carriage return (CR) character as a line delimiter. The default 
-is LF but this can be changed at program start to CR. If the alternate line ending character is encountered
-in text it is replaced by a diamond shaped character.
+
+If the document has unsaved changes a `*` appears in the top right corner of the screen. `Moreorless` uses a 
+single line feed (LF) or carriage return (CR) character as a line delimiter. The default is LF but this can be 
+changed at program start to CR. If the alternate line ending character is encountered in text it is replaced 
+by a diamond shaped character.
 
 The software auto detects the presence of a RAM expansion cartridge and uses the extra RAM if it is
 determined that such a cartridge is in fact present.
