@@ -208,7 +208,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 26
+NUM_EDITOR_COMMANDS = 28
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -221,7 +221,9 @@ EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
 EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
 EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60            ; F1
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30            ; F3
+EDT_WORD_LEFT    .dstruct KeyEntry_t, $0102, toPrevWord            ; CTRL + CrsrLeft 
 EDT_COPY_TXT     .dstruct KeyEntry_t, $0103, copyInLine            ; CTRL + c
+EDT_WORD_RIGHT   .dstruct KeyEntry_t, $0106, toNextWord            ; CTRL + CrsrRight
 EDT_MV_SCR_DOWN  .dstruct KeyEntry_t, $010E, moveWindowDown        ; CTRL + CrsrDown
 EDT_MV_SCR_UP    .dstruct KeyEntry_t, $0110, moveWindowUp          ; CTRL + CrsrUp
 EDT_PASTE_TXT    .dstruct KeyEntry_t, $0116, pasteInLine           ; CTRL + v
@@ -1030,6 +1032,90 @@ toLineEnd
 toLineStart
     lda #0
     jsr moveToPos
+    rts
+
+
+checkCursorEnd
+    cpy LINE_BUFFER.len
+    ; we are already at the end of the line
+    beq _done
+    cpy #search.MAX_CHARS_TO_CONSIDER - 1
+    ; Zero flag is set if we are at the end of the screen
+_done
+    rts
+
+
+searchNextWord
+    ldy CURSOR_STATE.xPos
+_loop
+    jsr checkCursorEnd
+    beq _done
+    lda LINE_BUFFER.buffer, y
+    cmp #$20
+    bne _done
+    iny
+    bra _loop
+_done
+    rts
+
+
+searchNextBlank
+_loop
+    jsr checkCursorEnd
+    beq _done
+    lda LINE_BUFFER.buffer, y
+    cmp #$20
+    beq _done
+    iny
+    bra _loop
+_done
+    rts
+
+
+toNextWord
+    jsr searchNextWord
+    jsr searchNextBlank
+    tya
+    jsr moveToPos
+    rts
+
+
+searchPrevBlank
+_loop
+    cpy #0
+    beq _done
+    lda LINE_BUFFER.buffer, y
+    cmp #$20
+    beq _done
+    dey
+    bra _loop
+_done
+    rts
+
+
+searchPrevWord
+    ldy CURSOR_STATE.xPos
+    beq _done
+    cpy LINE_BUFFER.len
+    bne _loop
+    dey
+_loop
+    cpy #0
+    beq _done
+    lda LINE_BUFFER.buffer, y
+    cmp #$20
+    bne _done
+    dey
+    bra _loop
+_done
+    rts
+
+
+toPrevWord
+    jsr searchPrevWord
+    jsr searchPrevBlank
+    tya
+    jsr moveToPos    
     rts
 
 

@@ -11,6 +11,8 @@ a PS/2 keyboard.)
 preserving the current cursor position
 - Pressing `Control+Cursor down` moves the visible section of the document one line down while
 preserving the current cursor position
+- Pressing `Control+Cursor Right` moves the cursor to the end of the next word 
+- Pressing `Control+Cursor Left` moves the cursor to the beginning of the next word 
 - Pressing `Foenix+Cursor down` moves the view one screen towards the end of the file
 - Pressing `Foenix+Cursor up` moves the view one screen towards the beginning of the file
 - Pressing `F1` resets the view to line one in 80x60 text mode
@@ -124,11 +126,10 @@ using the built in screen editor.
 I am in the process to extend this software to make it a better text editor. Be warned this is not finished by a 
 long shot. This is how I plan to progress:
 
-Short term goals  
-- allowing to move one word at a time in a line via Ctrl+Cursor left and right
+Short term goals
+- adding replace to search
 
 Midterm goals
-- adding search and replace
 - Allow reuse of an entered file name (save vs save as ...)
 - use a beep to signal to the user that a command excecution is not possible 
 - replace tab characters at load by four blanks
