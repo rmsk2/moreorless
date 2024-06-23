@@ -12,7 +12,7 @@ preserving the current cursor position
 - Pressing `Control+Cursor down` moves the visible section of the document one line down while
 preserving the current cursor position
 - Pressing `Control+Cursor Right` moves the cursor to the end of the next word 
-- Pressing `Control+Cursor Left` moves the cursor to the beginning of the next word 
+- Pressing `Control+Cursor Left` moves the cursor to the beginning of the previous word 
 - Pressing `Foenix+Cursor down` moves the view one screen towards the end of the file
 - Pressing `Foenix+Cursor up` moves the view one screen towards the beginning of the file
 - Pressing `F1` resets the view to line one in 80x60 text mode
