@@ -2,7 +2,7 @@
 
 This is a simple text editor and viewer for the Foenix F256 family of modern retro computers. It allows you to load 
 a text file (remark: SuperBASIC programs are also text files) into RAM and to navigate through it as well as editing 
-the loaded file. The following commands are supported (Remark: Use the `Windows` key insteadof `Foenix` when using 
+the loaded file. The following commands are supported (Remark: Use the `Windows` key instead of `Foenix` when using 
 a PS/2 keyboard.)
 
 - `Cursor left` and `right` move the cursor horizontally
@@ -58,6 +58,7 @@ position where `Ctrl+x` was pressed into the clipboard and then deletes them fro
 cursor position
 - Pressing `Alt+k` clears the clipboard and frees the associated memory
 - Pressing `Alt+s` allows you to save the dcoument under a new name
+- Pressing the `Tab` key inserts two spaces
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 If the document has unsaved changes a `*` appears in the top right corner of the screen. `Moreorless` uses a 
@@ -134,7 +135,6 @@ Midterm goals
 - use a beep to signal to the user that a command excecution is not possible 
 - replace tab characters at load by four blanks
 - visualize line lengths larger than 80 in UI
-- Make pressing the tab key insering two spaces
 
 After that possibly
 - adding an undo feature (I have no clear plan on how to achieve this, yet)

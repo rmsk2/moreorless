@@ -212,7 +212,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 29
+NUM_EDITOR_COMMANDS = 30
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -220,6 +220,7 @@ EDT_LINE_START   .dstruct KeyEntry_t, $0001, toLineStart           ; HOME
 EDT_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
 EDT_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
 EDT_DELETE       .dstruct KeyEntry_t, $0008, deleteChar            ; delete
+EDT_TAB          .dstruct KeyEntry_t, $0009, insertTab             ; delete
 EDT_LINE_SPLIT   .dstruct KeyEntry_t, $000D, splitLines            ; Return
 EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
 EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
@@ -1160,6 +1161,14 @@ markDocumentAsDirty
     sta editor.STATE.dirty
     stz editor.STATE.mark.isValid
     jsr showDocumentState
+    rts
+
+
+insertTab
+    lda #$20
+    jsr insertCharacter
+    lda #$20
+    jsr insertCharacter
     rts
 
 
