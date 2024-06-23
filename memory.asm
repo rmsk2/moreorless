@@ -113,6 +113,14 @@ memCopy .macro src, target, length
     jsr memory.memCpy
 .endmacro
 
+memCopyAddr .macro src, target, lengthAddr 
+    #load16BitImmediate \src, memory.MEM_CPY.startAddress
+    #load16BitImmediate \target, memory.MEM_CPY.targetAddress
+    #move16Bit \lengthAddr, memory.MEM_CPY.length
+    jsr memory.memCpy
+.endmacro
+
+
 NIL   .dstruct FarPtr_t
 
 memory .namespace

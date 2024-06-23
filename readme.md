@@ -35,7 +35,8 @@ the search is in progress a `*` is shown in the upper left corner of the screen.
 - Pressing `delete` can be used to delete single characters and to merge a line with the one above and thereby
 deleting the current line
 - Pressing `Return` can be used to split a line in two lines, i.e. it creates a new line below the current one
-- `Foenix+s` can be used to save the current state of the edited text
+- `Foenix+s` can be used to save the current state of the edited text. If no file name was specified yet, you
+have to enter a new one-
 - `Alt+b` creates a new file from the current state of the edited text by automatically prefixing each line with
 a line number. This can be used to edit BASIC programs without line numbers and adding them while writing the
 file to SD card or an IEC drive.
@@ -56,6 +57,7 @@ position where `Ctrl+x` was pressed into the clipboard and then deletes them fro
 - Pressing `Ctrl+v` inserts the contents of the clipboard (filled by `Ctrl+c` or `Ctrl+x`) at the current
 cursor position
 - Pressing `Alt+k` clears the clipboard and frees the associated memory
+- Pressing `Alt+s` allows you to save the dcoument under a new name
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 If the document has unsaved changes a `*` appears in the top right corner of the screen. `Moreorless` uses a 
@@ -107,19 +109,18 @@ When a RAM expansion cartridge is present the memory available to `Moreorless` i
 
 ## Viewing and editing SuperBASIC programs
 
+`moreorless` allows you to create BASIC programs in a more or less usable (pun intended) editor. When you press 
+`Alt+b` you can write the current contents of the file to the selected drive while `moreorless` adds the line 
+numbers automatically. If you refrain from using `goto` and `gosub` you can therefore write BASIC programs without 
+using the built in screen editor.
+
 SuperBASIC can cope with either LF or CR as a line ending character and CR seems to be the default. So if you 
 can not load a SuperBASIC program into `moreorless` try to switch to the CR line ending at program start. 
 
 SuperBASICs `list` command performs pretty printing when showing a program. I.e. it for instance automatically
 indents certain parts of the program and does syntax highlighting. `moreorless` will not perform any pretty
 printing when showing or editing a BASIC program. On the other hand it allows you to look at and edit the program 
-in a much more comfortable way and you can search in the program's text. Additonally you can add your own indentation
-when editing the source code. 
-
-`moreorless` allows you to create BASIC programs in a more or less usable (pun intended) editor. When you press 
-`Alt+b` you can write the current contents of the file to the selected drive while `moreorless` adds the line 
-numbers automatically. If you refrain from using `goto` and `gosub` you can therefore write BASIC programs without 
-using the built in screen editor.
+in a much more comfortable way. Additonally you can add your own indentation when editing the source code. 
 
 ## Some plans
 
@@ -130,7 +131,6 @@ Short term goals
 - adding replace to search
 
 Midterm goals
-- Allow reuse of an entered file name (save vs save as ...)
 - use a beep to signal to the user that a command excecution is not possible 
 - replace tab characters at load by four blanks
 - visualize line lengths larger than 80 in UI

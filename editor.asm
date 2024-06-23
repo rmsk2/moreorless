@@ -19,6 +19,7 @@ EditState_t .struct
     dirty            .byte 0
     searchInProgress .byte 0
     mark             .dstruct MarkState_t
+    fileNameSet      .byte 0
 .endstruct
 
 MAX_FILE_LENGTH = 100
@@ -162,6 +163,7 @@ init
     stz STATE.dirty
     stz STATE.searchInProgress
     stz STATE.mark.isValid
+    stz STATE.fileNameSet
     rts
 
 .endnamespace

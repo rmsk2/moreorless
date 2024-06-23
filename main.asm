@@ -28,7 +28,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 1.9.10"
+PROG_NAME .text "MOREORLESS 1.9.11"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -108,10 +108,14 @@ _l2
     bcc _l1
     #printString FILE_ERROR, len(FILE_ERROR)
     jmp _restart
+_l1
+    lda #BOOL_TRUE
+    sta editor.STATE.fileNameSet
+    bra _showMain
 _newDocument
     jsr list.create
     bcs _reset
-_l1
+_showMain
     jsr start80x60
     jsr keyrepeat.init
     #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
@@ -208,7 +212,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 28
+NUM_EDITOR_COMMANDS = 29
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -230,16 +234,17 @@ EDT_PASTE_TXT    .dstruct KeyEntry_t, $0116, pasteInLine           ; CTRL + v
 EDT_CUT_TXT      .dstruct KeyEntry_t, $0118, cutInLine             ; CTRL + x
 EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
 EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02EB, clearClip             ; ALT + k
+EDT_SAVE_DOC_AS  .dstruct KeyEntry_t, $02F3, saveDocumentAs        ; ALT + s
 EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down
 EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp                ; FNX + up
 EDT_COPY_LINE    .dstruct KeyEntry_t, $0463, copyLines             ; FNX + c
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine              ; FNX + g
 EDT_SET_MARK     .dstruct KeyEntry_t, $046D, setMark               ; FNX + m
-EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveDocument          ; FNX + s
+EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveFile              ; FNX + s
 EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch           ; FNX + u
 EDT_PASTE_LINES  .dstruct KeyEntry_t, $0476, pasteIntoDocument     ; FNX + v
 EDT_CUT_LINES    .dstruct KeyEntry_t, $0478, cutFromDocument       ; FNX + x
-EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; SHift + HOME
+EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; Shift + HOME
 
 
 toEditor
@@ -1343,29 +1348,13 @@ _notDone
     rts    
 
 
-saveDocument
+saveFile
+    lda editor.STATE.fileNameSet
+    bne _dosave
+    jmp saveDocumentAs
+_dosave
     jsr toProg
-
-    jsr toLeftLastLine
-    #printString BLANKS_80, len(CURRENT_LINE) + 5
-
-    jsr toLeftLastLine
-    #printString ENTER_FILE_NAME, len(ENTER_FILE_NAME)
-
-    #inputStringNonBlocking FILE_NAME, 78 - len(ENTER_FILE_NAME), FILE_ALLOWED, len(FILE_ALLOWED)
-    #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
-    #load16BitImmediate processSaveFile, keyrepeat.FOCUS_VECTOR
-    rts
-
-
-processSaveFile
-    jsr txtio.getStringFocusFunc
-    bcc _procEnd
-    jmp _notDone
-_procEnd
-    sta TXT_FILE.nameLen
-    jsr txtio.cursorOn
-
+saveFileInt
     jsr toLeftLastLine
     jsr print80Blanks
 
@@ -1385,8 +1374,46 @@ _saveOK
 _doNothing
     jsr toData
     jsr updateProgData
-_finished
     jsr keyrepeat.init
+_finished
+    rts
+
+
+FILE_NAME_BUFFER .fill 78 - len(ENTER_FILE_NAME)
+NAME_LEN_TEMP    .word 0
+saveDocumentAs
+    jsr toProg
+
+    jsr toLeftLastLine
+    #printString BLANKS_80, len(CURRENT_LINE) + 5
+
+    jsr toLeftLastLine
+    #printString ENTER_FILE_NAME, len(ENTER_FILE_NAME)
+
+    #inputStringNonBlocking FILE_NAME_BUFFER, 78 - len(ENTER_FILE_NAME), FILE_ALLOWED, len(FILE_ALLOWED)
+    #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
+    #load16BitImmediate processSaveFile, keyrepeat.FOCUS_VECTOR
+    rts
+
+
+processSaveFile
+    jsr txtio.getStringFocusFunc
+    bcc _procEnd
+    jmp _notDone
+_procEnd
+    sta NAME_LEN_TEMP
+    jsr txtio.cursorOn
+
+    lda NAME_LEN_TEMP
+    beq _finish
+    #memCopyAddr FILE_NAME_BUFFER, FILE_NAME, NAME_LEN_TEMP
+    lda NAME_LEN_TEMP
+    sta TXT_FILE.nameLen
+    lda #BOOL_TRUE
+    sta editor.STATE.fileNameSet
+_finish
+    jsr saveFileInt
+    
     #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
 _notDone
     sec    
