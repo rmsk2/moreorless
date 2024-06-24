@@ -16,17 +16,17 @@ preserving the current cursor position
 - Pressing `Foenix+Cursor down` moves the view one screen towards the end of the file
 - Pressing `Foenix+Cursor up` moves the view one screen towards the beginning of the file
 - Pressing `F1` resets the view to line one in 80x60 text mode
-- Pressing `F3` resets the view to line one in 80x30 text mode
+- Pressing `F2` resets the view to line one in 80x30 text mode
 - Pressing `Alt+x` leaves the program and restarts BASIC
 - Pressing `Foenix+g` moves you to the line number which was entered after pressing the key
 - Pressing `Foenix+f` allows you to enter a string to search for in the document. If a non empty string is entered 
 `SRCH` is  shown in the status line. If an empty string is entered the current search string is deleted. If
 a search string was entered `moreorless` will immediately search for it in forward direction. You can press
- `F5` or `F7` explicitly to search forward or backward for the next occurance. All searches are case insensitive
+ `F3` or `F7` explicitly to search forward or backward for the next occurance. All searches are case insensitive
 and instead of printing the found string in reverse the cursor is moved to the start position of the search 
 string in the line.
 - Pressing `Foenix+u` unsets or deletes the search string. This also makes `SRCH` disappear
-- Pressing `F5` searches for the next occurance of the search string when moving towards the end of the 
+- Pressing `F3` searches for the next occurance of the search string when moving towards the end of the 
 document. If it is found the line in which it appeared becomes the first line which is displayed. While
 the search is in progress a `*` is shown in the upper left corner of the screen.
 - Pressing `F7` searches for the next occurance of the search string when moving towards the start of the 
@@ -59,6 +59,10 @@ cursor position
 - Pressing `Alt+k` clears the clipboard and frees the associated memory
 - Pressing `Alt+s` allows you to save the dcoument under a new name
 - Pressing the `Tab` key inserts two spaces
+- Pressing `Foenix+r` allows you to set a replace string. This string is used when performing a replace operation
+- Pressing `F5` tests whether the cursor is placed at the beginning of an occurance of the search string. If
+this is the case the search string is replaced by the replace string. The replace operation is not peroformed
+if the result of the operation would lead to a line which is longer than 80 characters
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 If the document has unsaved changes a `*` appears in the top right corner of the screen. `Moreorless` uses a 
@@ -125,15 +129,12 @@ in a much more comfortable way. Additonally you can add your own indentation whe
 
 ## Some plans
 
-I am in the process to extend this software to make it a better text editor. Be warned this is not finished by a 
-long shot. This is how I plan to progress:
-
-Short term goals
-- adding replace to search
+I am in the process to extend this software to make it a better text editor. I have finished implementing the
+features which I think are a must have. This is how I plan to progress:
 
 Midterm goals
 - use a beep to signal to the user that a command excecution is not possible 
-- replace tab characters at load by four blanks
+- replace tab characters at load by two blanks
 - visualize line lengths larger than 80 in UI
 
 After that possibly
@@ -144,7 +145,7 @@ I hope I can keep the overall length of the code below 32KB which would allow to
 at $8000 as a window to map in some sort of yet unspecified extension code.
 
 My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
-the memory managment and linked list functionality.
+the memory managment, linked list functionality and any other piece of the software which is not part of the UI.
 
 # Building the software
 

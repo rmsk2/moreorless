@@ -25,7 +25,7 @@ restoreEvents
     rts
 
 
-FKEYS .byte $81, $82, $83, $84, $85, $86, $87, $88
+FKEYS .byte $81, $83, $85, $87
 
 testForFKey
     phx
@@ -34,7 +34,7 @@ _loop
     cmp FKEYS, x
     beq _isFKey
     inx
-    cpx #8
+    cpx #4
     bne _loop
     plx
     clc

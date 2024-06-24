@@ -28,7 +28,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 1.9.11"
+PROG_NAME .text "MOREORLESS 2.0.0"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -54,7 +54,11 @@ SAVING_FILE .text "Saving file ... "
 TXT_ERROR .text "error"
 TXT_EXIT_WARN .text "There are unsaved changes. Enter a non empty string to exit anyway: "
 
+; these have to remain in this sequence
 FILE_ALLOWED .text "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 0123456789_-./:#+~()!&@[]"
+TXT_ALLOWED  .text "=$%^\|*';?,{}<>"""
+
+ENTER_REPLACE_STR .text "Replace string: "
 
 CRLF = $0D
 
@@ -70,6 +74,7 @@ main
     jsr line.init_module
     jsr editor.init
     jsr basic.init
+    jsr search.init
 
     lda editor.STATE.col
     sta CURSOR_STATE.col 
@@ -212,7 +217,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
 MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 30
+NUM_EDITOR_COMMANDS = 32
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -225,7 +230,7 @@ EDT_LINE_SPLIT   .dstruct KeyEntry_t, $000D, splitLines            ; Return
 EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
 EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
 EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60            ; F1
-EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0083, start80x30            ; F3
+EDT_REPLACE      .dstruct KeyEntry_t, $0085, replaceString         ; F5
 EDT_WORD_LEFT    .dstruct KeyEntry_t, $0102, toPrevWord            ; CTRL + CrsrLeft 
 EDT_COPY_TXT     .dstruct KeyEntry_t, $0103, copyInLine            ; CTRL + c
 EDT_WORD_RIGHT   .dstruct KeyEntry_t, $0106, toNextWord            ; CTRL + CrsrRight
@@ -241,16 +246,18 @@ EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp                ; FNX + up
 EDT_COPY_LINE    .dstruct KeyEntry_t, $0463, copyLines             ; FNX + c
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine              ; FNX + g
 EDT_SET_MARK     .dstruct KeyEntry_t, $046D, setMark               ; FNX + m
+EDT_SET_REPL     .dstruct KeyEntry_t, $0472, setReplaceString      ; FNX + r
 EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveFile              ; FNX + s
 EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch           ; FNX + u
 EDT_PASTE_LINES  .dstruct KeyEntry_t, $0476, pasteIntoDocument     ; FNX + v
 EDT_CUT_LINES    .dstruct KeyEntry_t, $0478, cutFromDocument       ; FNX + x
 EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; Shift + HOME
+EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0882, start80x30            ; F2
 
 
 toEditor
     #load16BitImmediate $0466, MEM_SET_SEARCH.keyComb              ; FNX + f
-    #load16BitImmediate $0085, MEM_SEARCH_DOWN.keyComb             ; F5
+    #load16BitImmediate $0083, MEM_SEARCH_DOWN.keyComb             ; F3
     #load16BitImmediate $0087, MEM_SEARCH_UP.keyComb               ; F7
     #load16BitImmediate $02F8, MEM_EXIT.keyComb                    ; ALT + x
     #load16BitImmediate EDITOR_COMMANDS, KEY_SEARCH_PTR
@@ -261,6 +268,38 @@ toEditor
 
 
 .include "change_pos_ops.asm"
+
+
+REPL_POS .byte 0
+replaceString
+    lda editor.STATE.searchPatternSet
+    beq _done
+    lda CURSOR_STATE.xPos
+    sta REPL_POS
+    jsr search.CheckAtPos
+    bcc _done
+    lda REPL_POS
+    jsr search.Replace
+    bcs _done
+
+    jsr markDocumentAsDirty
+    lda #BOOL_TRUE
+    sta LINE_BUFFER.dirty
+
+    jsr txtio.leftMost
+    #ovwrWithLineBuffer
+
+    lda REPL_POS
+    cmp LINE_BUFFER.len
+    bcc _setPos
+    lda LINE_BUFFER.len
+    cmp #search.MAX_CHARS_TO_CONSIDER
+    bcc _setPos
+    lda #search.MAX_CHARS_TO_CONSIDER - 1
+_setPos
+    jsr moveToPos
+_done
+    rts
 
 
 setMark
@@ -553,7 +592,7 @@ setSearchString
     jsr toLeftLastLine
     #printString ENTER_SRCH_STR, len(ENTER_SRCH_STR)
 
-    #inputStringNonBlocking SEARCH_BUFFER, 64, FILE_ALLOWED + 26, len(FILE_ALLOWED) - 26
+    #inputStringNonBlocking SEARCH_BUFFER.buffer, 64, FILE_ALLOWED + 26, len(FILE_ALLOWED) - 26 + len(TXT_ALLOWED)
     #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
     #load16BitImmediate processSearchString, keyrepeat.FOCUS_VECTOR
     rts
@@ -597,6 +636,42 @@ _done
     jsr updateProgData
     #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
     jsr searchDown
+_notDone
+    sec    
+    rts 
+
+
+setReplaceString
+    jsr toProg
+
+    jsr toLeftLastLine
+    #printString BLANKS_80, len(CURRENT_LINE) + 5
+
+    jsr toLeftLastLine
+    #printString ENTER_REPLACE_STR, len(ENTER_REPLACE_STR)
+
+    #inputStringNonBlocking search.REPLACE_TXT, 62, FILE_ALLOWED, len(FILE_ALLOWED) + len(TXT_ALLOWED)
+    #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
+    #load16BitImmediate processReplaceString, keyrepeat.FOCUS_VECTOR
+    rts
+
+
+processReplaceString
+    jsr txtio.getStringFocusFunc
+    bcc _procEnd
+    jmp _notDone
+_procEnd
+    sta search.REPLACE_TXT.len
+    jsr txtio.cursorOn
+
+    jsr toLeftLastLine
+    jsr print80Blanks
+
+    jsr printFixedProgData
+    jsr toData
+_done
+    jsr updateProgData
+    #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
 _notDone
     sec    
     rts 

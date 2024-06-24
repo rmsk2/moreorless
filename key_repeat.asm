@@ -8,7 +8,8 @@ COOKIE_MEASUREMENT_TIMER = $10
 COOKIE_REPEAT_TIMER = $11
 IMPOSSIBLE_KEY = 0
 
-SHIFT_RAW = 0
+SHIFT_LEFT_RAW = 0
+SHIFT_RIGHT_RAW = 1
 CTRL_RAW  = 2
 ALT_RAW   = 4
 ALTGR_RAW = 5
@@ -105,7 +106,14 @@ handleKeyPressEvent
     lda myEvent.key.raw
     jsr testForFKey
     bcs _handleFKey
-    cmp #SHIFT_RAW
+    cmp #SHIFT_RIGHT_RAW
+    bne _shiftLeft
+    lda TRACKING.metaState
+    ora #SET_SHIFT
+    sta TRACKING.metaState
+    bra _done
+_shiftLeft
+    cmp #SHIFT_LEFT_RAW
     bne _ctrl
     lda TRACKING.metaState
     ora #SET_SHIFT
@@ -142,7 +150,7 @@ _done
     sec                                            ; we did not recognize the key. Make another loop iteration in keyEventLoop
     rts
 _handleFKey
-    lda myEvent.key.raw    
+    lda myEvent.key.ascii    
     bra _startMeasureTimer
 _isAscii
     lda myEvent.key.ascii
@@ -163,7 +171,14 @@ handleKeyReleaseEvent
     lda myEvent.key.raw
     jsr testForFKey
     bcs _handleFKey
-    cmp #SHIFT_RAW
+    cmp #SHIFT_RIGHT_RAW
+    bne _shiftLeft
+    lda TRACKING.metaState
+    and #CLR_SHIFT
+    sta TRACKING.metaState
+    bra _done
+_shiftLeft
+    cmp #SHIFT_LEFT_RAW
     bne _ctrl
     lda TRACKING.metaState
     and #CLR_SHIFT
