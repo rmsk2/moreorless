@@ -1,0 +1,5 @@
+{
+    "Name": "Test Replace in line I",
+    "TestDriverSource": "repl1.asm",
+    "TestScript": "repl1.lua"
+}
