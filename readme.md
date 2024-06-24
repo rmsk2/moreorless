@@ -1,16 +1,18 @@
 # Moreorless
 
-This is a simple text editor and viewer for the Foenix F256 family of modern retro computers. It allows you to load 
-a text file (remark: SuperBASIC programs are also text files) into RAM and to navigate through it as well as editing 
-the loaded file. The following commands are supported (Remark: Use the `Windows` key instead of `Foenix` when using 
-a PS/2 keyboard.)
+This is a simple text editor for the Foenix F256 family of modern retro computers. It allows you to load a text file 
+(remark: SuperBASIC programs are also text files) into RAM and to navigate through it as well as editing the loaded 
+file in 80x60 or 80x30 text mode. The following commands are supported (remark: Use the `Windows` key instead of 
+the `Foenix` when using a PS/2 keyboard.)
 
-- `Cursor left` and `right` move the cursor horizontally
-- `Cursor up` and `down` move the cursor one line up or down
+- Pressing `Cursor left` and `right` moves the cursor horizontally
+- Pressing `Cursor up` and `down` moves the cursor one line up or down
 - Pressing `Control+Cursor up` moves the visible section of the document one line up while
-preserving the current cursor position
+preserving the current cursor position. You can not move the cursor out of the visible screen
+using this command.
 - Pressing `Control+Cursor down` moves the visible section of the document one line down while
-preserving the current cursor position
+preserving the current cursor position. You can not move the cursor out of the visible screen
+using this command.
 - Pressing `Control+Cursor Right` moves the cursor to the end of the next word 
 - Pressing `Control+Cursor Left` moves the cursor to the beginning of the previous word 
 - Pressing `Foenix+Cursor down` moves the view one screen towards the end of the file
@@ -30,23 +32,25 @@ string in the line.
 document. If it is found the line in which it appeared becomes the first line which is displayed. While
 the search is in progress a `*` is shown in the upper left corner of the screen.
 - Pressing `F7` searches for the next occurance of the search string when moving towards the start of the 
-document. If it is found the line in which it appeared becomes the first line which is displayed. While
-the search is in progress a `*` is shown in the upper left corner of the screen.
+document. I.e. the search is done in backwards direction. If it is found the line in which it appeared becomes 
+the first line which is displayed. Whilethe search is in progress a `*` is shown in the upper left corner of the screen.
 - Pressing `delete` can be used to delete single characters and to merge a line with the one above and thereby
 deleting the current line
 - Pressing `Return` can be used to split a line in two lines, i.e. it creates a new line below the current one
 - `Foenix+s` can be used to save the current state of the edited text. If no file name was specified yet, you
-have to enter a new one-
+have to enter a new one.
 - `Alt+b` creates a new file from the current state of the edited text by automatically prefixing each line with
 a line number. This can be used to edit BASIC programs without line numbers and adding them while writing the
-file to SD card or an IEC drive.
+file to SD card or an IEC drive. The created file can then be loaded and executed.
 - `Home` and `Shift+Home` can be used to move the cursor to the start or the end of a line
 - Pressing `Foenix+m` sets a mark which determines the start position of copy and paste operations. That a mark
-is set is visualized by an `M` in the top right corner of the screen. As soon as the document is changed the mark 
-is invalidated and the `M` disappears
-- Pressing `Foenix+c` copies all the lines between the marked line and the current line into the clipboard
+is set is visualized by an `M` in the top right corner of the screen. As soon as the document is changed or a copy
+or cut operation has been successfully performed the mark is invalidated and the `M` disappears
+- Pressing `Foenix+c` copies all the lines between the marked line and the current line into the clipboard. This uses
+additional memory
 - Pressing `Foenix+x` copies all the lines between the marked line and the current line into the clipboard and deletes
-them from the document
+them from the document. Cutting a part of the document does not use any additional memory as the linked list
+which is used to represent the document is simply split in two
 - Pressing `Foenix+v` inserts the current clipboard contents (filled by `Foenix+c` or `Foenix+x`) into the document
 starting at the current cursor position, i.e. the lines are inserted after the current line
 - Pressing `Ctrl+c` copies all the characters *in the current line* which reside between the mark and the cursor 
@@ -61,13 +65,14 @@ cursor position
 - Pressing the `Tab` key inserts two spaces
 - Pressing `Foenix+r` allows you to set a replace string. This string is used when performing a replace operation
 - Pressing `F5` tests whether the cursor is placed at the beginning of an occurance of the search string. If
-this is the case the search string is replaced by the replace string. The replace operation is not peroformed
-if the result of the operation would lead to a line which is longer than 80 characters
+this is the case the search string is replaced by the replace string. The replace operation is not performed
+if the result of the operation would lead to a line which is longer than 80 characters or if a search string
+has not been set.
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
-If the document has unsaved changes a `*` appears in the top right corner of the screen. `Moreorless` uses a 
+If the document has unsaved changes a `*` appears in the top right corner of the screen. `moreorless` uses a 
 single line feed (LF) or carriage return (CR) character as a line delimiter. The default is LF but this can be 
-changed at program start to CR. If the alternate line ending character is encountered in text it is replaced 
+changed at program start to CR. If the alternate line ending character is encountered in the text it is replaced 
 by a diamond shaped character.
 
 The software auto detects the presence of a RAM expansion cartridge and uses the extra RAM if it is
@@ -82,18 +87,17 @@ to be slower with a real keyboard vertical scrolling appears to be slower on the
 - In order to spare me the pain to consider a gazillion edge and corner cases I have for the moment decided 
 to split cut, copy and pasting data from and into the document into two different sets of commands. There
 is one set of commands that can be used to copy and paste simple text **but not full lines**. These commands 
-can be accessed through the usual key combinations `Ctrl+c`, `Ctrl+x` and `Ctrl+v`. If you want to copy blocks of 
-code or text which only consist of **of full lines** you can use `Foenix+c`, `Foenix+x` and `Foenix+v` for that
-purpose.
+can be accessed through the key combinations `Foenix+m`, `Ctrl+c`, `Ctrl+x` and `Ctrl+v`. If you want to 
+copy blocks of code or text which only consist of **of full lines** you can use `Foenix+m`, `Foenix+c`, 
+`Foenix+x` and `Foenix+v` for that purpose.
 - The maximum line length is 224 characters. Any file with lines longer than that will not be loaded. All characters 
-which appear in columns 81 or higher are clipped, i.e. there is currently no horizontal scrolling. Additonally 
+which appear in columns 81 or higher are clipped, i.e. there is no horizontal scrolling. Additonally 
 `moreorless` does not allow to add characters to lines which are already longer than 80 characters but they can be
 split via `return` and they can shortened by pressing the `delete` key. A file that was only edited with 
 `moreorless` will therefore never have lines with more than 80 characters.
-- Tab characters are not expanded at the moment
-- Due to the data structure selected (see below) there is quite a bit if memory management overhead, i.e.
-wasted memory. `Moreorless` uses roughly twice as much memory as would be needed to only store the file 
-contents in RAM. On the other hand the files `const.txt` (47 KB) and `macbeth.txt` (125 KB) contained 
+- Due to the data structure selected (see below) there is quite a bit of memory management overhead, i.e.
+in essence wasted memory. `Moreorless` uses roughly twice as much memory as would be needed to only store the 
+file contents in RAM. On the other hand the files `const.txt` (47 KB) and `macbeth.txt` (125 KB) contained 
 in this repo as an example can be loaded and viewed on an unexpanded F256 with RAM to spare. The file 
 `grimm.txt` (286 KB) needs the RAM expansion but also leaves 90 KB free for additional text.
 
@@ -106,9 +110,9 @@ in the linked list contain three bytes. The first two bytes give the address in 
 to which the 32 byte block is mapped when brought into view by the MMU and the third byte contains the 8K 
 block number which can be written directly into the corresponding MMU register.
 
-On an unexpanded system 384 KB (48 8 KB blocks) of RAM are managed by `Moreorless`. There would be an 
+On an unexpanded system 384 KB (48 8 KB blocks) of RAM are managed by `moreorless`. There would be an 
 additional 64 KB (eight 8 KB blocks) available which have been excluded as a reserve for future extensions.
-When a RAM expansion cartridge is present the memory available to `Moreorless` is increased to 640 KB.
+When a RAM expansion cartridge is present the memory available to `moreorless` is increased to 640 KB.
 
 # Remarks
 
@@ -116,9 +120,10 @@ When a RAM expansion cartridge is present the memory available to `Moreorless` i
 
 `moreorless` allows you to create BASIC programs in a more or less usable (pun intended) editor. When you press 
 `Alt+b` you can write the current contents of the file to the selected drive while `moreorless` adds the line 
-numbers automatically. If you refrain from using `goto` and `gosub` you can therefore write BASIC programs without 
-using the built in screen editor.
+numbers automatically. If you refrain from using `goto` and `gosub` you can therefore write SuperBASIC programs 
+without using the built in screen editor.
 
+It is also possible to load existing SuperBASIC programs with `moreorless` (i.e. files including the file numbers). 
 SuperBASIC can cope with either LF or CR as a line ending character and CR seems to be the default. So if you 
 can not load a SuperBASIC program into `moreorless` try to switch to the CR line ending at program start. 
 
@@ -126,6 +131,17 @@ SuperBASICs `list` command performs pretty printing when showing a program. I.e.
 indents certain parts of the program and does syntax highlighting. `moreorless` will not perform any pretty
 printing when showing or editing a BASIC program. On the other hand it allows you to look at and edit the program 
 in a much more comfortable way. Additonally you can add your own indentation when editing the source code. 
+
+## Search and replace
+
+If you want to perform a search and replace operation with `moreorless` you have to set a search string via 
+`Foenix+f`. If you then place the cursor at the beginning of an occurance of the search string you can replace
+that occurance with the replace string by pressing `F5`. You can then search for the next occrance via `F3` or
+`F7`. If you choose not replace an occurance of the search string it may be neccessary to move the cursor away
+from the last occurance in order to allow `moreorless` to find the next occurance in the desired search direction.
+The default replace string is the empty string but you can change that via `Foenix+r`. You can set the replace
+string before setting a search string but you will not be able to actually perform the replace operation before a
+search string is set.
 
 ## Some plans
 
@@ -141,8 +157,8 @@ After that possibly
 - adding an undo feature (I have no clear plan on how to achieve this, yet)
 - adding some sort of mouse support
 
-I hope I can keep the overall length of the code below 32KB which would allow to keep the 8K block starting 
-at $8000 as a window to map in some sort of yet unspecified extension code.
+I am at the moment optimistic that I can keep the overall length of the assmebled program below 32KB which would 
+allow to use the 8K block starting at $8000 as a window to map in some sort of yet unspecified extension code.
 
 My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
 the memory managment, linked list functionality and any other piece of the software which is not part of the UI.
