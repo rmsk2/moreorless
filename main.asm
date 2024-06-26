@@ -147,7 +147,6 @@ processKeyEvent
     jsr endProg
     rts
 _checkCommands
-    ldx TRACKING.metaState
     jsr binsearch.searchEntry
     bcc _default
     iny
