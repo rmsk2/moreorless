@@ -17,7 +17,6 @@ EditState_t .struct
     navigateCol      .byte 0
     inputVector      .word 0
     dirty            .byte 0
-    searchInProgress .byte 0
     mark             .dstruct MarkState_t
     fileNameSet      .byte 0
 .endstruct
@@ -161,7 +160,6 @@ init
     sta STATE.searchPatternSet
     stz STATE.navigateCol
     stz STATE.dirty
-    stz STATE.searchInProgress
     stz STATE.mark.isValid
     stz STATE.fileNameSet
     rts

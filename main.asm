@@ -28,7 +28,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.0.0"
+PROG_NAME .text "MOREORLESS 2.0.1"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -139,35 +139,6 @@ _reset
 processKeyEvent
     sta ASCII_TEMP
     ldx TRACKING.metaState
-    ; the three search operations have to be the first which are checked
-    ; this serves the purpose of determining whether a search is in progress.
-    cpx MEM_SET_SEARCH.keyComb + 1
-    bne _checkSearchDown
-    cmp MEM_SET_SEARCH.keyComb
-    bne _checkSearchDown
-    jsr setSearchString
-    sec
-    rts
-_checkSearchDown
-    cpx MEM_SEARCH_DOWN.keyComb + 1
-    bne _checkSearchUp
-    cmp MEM_SEARCH_DOWN.keyComb
-    bne _checkSearchUp
-    jsr searchDown
-    sec
-    rts
-_checkSearchUp
-    cpx MEM_SEARCH_UP.keyComb + 1
-    bne _noSearch
-    cmp MEM_SEARCH_UP.keyComb
-    bne _noSearch
-    jsr searchUp
-    sec
-    rts  
-_noSearch
-    ; the user interrupts the search operation. This is recorded
-    ; by clearing editor.STATE.searchInProgress.
-    stz editor.STATE.searchInProgress
     cpx MEM_EXIT.keyComb + 1
     bne _checkCommands
     cmp MEM_EXIT.keyComb
@@ -176,6 +147,7 @@ _noSearch
     jsr endProg
     rts
 _checkCommands
+    ldx TRACKING.metaState
     jsr binsearch.searchEntry
     bcc _default
     iny
@@ -209,15 +181,11 @@ nothing
 
 ; a key code is a word. The hi byte specifies the state of the meta keys
 ; and the lo byte the ascii code of the key press
+MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
-; Fixed commands which are processed seperately
-MEM_SET_SEARCH   .dstruct KeyEntry_t, $002F, setSearchString
-MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0073, searchDown
-MEM_SEARCH_UP    .dstruct KeyEntry_t, $0853, searchUp
-MEM_EXIT         .dstruct KeyEntry_t, $0071, endProg
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 32
+NUM_EDITOR_COMMANDS = 35
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -230,7 +198,9 @@ EDT_LINE_SPLIT   .dstruct KeyEntry_t, $000D, splitLines            ; Return
 EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
 EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
 EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60            ; F1
+MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0083, searchDown            ; F3
 EDT_REPLACE      .dstruct KeyEntry_t, $0085, replaceString         ; F5
+MEM_SEARCH_UP    .dstruct KeyEntry_t, $0087, searchUp              ; F7
 EDT_WORD_LEFT    .dstruct KeyEntry_t, $0102, toPrevWord            ; CTRL + CrsrLeft 
 EDT_COPY_TXT     .dstruct KeyEntry_t, $0103, copyInLine            ; CTRL + c
 EDT_WORD_RIGHT   .dstruct KeyEntry_t, $0106, toNextWord            ; CTRL + CrsrRight
@@ -244,6 +214,7 @@ EDT_SAVE_DOC_AS  .dstruct KeyEntry_t, $02F3, saveDocumentAs        ; ALT + s
 EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down
 EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp                ; FNX + up
 EDT_COPY_LINE    .dstruct KeyEntry_t, $0463, copyLines             ; FNX + c
+MEM_SET_SEARCH   .dstruct KeyEntry_t, $0466, setSearchString       ; FNX + f
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine              ; FNX + g
 EDT_SET_MARK     .dstruct KeyEntry_t, $046D, setMark               ; FNX + m
 EDT_SET_REPL     .dstruct KeyEntry_t, $0472, setReplaceString      ; FNX + r
@@ -256,10 +227,6 @@ EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0882, start80x30            ; F2
 
 
 toEditor
-    #load16BitImmediate $0466, MEM_SET_SEARCH.keyComb              ; FNX + f
-    #load16BitImmediate $0083, MEM_SEARCH_DOWN.keyComb             ; F3
-    #load16BitImmediate $0087, MEM_SEARCH_UP.keyComb               ; F7
-    #load16BitImmediate $02F8, MEM_EXIT.keyComb                    ; ALT + x
     #load16BitImmediate EDITOR_COMMANDS, KEY_SEARCH_PTR
     lda #NUM_EDITOR_COMMANDS
     sta BIN_STATE.numEntries
@@ -462,25 +429,29 @@ clearClip
 
 
 FOUND_POS .byte 0
+DIR_TEMP .byte 0
 ; y contains direction
 searchBoth
+    sty DIR_TEMP
     ; is a search pattern set?
     lda editor.STATE.searchPatternSet
     beq _done
     phy
     jsr signalStartSearch
     ply
-    ; is a search in progress, i.e. has the user only executed seach operations
-    ; and nothing else? If yes we have to move to the next character before
-    ; starting the search.
-    lda editor.STATE.searchInProgress
-    bne _moveFirst
-    ; no search in progress => search from unmodified current cursor position.
+    ; Are we at a position where the search string occurs?
+    ; If yes we have to move to the next character before starting the search.
     lda CURSOR_STATE.xPos
+    jsr search.CheckAtPos
+    bcs _moveFirst
+    
+    lda CURSOR_STATE.xPos
+    ldy DIR_TEMP
     jsr searchFromPos
     bcc _done
     bcs _found
 _moveFirst
+    ldy DIR_TEMP
     ; search is in progress, move one char to left or right before starting next search
     cpy #BOOL_FALSE
     bne _forward
@@ -520,8 +491,6 @@ _found
     sta CURSOR_STATE.xPos
     jsr txtio.cursorSet
     jsr updateProgData
-    lda #1
-    sta editor.STATE.searchInProgress
 _done
     jsr signalEndSearch
     rts
