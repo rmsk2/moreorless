@@ -19,6 +19,8 @@ EditState_t .struct
     dirty            .byte 0
     mark             .dstruct MarkState_t
     fileNameSet      .byte 0
+    colorIndex       .byte 0
+    maxCol           .byte 0
 .endstruct
 
 MAX_FILE_LENGTH = 100
@@ -29,6 +31,8 @@ TXT_FILE .dstruct FileState_t, 76, FILE_NAME, len(FILE_NAME), LINE_BUFFER.buffer
 
 
 editor .namespace
+
+COLOURS .byte $12, $21, $30, $03, $01, $10
 
 ALREADY_CREATED .byte 1
 
@@ -151,11 +155,29 @@ _done
 
 STATE .dstruct EditState_t
 
-init
-    lda #$12
+
+cycleColour
+    inc STATE.colorIndex
+    lda STATE.colorIndex
+    cmp STATE.maxCol
+    bne setColour
+    stz STATE.colorIndex
+setColour
+    lda STATE.colorIndex
+    asl
+    tay
+    lda COLOURS, y
     sta STATE.col
-    lda #$21
+    iny
+    lda COLOURS, y
     sta STATE.colReversed
+    rts
+
+
+init
+    stz STATE.colorIndex
+    lda #(len(COLOURS)/2)
+    sta STATE.maxCol
     lda #BOOL_FALSE
     sta STATE.searchPatternSet
     stz STATE.navigateCol

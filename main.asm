@@ -28,7 +28,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.0.1"
+PROG_NAME .text "MOREORLESS 2.0.2"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -184,7 +184,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 35
+NUM_EDITOR_COMMANDS = 36
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -223,7 +223,7 @@ EDT_PASTE_LINES  .dstruct KeyEntry_t, $0476, pasteIntoDocument     ; FNX + v
 EDT_CUT_LINES    .dstruct KeyEntry_t, $0478, cutFromDocument       ; FNX + x
 EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; Shift + HOME
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0882, start80x30            ; F2
-
+EDT_COLOUR_CYCLE .dstruct KeyEntry_t, $0884, colourCycle           ; F4
 
 toEditor
     #load16BitImmediate EDITOR_COMMANDS, KEY_SEARCH_PTR

@@ -3,7 +3,7 @@
 This is a simple text editor for the Foenix F256 family of modern retro computers. It allows you to load a text file 
 (remark: SuperBASIC programs are also text files) into RAM and to navigate through it as well as editing the loaded 
 file in 80x60 or 80x30 text mode. The following commands are supported (remark: Use the `Windows` key instead of 
-the `Foenix` when using a PS/2 keyboard.)
+the `Foenix` key when using a PS/2 keyboard.)
 
 - Pressing `Cursor left` and `right` moves the cursor horizontally
 - Pressing `Cursor up` and `down` moves the cursor one line up or down
@@ -67,7 +67,8 @@ cursor position
 - Pressing `F5` tests whether the cursor is placed at the beginning of an occurance of the search string. If
 this is the case the search string is replaced by the replace string. The replace operation is not performed
 if the result of the operation would lead to a line which is longer than 80 characters or if a search string
-has not been set.
+has not been set
+- Pressing `F2` lets you change the colour scheme by cycling through three alternatives
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 If the document has unsaved changes a `*` appears in the top right corner of the screen. `moreorless` uses a 

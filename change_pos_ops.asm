@@ -316,6 +316,22 @@ moveToPos
     rts
 
 
+colourCycle
+    jsr editor.cycleColour
+    jsr list.setCurrentLine
+    lda editor.STATE.col
+    sta CURSOR_STATE.col
+    jsr toProg
+    lda editor.STATE.col
+    sta CURSOR_STATE.col
+    jsr txtio.clear
+    jsr toData
+    lda CURSOR_STATE.yPos
+    ldx CURSOR_STATE.xPos
+    jsr refreshView
+    rts
+
+
 ; This routine redraws the screen in such a way that the current element of the 
 ; linked list appears at the y-position given in the accu. 
 ;

@@ -17,6 +17,7 @@ restoreIo .macro
 TXT_BLACK = 0
 TXT_WHITE = 1
 TXT_BLUE = 2
+TXT_GREEN = 3
 
 clut .namespace
 
@@ -55,7 +56,8 @@ init
     #setIo 0
     #setTxtColInt TXT_BLACK,  $00, $00, $00, $FF
     #setTxtColInt TXT_WHITE,  $FF, $FF, $FF, $FF
-    #setTxtColInt TXT_BLUE,  $00, $00, $FF, $FF
+    #setTxtColInt TXT_BLUE,   $00, $00, $FF, $FF
+    #setTxtColInt TXT_GREEN,  $00, $FF, $00, $FF
     
     #restoreIo
     rts
