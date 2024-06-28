@@ -32,7 +32,7 @@ TXT_FILE .dstruct FileState_t, 76, FILE_NAME, len(FILE_NAME), LINE_BUFFER.buffer
 
 editor .namespace
 
-COLOURS .byte $12, $21, $30, $03, $01, $10
+COLOURS .byte $12, $21, $30, $03, $01, $10, $10, $01, $40, $04
 
 ALREADY_CREATED .byte 1
 

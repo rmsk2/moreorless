@@ -28,13 +28,13 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.0.2"
+PROG_NAME .text "MOREORLESS 2.0.3"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
 SPACER .text " - "
 FILE_ERROR .text "File read error. Please try again!", $0d, $0d
-DONE_TXT .text $0d, "Done!", $0d
+DONE_TXT .text $0d, "moreoreless has stopped. Please reset your machine if you see this", $0d
 LINES_TXT    .text " Lines | "
 OF_TEXT .text " of "
 BLOCK_FREE_TXT    .text " KB free | "
@@ -50,6 +50,7 @@ ENTER_SRCH_STR .text "Search string: "
 SRCH_TEXT .text "SRCH"
 LINE_END_CHAR_TEXT .text "Select line end character (press c for CR, press any other key for LF): "
 ENTER_FILE_NAME .text "File name: "
+ENTER_BASIC_NAME .text "BASIC file name: "
 SAVING_FILE .text "Saving file ... "
 TXT_ERROR .text "error"
 TXT_EXIT_WARN .text "There are unsaved changes. Enter a non empty string to exit anyway: "
@@ -126,8 +127,8 @@ _showMain
     #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
     jsr keyrepeat.keyEventLoop
 
-    jsr txtio.clear
     jsr txtio.init80x60
+    jsr txtio.clear
     #printString DONE_TXT, len(DONE_TXT)
 _reset
     jsr exitToBasic
@@ -184,7 +185,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 36
+NUM_EDITOR_COMMANDS = 37
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -203,6 +204,7 @@ MEM_SEARCH_UP    .dstruct KeyEntry_t, $0087, searchUp              ; F7
 EDT_WORD_LEFT    .dstruct KeyEntry_t, $0102, toPrevWord            ; CTRL + CrsrLeft 
 EDT_COPY_TXT     .dstruct KeyEntry_t, $0103, copyInLine            ; CTRL + c
 EDT_WORD_RIGHT   .dstruct KeyEntry_t, $0106, toNextWord            ; CTRL + CrsrRight
+EDT_LONG_TAB     .dstruct KeyEntry_t, $0109, insertTabTab          ; CTRL + Tab
 EDT_MV_SCR_DOWN  .dstruct KeyEntry_t, $010E, moveWindowDown        ; CTRL + CrsrDown
 EDT_MV_SCR_UP    .dstruct KeyEntry_t, $0110, moveWindowUp          ; CTRL + CrsrUp
 EDT_PASTE_TXT    .dstruct KeyEntry_t, $0116, pasteInLine           ; CTRL + v
@@ -224,6 +226,7 @@ EDT_CUT_LINES    .dstruct KeyEntry_t, $0478, cutFromDocument       ; FNX + x
 EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; Shift + HOME
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0882, start80x30            ; F2
 EDT_COLOUR_CYCLE .dstruct KeyEntry_t, $0884, colourCycle           ; F4
+
 
 toEditor
     #load16BitImmediate EDITOR_COMMANDS, KEY_SEARCH_PTR
@@ -956,11 +959,11 @@ _goOn
 _noPattern
     jsr txtio.reverseColor
 
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
-    #printString CURRENT_LINE, len(CURRENT_LINE)
+    ; stz CURSOR_STATE.xPos
+    ; lda CURSOR_STATE.yMaxMinus1
+    ; sta CURSOR_STATE.yPos
+    ; jsr txtio.cursorSet
+    ; #printString CURRENT_LINE, len(CURRENT_LINE)
     rts
 
 
@@ -972,15 +975,16 @@ updateProgData
 
 
 progUpdateInt
+    jsr txtio.cursorOff
     stz CURSOR_STATE.xPos
     lda CURSOR_STATE.yMaxMinus1
     sta CURSOR_STATE.yPos
     jsr txtio.cursorSet
-    #printString BLANKS_80, 78 - 15
-    stz CURSOR_STATE.xPos
-    lda CURSOR_STATE.yMaxMinus1
-    sta CURSOR_STATE.yPos
-    jsr txtio.cursorSet
+    ; #printString BLANKS_80, 78 - 15
+    ; stz CURSOR_STATE.xPos
+    ; lda CURSOR_STATE.yMaxMinus1
+    ; sta CURSOR_STATE.yPos
+    ; jsr txtio.cursorSet
     #printString CURRENT_LINE, len(CURRENT_LINE)
     #move16Bit editor.STATE.curLine, txtio.WORD_TEMP
     jsr txtio.printWordDecimal
@@ -990,6 +994,20 @@ progUpdateInt
     sta txtio.WORD_TEMP
     stz txtio.WORD_TEMP + 1
     jsr txtio.printWordDecimal
+    lda LINE_BUFFER.len
+    cmp #search.MAX_CHARS_TO_CONSIDER+1
+    bcc _done
+    lda #$2a
+    jsr txtio.charOut
+_done
+    lda #$20
+    ldy #0
+_blanks
+    jsr txtio.charOut
+    iny
+    cpy #10
+    bne _blanks 
+    jsr txtio.cursorOn
     rts
 
 Y_OFFSET = 1
@@ -1215,6 +1233,17 @@ insertTab
     rts
 
 
+insertTabTab
+    lda #$20
+    jsr insertCharacter
+    lda #$20
+    jsr insertCharacter
+    lda #$20
+    jsr insertCharacter
+    lda #$20
+    jsr insertCharacter
+    rts
+
 SCREEN_LEN .byte 0
 insertCharacter
     sta ASCII_TEMP
@@ -1346,10 +1375,10 @@ basicAutoNum
 
     ; reset to position 0 in last line and print message
     jsr toLeftLastLine
-    #printString ENTER_FILE_NAME, len(ENTER_FILE_NAME)
+    #printString ENTER_BASIC_NAME, len(ENTER_BASIC_NAME)
 
     ; setup callbacks for key presses
-    #inputStringNonBlocking basic.BASIC_NAME, 78 - len(ENTER_FILE_NAME), FILE_ALLOWED, len(FILE_ALLOWED)
+    #inputStringNonBlocking basic.BASIC_NAME, 78 - len(ENTER_BASIC_NAME), FILE_ALLOWED, len(FILE_ALLOWED)
     #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
     #load16BitImmediate doAutoNum, keyrepeat.FOCUS_VECTOR
     rts
@@ -1419,15 +1448,16 @@ saveFileInt
     jsr editor.saveFile
     bcc _saveOK
     #printString TXT_ERROR, len(TXT_ERROR)
+    jsr printFixedProgData
     jsr toData
-    bra _finished
+    bra _done
 _saveOK
     jsr printFixedProgData
+    jsr keyrepeat.init
 _doNothing
     jsr toData
     jsr updateProgData
-    jsr keyrepeat.init
-_finished
+_done
     rts
 
 
@@ -1463,9 +1493,14 @@ _procEnd
     sta TXT_FILE.nameLen
     lda #BOOL_TRUE
     sta editor.STATE.fileNameSet
-_finish
     jsr saveFileInt
-    
+    bra _end
+_finish
+    jsr toLeftLastLine
+    jsr print80Blanks
+    jsr toData
+    jsr updateProgData
+_end
     #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
 _notDone
     sec    

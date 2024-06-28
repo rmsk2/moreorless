@@ -62,13 +62,13 @@ position where `Ctrl+x` was pressed into the clipboard and then deletes them fro
 cursor position
 - Pressing `Alt+k` clears the clipboard and frees the associated memory
 - Pressing `Alt+s` allows you to save the dcoument under a new name
-- Pressing the `Tab` key inserts two spaces
+- Pressing the `Tab` key inserts two spaces. `Ctrl+Tab` inserts four space characters
 - Pressing `Foenix+r` allows you to set a replace string. This string is used when performing a replace operation
 - Pressing `F5` tests whether the cursor is placed at the beginning of an occurance of the search string. If
 this is the case the search string is replaced by the replace string. The replace operation is not performed
 if the result of the operation would lead to a line which is longer than 80 characters or if a search string
 has not been set
-- Pressing `F2` lets you change the colour scheme by cycling through three alternatives
+- Pressing `F2` lets you change the colour scheme by cycling through five alternatives
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 If the document has unsaved changes a `*` appears in the top right corner of the screen. `moreorless` uses a 
@@ -92,10 +92,11 @@ can be accessed through the key combinations `Foenix+m`, `Ctrl+c`, `Ctrl+x` and 
 copy blocks of code or text which only consist of **of full lines** you can use `Foenix+m`, `Foenix+c`, 
 `Foenix+x` and `Foenix+v` for that purpose.
 - The maximum line length is 224 characters. Any file with lines longer than that will not be loaded. All characters 
-which appear in columns 81 or higher are clipped, i.e. there is no horizontal scrolling. Additonally 
-`moreorless` does not allow to add characters to lines which are already longer than 80 characters but they can be
-split via `return` and they can shortened by pressing the `delete` key. A file that was only edited with 
-`moreorless` will therefore never have lines with more than 80 characters.
+which appear in columns 81 or higher are clipped, i.e. there is no horizontal scrolling. If `moreorless` 
+encounters a line which is longer than 80 characters, a star is printed after the value specifiying the current 
+column. Additonally `moreorless` does not allow to add characters to lines which are already longer than 80 characters 
+but they can be split via `return` and they can shortened by pressing the `delete` key. A file that was only edited 
+with `moreorless` will therefore never have lines with more than 80 characters.
 - Due to the data structure selected (see below) there is quite a bit of memory management overhead, i.e.
 in essence wasted memory. `Moreorless` uses roughly twice as much memory as would be needed to only store the 
 file contents in RAM. On the other hand the files `const.txt` (47 KB) and `macbeth.txt` (125 KB) contained 
@@ -147,10 +148,12 @@ search string is set.
 I am in the process to extend this software to make it a better text editor. I have finished implementing the
 features which I think are a must have. This is how I plan to progress:
 
+Short term goals
+- adding a command to indent a group of lines
+- adding a command to un-indent a group of lines
+
 Midterm goals
-- use a beep to signal to the user that a command excecution is not possible 
-- replace tab characters at load by two blanks
-- visualize line lengths larger than 80 in UI
+- use a beep to signal to the user that a command excecution is not possible
 
 After that possibly
 - adding an undo feature (I have no clear plan on how to achieve this, yet)
