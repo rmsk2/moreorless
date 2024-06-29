@@ -51,6 +51,22 @@ _done
     rts
 
 
+SPACE_CHAR = $20
+; y contains the number of blanks that prefix the current line
+countBlanks
+    ldy #0
+_loop
+    cpy LINE_BUFFER.len
+    beq _done
+    lda LINE_BUFFER.buffer, y
+    cmp #SPACE_CHAR
+    bne _done
+    iny
+    bra _loop
+_done
+    rts
+
+
 init_module
     lda #0
     sta LINE_BUFFER.len

@@ -256,7 +256,7 @@ DELETE_POS_HELP .byte 0
 ; This routine shifts the memory area to which MEM_PTR1 points and which has the length given in y
 ; one position to the left beginning with the position specified in the accu. The "hole" that
 ; is created at the end is filled with a space character. Upon return y is set to the
-; position of the "hole" that was created. Length has to be at least two for this code to work.
+; position of the "hole" that was created.
 ;
 ; ***** Beware **** This routine uses self modifying code. I know this is ugly but doing it
 ; in the "proper" way would not be nice either.

@@ -153,6 +153,7 @@ Short term goals
 - adding a command to un-indent a group of lines
 
 Midterm goals
+- adding a sensible out of memory handler
 - use a beep to signal to the user that a command excecution is not possible
 
 After that possibly

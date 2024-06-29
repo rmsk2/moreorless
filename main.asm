@@ -190,13 +190,13 @@ EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
 EDT_LINE_START   .dstruct KeyEntry_t, $0001, toLineStart           ; HOME
-EDT_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2
-EDT_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2
+EDT_CRSR_LEFT    .dstruct KeyEntry_t, $0002, procCrsrLeft2         ; CrsrLeft
+EDT_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2        ; CrsrRight
 EDT_DELETE       .dstruct KeyEntry_t, $0008, deleteChar            ; delete
 EDT_TAB          .dstruct KeyEntry_t, $0009, insertTab             ; Tab
 EDT_LINE_SPLIT   .dstruct KeyEntry_t, $000D, splitLines            ; Return
-EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2
-EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2
+EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2         ; CrsrDown
+EDT_CRSR_UP      .dstruct KeyEntry_t, $0010, procCrsrUp2           ; CrsrUp
 EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60            ; F1
 MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0083, searchDown            ; F3
 EDT_REPLACE      .dstruct KeyEntry_t, $0085, replaceString         ; F5
@@ -1243,6 +1243,7 @@ insertTabTab
     lda #$20
     jsr insertCharacter
     rts
+
 
 SCREEN_LEN .byte 0
 insertCharacter
