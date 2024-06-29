@@ -26,7 +26,7 @@ EditState_t .struct
     dirty            .byte 0
     mark             .dstruct MarkState_t
     fileNameSet      .byte 0
-    colorIndex       .byte GREEN_ON_BLACK
+    colorIndex       .byte WHITE_ON_BLUE
     maxCol           .byte 0
     indentLevel      .byte INDENT_SIZE
 .endstruct
