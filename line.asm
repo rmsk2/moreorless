@@ -48,6 +48,8 @@ _next
     inx
     bra _loop
 _done
+    lda #BOOL_TRUE
+    sta LINE_BUFFER.dirty
     rts
 
 

@@ -10,6 +10,7 @@ LINE_BUF .word LINE_BUFFER
 .include "arith16.asm"
 .include "memory.asm"
 .include "line.asm"
+.include "search.asm"
 
 main
     pha
