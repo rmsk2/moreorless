@@ -85,9 +85,14 @@ _indentLoop
     bcs _done
     dec NUM_BLANKS
     inc LINE_BUFFER.len
-    Inc NUM_INDENT
+    inc NUM_INDENT
     bra _indentLoop
 _done
+    lda NUM_INDENT
+    beq _return
+    lda #BOOL_TRUE
+    sta LINE_BUFFER.dirty
+_return
     rts
 
 
@@ -111,6 +116,11 @@ _loop
     dec LINE_BUFFER.len
     bra _loop
 _done
+    lda NUM_UNINDENT
+    beq _return
+    lda #BOOL_TRUE
+    sta LINE_BUFFER.dirty
+_return
     rts
 
 

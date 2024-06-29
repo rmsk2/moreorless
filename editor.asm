@@ -1,3 +1,10 @@
+INDENT_SIZE = 2
+
+WHITE_ON_BLUE = 0
+GREEN_ON_BLACK = 1
+BLACK_ON_WHITE = 2
+WHITE_ON_BLACK = 3
+AMBER_ON_BLACK = 4
 
 MarkState_t .struct 
     line    .word 0
@@ -19,8 +26,9 @@ EditState_t .struct
     dirty            .byte 0
     mark             .dstruct MarkState_t
     fileNameSet      .byte 0
-    colorIndex       .byte 0
+    colorIndex       .byte GREEN_ON_BLACK
     maxCol           .byte 0
+    indentLevel      .byte INDENT_SIZE
 .endstruct
 
 MAX_FILE_LENGTH = 100
@@ -175,9 +183,9 @@ setColour
 
 
 init
-    stz STATE.colorIndex
     lda #(len(COLOURS)/2)
     sta STATE.maxCol
+    jsr setColour
     lda #BOOL_FALSE
     sta STATE.searchPatternSet
     stz STATE.navigateCol

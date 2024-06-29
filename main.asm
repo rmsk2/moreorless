@@ -415,8 +415,6 @@ _doCopy
     rts
 
 
-INDENT_SIZE = 2
-
 CUR_PTR .dstruct FarPtr_t
 INDENT_CUR_Y_POS .byte 0
 INDENT_CUR_X_POS .byte 0
@@ -441,7 +439,7 @@ _isValid
 _loop
     #cmp16BitImmediate 0, clip.CPCT_PARMS.len
     beq _indentDone
-    lda #INDENT_SIZE
+    lda editor.STATE.indentLevel
     jsr line.doIndent
     lda INDENT_START
     bne _setLine
@@ -459,7 +457,7 @@ _setLine
     bra _loop
 _indentDone
     #copyMem2Mem CUR_PTR, list.SET_PTR
-    jsr list.setTo
+    #changeLine list.setTo
     stz editor.STATE.mark.isValid
     jsr toProg
     jsr printFixedProgData
@@ -507,7 +505,7 @@ _isValid
 _loop
     #cmp16BitImmediate 0, clip.CPCT_PARMS.len
     beq _unIndentDone
-    lda #INDENT_SIZE
+    lda editor.STATE.indentLevel
     jsr line.doUnIndent
     lda INDENT_START
     bne _setLine
@@ -525,7 +523,7 @@ _setLine
     bra _loop
 _unIndentDone
     #copyMem2Mem CUR_PTR, list.SET_PTR
-    jsr list.setTo
+    #changeLine list.setTo
     stz editor.STATE.mark.isValid
     jsr toProg
     jsr printFixedProgData
@@ -1375,23 +1373,24 @@ markDocumentAsDirty
     rts
 
 
+INDENT_COUNT .byte 0
 insertTab
+    lda editor.STATE.indentLevel
+    sta INDENT_COUNT
+_loop
+    lda INDENT_COUNT
+    beq _done
     lda #$20
     jsr insertCharacter
-    lda #$20
-    jsr insertCharacter
+    dec INDENT_COUNT
+    bra _loop
+_done
     rts
 
 
 insertTabTab
-    lda #$20
-    jsr insertCharacter
-    lda #$20
-    jsr insertCharacter
-    lda #$20
-    jsr insertCharacter
-    lda #$20
-    jsr insertCharacter
+    jsr insertTab
+    jsr insertTab
     rts
 
 
