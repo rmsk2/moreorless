@@ -1,9 +1,7 @@
 # Moreorless
 
-This is a simple text editor for the Foenix F256 family of modern retro computers. It allows you to load a text file 
-(remark: SuperBASIC programs are also text files) into RAM and to navigate through it as well as editing the loaded 
-file in 80x60 or 80x30 text mode. The following commands are supported (remark: Use the `Windows` key instead of 
-the `Foenix` key when using a PS/2 keyboard.)
+This is a simple text editor for the Foenix F256 family of modern retro computers. You can edit files in 80x60 or 80x30 text mode.
+The following commands are supported (remark: Use the `Windows` key instead of the `Foenix` key when using a PS/2 keyboard.)
 
 - Pressing `Cursor left` and `right` moves the cursor horizontally
 - Pressing `Cursor up` and `down` moves the cursor one line up or down
@@ -141,7 +139,7 @@ in a much more comfortable way. Additonally you can add your own indentation whe
 ## Search and replace
 
 If you want to perform a search and replace operation with `moreorless` you have to set a search string via 
-`Foenix+f`. If you then place the cursor at the beginning of an occurance of the search string you can replace
+`Foenix+f`. If the cursor is placed at the beginning of an occurance of the search string you can replace
 that occurance with the replace string by pressing `F5`. You can then search for the next occrance via `F3` or
 `F7`. The default replace string is the empty string but you can change that via `Foenix+r`. You can set the replace
 string before setting a search string but you will not be able to actually perform the replace operation before a
@@ -153,11 +151,10 @@ I am in the process to extend this software to make it a better text editor. I h
 features which I think are a must have. This is how I plan to progress:
 
 Short term goals
-- adding a command to indent a group of lines
-- adding a command to un-indent a group of lines
+- adding a sensible out of memory handler
 
 Midterm goals
-- adding a sensible out of memory handler
+
 - use a beep to signal to the user that a command excecution is not possible
 
 After that possibly
