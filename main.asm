@@ -28,7 +28,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.0.3"
+PROG_NAME .text "MOREORLESS 2.0.4"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -185,7 +185,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 37
+NUM_EDITOR_COMMANDS = 39
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -209,9 +209,11 @@ EDT_MV_SCR_DOWN  .dstruct KeyEntry_t, $010E, moveWindowDown        ; CTRL + Crsr
 EDT_MV_SCR_UP    .dstruct KeyEntry_t, $0110, moveWindowUp          ; CTRL + CrsrUp
 EDT_PASTE_TXT    .dstruct KeyEntry_t, $0116, pasteInLine           ; CTRL + v
 EDT_CUT_TXT      .dstruct KeyEntry_t, $0118, cutInLine             ; CTRL + x
+EDT_UNDENT_LINES .dstruct KeyEntry_t, $0209, unIndentLines         ; Alt + Tab
 EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
 EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02EB, clearClip             ; ALT + k
 EDT_SAVE_DOC_AS  .dstruct KeyEntry_t, $02F3, saveDocumentAs        ; ALT + s
+EDT_INDENT_LINES .dstruct KeyEntry_t, $0409, indentLines           ; FNX + Tab
 EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down
 EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp                ; FNX + up
 EDT_COPY_LINE    .dstruct KeyEntry_t, $0463, copyLines             ; FNX + c
@@ -391,12 +393,11 @@ _done
     rts
 
 
-LINE_HELP .word 0
-copyLines
-    lda editor.STATE.mark.isValid
-    bne _isValid
-    jmp _done
-_isValid
+CRSR_AT_START .byte 0
+LINE_HELP     .word 0
+determineLineParams
+    lda #BOOL_TRUE
+    sta CRSR_AT_START
     #cmp16Bit editor.STATE.mark.line, editor.STATE.curLine
     bcc _markBefore
     #move16Bit editor.STATE.mark.line, LINE_HELP
@@ -404,12 +405,161 @@ _isValid
     #copyMem2Mem list.LIST.current, clip.CPCT_PARMS.start
     bra _doCopy
 _markBefore
+    stz CRSR_AT_START
     #move16Bit editor.STATE.curLine, LINE_HELP
     #sub16Bit editor.STATE.mark.line, LINE_HELP
     #copyMem2Mem editor.STATE.mark.element, clip.CPCT_PARMS.start
 _doCopy
     #inc16Bit LINE_HELP
     #move16Bit LINE_HELP, clip.CPCT_PARMS.len
+    rts
+
+
+INDENT_SIZE = 2
+
+CUR_PTR .dstruct FarPtr_t
+INDENT_CUR_Y_POS .byte 0
+INDENT_CUR_X_POS .byte 0
+INDENT_FIRST     .byte 0
+INDENT_LAST      .byte 0
+INDENT_START     .byte 0
+indentLines
+    lda editor.STATE.mark.isValid
+    bne _isValid
+    jmp _done
+_isValid
+    lda CURSOR_STATE.xPos
+    sta INDENT_CUR_X_POS
+    lda CURSOR_STATE.yPos
+    sta INDENT_CUR_Y_POS
+    #copyMem2Mem list.LIST.current, CUR_PTR
+    jsr determineLineParams
+    jsr markDocumentAsDirty
+    #copyMem2Mem clip.CPCT_PARMS.start, list.SET_PTR
+    #changeLine list.setTo
+    stz INDENT_START
+_loop
+    #cmp16BitImmediate 0, clip.CPCT_PARMS.len
+    beq _indentDone
+    lda #INDENT_SIZE
+    jsr line.doIndent
+    lda INDENT_START
+    bne _setLine
+    inc INDENT_START
+    lda line.NUM_INDENT
+    sta INDENT_FIRST
+_setLine
+    lda line.NUM_INDENT
+    sta INDENT_LAST
+    jsr list.setCurrentLine
+    bcs _error
+    #dec16Bit clip.CPCT_PARMS.len
+    jsr list.next
+    jsr list.readCurrentLine
+    bra _loop
+_indentDone
+    #copyMem2Mem CUR_PTR, list.SET_PTR
+    jsr list.setTo
+    stz editor.STATE.mark.isValid
+    jsr toProg
+    jsr printFixedProgData
+    jsr toData
+    
+    lda CRSR_AT_START
+    bne _crsrAtStart
+    lda INDENT_CUR_X_POS
+    clc 
+    adc INDENT_LAST
+    bra _refresh    
+_crsrAtStart
+    lda INDENT_CUR_X_POS
+    clc 
+    adc INDENT_FIRST
+_refresh
+    tax
+    cpx #search.MAX_CHARS_TO_CONSIDER
+    bcc _posOK
+    ldx #search.MAX_CHARS_TO_CONSIDER - 1
+_posOK
+    lda CURSOR_STATE.ypos
+    jsr refreshView
+_done    
+    rts
+_error
+    jmp (OUT_OF_MEMORY)
+
+
+unIndentLines
+    lda editor.STATE.mark.isValid
+    bne _isValid
+    jmp _done
+_isValid
+    lda CURSOR_STATE.xPos
+    sta INDENT_CUR_X_POS
+    lda CURSOR_STATE.yPos
+    sta INDENT_CUR_Y_POS
+    #copyMem2Mem list.LIST.current, CUR_PTR
+    jsr determineLineParams
+    jsr markDocumentAsDirty
+    #copyMem2Mem clip.CPCT_PARMS.start, list.SET_PTR
+    #changeLine list.setTo
+    stz INDENT_START
+_loop
+    #cmp16BitImmediate 0, clip.CPCT_PARMS.len
+    beq _unIndentDone
+    lda #INDENT_SIZE
+    jsr line.doUnIndent
+    lda INDENT_START
+    bne _setLine
+    inc INDENT_START
+    lda line.NUM_UNINDENT
+    sta INDENT_FIRST
+_setLine
+    lda line.NUM_UNINDENT
+    sta INDENT_LAST
+    jsr list.setCurrentLine
+    bcs _error
+    #dec16Bit clip.CPCT_PARMS.len
+    jsr list.next
+    jsr list.readCurrentLine
+    bra _loop
+_unIndentDone
+    #copyMem2Mem CUR_PTR, list.SET_PTR
+    jsr list.setTo
+    stz editor.STATE.mark.isValid
+    jsr toProg
+    jsr printFixedProgData
+    jsr toData
+    
+    lda CRSR_AT_START
+    bne _crsrAtStart
+    lda INDENT_CUR_X_POS
+    sec 
+    sbc INDENT_LAST
+    bra _refresh    
+_crsrAtStart
+    lda INDENT_CUR_X_POS
+    sec 
+    sbc INDENT_FIRST
+_refresh    
+    bpl _notNeg
+    lda #0
+_notNeg
+    tax
+    lda CURSOR_STATE.ypos
+    jsr refreshView
+_done    
+    rts
+_error
+    jmp (OUT_OF_MEMORY)
+
+
+copyLines
+    lda editor.STATE.mark.isValid
+    bne _isValid
+    jmp _done
+_isValid
+    jsr determineLineParams
     jsr clip.copySegment
     bcs _error
     stz editor.STATE.mark.isValid

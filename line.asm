@@ -67,6 +67,53 @@ _done
     rts
 
 
+NUM_INDENT .byte 0
+NUM_BLANKS .byte 0
+doIndent
+    stz NUM_INDENT
+    sta NUM_BLANKS
+    #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
+    lda #search.MAX_CHARS_TO_CONSIDER
+    sta memory.INS_PARAM.maxLength
+_indentLoop
+    lda NUM_BLANKS
+    beq _done    
+    ldy LINE_BUFFER.len
+    lda #0
+    ldx #$20
+    jsr memory.insertCharacterGrow
+    bcs _done
+    dec NUM_BLANKS
+    inc LINE_BUFFER.len
+    Inc NUM_INDENT
+    bra _indentLoop
+_done
+    rts
+
+
+NUM_UNINDENT .byte 0
+doUnindent
+    stz NUM_UNINDENT
+    sta NUM_BLANKS
+    #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
+_loop
+    lda NUM_BLANKS
+    beq _done
+    ldy LINE_BUFFER.len
+    beq _done
+    lda LINE_BUFFER.buffer
+    cmp #$20
+    bne _done
+    lda #0
+    jsr memory.vecShiftLeft
+    dec NUM_BLANKS
+    inc NUM_UNINDENT
+    dec LINE_BUFFER.len
+    bra _loop
+_done
+    rts
+
+
 init_module
     lda #0
     sta LINE_BUFFER.len

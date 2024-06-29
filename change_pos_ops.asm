@@ -470,10 +470,8 @@ SPLIT_POS  .byte 0
 CUR_Y_POS  .byte 0
 NEW_Y_POS  .byte 0
 NEW_X_POS  .byte 0
-NUM_BLANKS .byte 0
 splitLines
     jsr line.countBlanks
-    sty NUM_BLANKS
     sty NEW_X_POS
     jsr markDocumentAsDirty
     jsr list.insertAfter    
@@ -549,21 +547,8 @@ _outOfMemory
 
 
 doAutoIndent
-    #load16BitImmediate LINE_BUFFER.buffer, MEM_PTR1
-    lda #search.MAX_CHARS_TO_CONSIDER
-    sta memory.INS_PARAM.maxLength
-_indentLoop
-    lda NUM_BLANKS
-    beq _done    
-    ldy LINE_BUFFER.len
-    lda #0
-    ldx #$20
-    jsr memory.insertCharacterGrow
-    bcs _done
-    dec NUM_BLANKS
-    inc LINE_BUFFER.len
-    bra _indentLoop
-_done
+    lda NEW_X_POS
+    jsr line.doIndent
     jsr list.setCurrentLine
     bcs _outOfMemory
     rts
