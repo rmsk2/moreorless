@@ -1107,12 +1107,6 @@ _goOn
     #printString SRCH_TEXT, len(SRCH_TEXT)
 _noPattern
     jsr txtio.reverseColor
-
-    ; stz CURSOR_STATE.xPos
-    ; lda CURSOR_STATE.yMaxMinus1
-    ; sta CURSOR_STATE.yPos
-    ; jsr txtio.cursorSet
-    ; #printString CURRENT_LINE, len(CURRENT_LINE)
     rts
 
 
@@ -1129,11 +1123,6 @@ progUpdateInt
     lda CURSOR_STATE.yMaxMinus1
     sta CURSOR_STATE.yPos
     jsr txtio.cursorSet
-    ; #printString BLANKS_80, 78 - 15
-    ; stz CURSOR_STATE.xPos
-    ; lda CURSOR_STATE.yMaxMinus1
-    ; sta CURSOR_STATE.yPos
-    ; jsr txtio.cursorSet
     #printString CURRENT_LINE, len(CURRENT_LINE)
     #move16Bit editor.STATE.curLine, txtio.WORD_TEMP
     jsr txtio.printWordDecimal
