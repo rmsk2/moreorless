@@ -537,6 +537,7 @@ _noInc
     jsr refreshView
     lda NEW_X_POS
     sta CURSOR_STATE.xPos
+    sta editor.STATE.navigateCol
     lda NEW_Y_POS
     sta CURSOR_STATE.yPos
     jsr txtio.cursorSet

@@ -1,0 +1,145 @@
+rem "**************************************"
+rem "*                                    *"
+rem "*    A word guessing game for the    *"
+rem "*                                    *"
+rem "*   Foenix F256 line of computers    *"
+rem "*                                    *"
+rem "*   Written by Martin Grap in 2024   *"
+rem "*                                    *"
+rem "* using the 'moreorless' text editor *"
+rem "*                                    *"
+rem "**************************************"
+
+tries = 8
+num_correct = 0
+game_end = false
+
+t = -1 * timer()
+dummy# = rnd(t)
+
+read num_words
+dim words$(num_words)
+
+read_words()
+sel_len = len(selected_word$)
+dim guesses$(sel_len)
+
+prepare_guesses()
+
+print chr$(12)
+print "Guess the word I have in mind"
+print "-----------------------------"
+
+game_loop()
+eval_end()
+
+data 32
+data "banana", "computer", "foenix", "city"
+data "syzygy", "assembler", "keyboard", "lion" 
+data "memory", "loop", "retro", "bike"
+data "system", "house", "plane", "carriage"
+data "ball", "tennis", "stick", "pool"
+data "sun", "galaxy", "telescope", "video"
+data "asterisk", "milk", "water", "wall"
+data "moon", "mercury", "jupiter", "paper"
+
+end
+
+
+proc read_words()
+  local rand_index, i
+  
+  for i = 1 to num_words
+    read words$(i)
+  next
+  
+  rand_index = 1 + random(num_words)
+  selected_word$ = words$(rand_index)
+endproc
+
+
+proc eval_end()
+  if tries > 0
+    print_guesses()
+    print
+    print "You win!"
+  else
+    print
+    print "The correct solution is: ";selected_word$
+    print
+    print "Sorry you lose. Try again! 
+  endif
+endproc
+
+
+proc game_loop()
+  local g$, c$
+  
+  game_end = false
+  
+  repeat
+    print_guesses()
+    g$ = ""
+    
+    repeat 
+      input "Your guess: ";g$
+    until g$ <> ""
+    
+    c$ = left$(g$, 1)
+    
+    check_guess(c$)
+    
+    if num_correct = 0
+      tries = tries - 1
+    else
+      check_end()
+    endif
+    print "------------------------------"
+  until (tries = 0) | (game_end <> false)
+endproc
+
+
+proc check_guess(u$)  
+  num_correct = 0
+  
+  for i = 1 to sel_len
+    if mid$(selected_word$, i, 1) = u$
+      num_correct = num_correct + 1
+      guesses$(i) = u$   
+    endif
+  next
+endproc
+
+
+proc check_end()
+  local num_guessed
+  
+  num_guessed = 0
+  
+  for i = 1 to sel_len
+    if guesses$(i) <> "_"
+      num_guessed = num_guessed + 1
+    endif  
+  next
+  
+  game_end = num_guessed >= sel_len 
+endproc
+
+
+proc prepare_guesses()
+  for i = 1 to sel_len
+    guesses$(i) = "_"  
+  next
+endproc
+
+
+proc print_guesses()
+  print
+  for i = 1 to sel_len
+    print guesses$(i);" ";  
+  next
+  
+  print
+  print
+  print "Unsuccessfull tries left: ";tries
+endproc
