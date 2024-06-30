@@ -10,7 +10,7 @@ rem "* using the 'moreorless' text editor *"
 rem "*                                    *"
 rem "**************************************"
 
-tries = 8
+tries_left = 8
 num_correct = 0
 game_end = false
 
@@ -23,6 +23,7 @@ dim words$(num_words)
 read_words()
 sel_len = len(selected_word$)
 dim guesses$(sel_len)
+already_guessed$ = ""
 
 prepare_guesses()
 
@@ -59,7 +60,7 @@ endproc
 
 
 proc eval_end()
-  if tries > 0
+  if tries_left > 0
     print_guesses()
     print
     print "You win!"
@@ -86,16 +87,17 @@ proc game_loop()
     until g$ <> ""
     
     c$ = left$(g$, 1)
+    already_guessed$ = already_guessed$ + c$
     
     check_guess(c$)
     
     if num_correct = 0
-      tries = tries - 1
+      tries_left = tries_left - 1
     else
       check_end()
     endif
-    print "------------------------------"
-  until (tries = 0) | (game_end <> false)
+    print "-------------------------------"
+  until (tries_left = 0) | (game_end <> false)
 endproc
 
 
@@ -141,5 +143,8 @@ proc print_guesses()
   
   print
   print
-  print "Unsuccessfull tries left: ";tries
+  print "Already guessed: ";already_guessed$
+  print
+  print
+  print "Unsuccessfull tries left: ";tries_left
 endproc
