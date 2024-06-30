@@ -185,7 +185,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 39
+NUM_EDITOR_COMMANDS = 40
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -216,6 +216,7 @@ EDT_SAVE_DOC_AS  .dstruct KeyEntry_t, $02F3, saveDocumentAs        ; ALT + s
 EDT_INDENT_LINES .dstruct KeyEntry_t, $0409, indentLines           ; FNX + Tab
 EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down
 EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0410, pageUp                ; FNX + up
+EDT_SET_MARK2    .dstruct KeyEntry_t, $0420, setMark               ; FNX + Space
 EDT_COPY_LINE    .dstruct KeyEntry_t, $0463, copyLines             ; FNX + c
 MEM_SET_SEARCH   .dstruct KeyEntry_t, $0466, setSearchString       ; FNX + f
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine              ; FNX + g

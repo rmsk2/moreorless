@@ -41,9 +41,10 @@ have to enter a new one.
 a line number. This can be used to edit BASIC programs without line numbers and adding them while writing the
 file to SD card or an IEC drive. The created file can then be loaded and executed.
 - `Home` and `Shift+Home` can be used to move the cursor to the start or the end of a line
-- Pressing `Foenix+m` sets a mark which determines the start position of copy and paste operations and block indentations. 
-That a mark is set is visualized by an `M` in the top right corner of the screen. As soon as the document is changed or 
-a copy or cut or indentation operation has been successfully performed the mark is invalidated and the `M` disappears
+- Pressing `Foenix+m` or `Foenix+Space` sets a mark which determines the start position of copy and paste operations 
+and block indentations. That a mark is set is visualized by an `M` in the top right corner of the screen. As soon as
+the document is changed or a copy or cut or indentation operation has been successfully performed the mark is invalidated
+and the `M` disappears
 - Pressing `Foenix+c` copies all the lines between the marked line and the current line into the clipboard. This uses
 additional memory
 - Pressing `Foenix+x` copies all the lines between the marked line and the current line into the clipboard and deletes
