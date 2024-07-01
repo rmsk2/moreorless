@@ -28,7 +28,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.0.6"
+PROG_NAME .text "MOREORLESS 2.0.7"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -185,7 +185,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 40
+NUM_EDITOR_COMMANDS = 41
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -223,6 +223,7 @@ EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine              ; FNX + g
 EDT_SET_MARK     .dstruct KeyEntry_t, $046D, setMark               ; FNX + m
 EDT_SET_REPL     .dstruct KeyEntry_t, $0472, setReplaceString      ; FNX + r
 EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveFile              ; FNX + s
+EDT_SAVE_TRANSFR .dstruct KeyEntry_t, $0474, transferClip2Srch     ; FNX + t
 EDT_UNSET_SEACRH .dstruct KeyEntry_t, $0475, unsetSearch           ; FNX + u
 EDT_PASTE_LINES  .dstruct KeyEntry_t, $0476, pasteIntoDocument     ; FNX + v
 EDT_CUT_LINES    .dstruct KeyEntry_t, $0478, cutFromDocument       ; FNX + x
@@ -240,6 +241,34 @@ toEditor
 
 
 .include "change_pos_ops.asm"
+
+
+transferClip2Srch
+    ldy #0
+_loop
+    cpy clip.LINE_CLIP.lenBuffer
+    beq _doneCopy
+    lda clip.LINE_CLIP.buffer, y
+    sta SEARCH_BUFFER.buffer, y
+    iny
+    bra _loop
+_doneCopy
+    sty SEARCH_BUFFER.len
+    #load16BitImmediate SEARCH_BUFFER.buffer, LINE_PTR1
+    jsr line.toLowerInt
+    
+    lda SEARCH_BUFFER.len
+    bne _searchStringSet
+    stz editor.STATE.searchPatternSet
+    bra _updateUI
+_searchStringSet
+    lda #BOOL_TRUE
+    sta editor.STATE.searchPatternSet
+_updateUI
+    jsr toProg
+    jsr printFixedProgData
+    jsr toData
+    rts
 
 
 REPL_POS .byte 0

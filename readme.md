@@ -41,7 +41,8 @@ have to enter a new one.
 - `Alt+b` creates a new file from the current state of the edited text by automatically prefixing each line with
 a line number. This can be used to edit BASIC programs without line numbers and adding them while writing the
 file to SD card or an IEC drive. The created file can then be loaded and executed.
-- `Home` and `Shift+Home` can be used to move the cursor to the start or the end of a line
+- `Home` and `Shift+Home` can be used to move the cursor to the start or the end of a line. On a PS/2 keyboard
+you have to use `Pos1` and `Shift+End`
 - Pressing `Foenix+m` or `Foenix+Space` sets a mark which determines the start position of copy and paste operations 
 and block indentations. That a mark is set is visualized by an `M` in the top right corner of the screen. As soon as
 the document is changed or a copy or cut or indentation operation has been successfully performed the mark is invalidated
@@ -74,7 +75,17 @@ line where `Foenix+Tab` was pressed
 last mark and the line where `Alt+Tab` was pressed
 - Pressing `F4` lets you change the colour scheme by cycling through five alternatives. When using a PS/2 keyboard
 you have to press `Shift+F4` to achieve the same effect
+- Pressing `Foenix+t` transfers the value previously copied by `Ctrl+x` or `Ctrl+c` to the search string, i.e. 
+this lets you search for a value that was copied from the document without typing that value again 
 - When any other key is pressed the corresponding character is inserted at the current cursor position
+
+When selecting a block of lines the line where the mark was set and the line where the corresponding command
+sequence was typed are part of the selection. The same applies to selecting a string within a line: The character
+where the mark was set and the character where the command was typed are part of the selection. It is valid to
+only select a single line or a single character.
+
+In lines which are shorter that 80 characters you can place the cursor to the right of the last character in that
+line. This position is valid for selecting a full line but invalid when selecting a string within a line. 
 
 If the document has unsaved changes a `*` appears in the top right corner of the screen. `moreorless` uses a 
 single line feed (LF) or carriage return (CR) character as a line delimiter. The default is LF but this can be 
