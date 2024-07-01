@@ -84,7 +84,7 @@ sequence was typed are part of the selection. The same applies to selecting a st
 where the mark was set and the character where the command was typed are part of the selection. It is valid to
 only select a single line or a single character.
 
-In lines which are shorter that 80 characters you can place the cursor to the right of the last character in that
+In lines which are shorter than 80 characters you can place the cursor to the right of the last character in that
 line. This position is valid for selecting a full line but invalid when selecting a string within a line. 
 
 If the document has unsaved changes a `*` appears in the top right corner of the screen. `moreorless` uses a 
