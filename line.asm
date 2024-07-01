@@ -31,11 +31,24 @@ SEARCH_BUFFER  .dstruct LineBuffer_t
 line .namespace
 
 toLower
-    ldx #0
+    #load16BitImmediate LINE_BUFFER.buffer, LINE_PTR1
+    ldy LINE_BUFFER.len
+    jsr toLowerInt
+_done
+    lda #BOOL_TRUE
+    sta LINE_BUFFER.dirty
+    rts
+
+
+; addr in LINE_PTR1, length in y
+LOWER_LEN .byte 0
+toLowerInt
+    sty LOWER_LEN
+    ldy #0
 _loop    
-    cpx LINE_BUFFER.len
+    cpy LOWER_LEN
     beq _done
-    lda LINE_BUFFER.buffer, x
+    lda (LINE_PTR1), y
     cmp #$5b
     bcs _next
     cmp #$41
@@ -43,13 +56,11 @@ _loop
     ; we have an uppercase letter => convert it to lower case
     clc
     adc #32
-    sta LINE_BUFFER.buffer, x
+    sta (LINE_PTR1), y
 _next
-    inx
+    iny
     bra _loop
 _done
-    lda #BOOL_TRUE
-    sta LINE_BUFFER.dirty
     rts
 
 

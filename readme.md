@@ -16,7 +16,8 @@ using this command.
 - Pressing `Foenix+Cursor down` moves the view one screen towards the end of the file
 - Pressing `Foenix+Cursor up` moves the view one screen towards the beginning of the file
 - Pressing `F1` resets the view to line one in 80x60 text mode
-- Pressing `F2` resets the view to line one in 80x30 text mode
+- Pressing `F2` resets the view to line one in 80x30 text mode. When using a PS/2 keyboard you have
+to press `Shift+F2` to achieve the same effect
 - Pressing `Alt+x` leaves the program and restarts BASIC
 - Pressing `Foenix+g` moves you to the line number which was entered after pressing the key
 - Pressing `Foenix+f` allows you to enter a string to search for in the document. If a non empty string is entered 
@@ -71,7 +72,8 @@ has not been set
 line where `Foenix+Tab` was pressed
 - Pressing `Alt+Tab` removes one level of indentation (i.e. two characters) from all lines which are between the 
 last mark and the line where `Alt+Tab` was pressed
-- Pressing `F2` lets you change the colour scheme by cycling through five alternatives
+- Pressing `F4` lets you change the colour scheme by cycling through five alternatives. When using a PS/2 keyboard
+you have to press `Shift+F4` to achieve the same effect
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 If the document has unsaved changes a `*` appears in the top right corner of the screen. `moreorless` uses a 
