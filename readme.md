@@ -99,6 +99,9 @@ On the F256K keyboard autorepeat is implemented in software by `Moreorless`. Sur
 compatible with autorepeat by a PS/2 keyboard when used on the Junior. As the repeat frequency seems
 to be slower with a real keyboard vertical scrolling appears to be slower on the Junior.
 
+The files `cheat_sheet.docx` and `cheat_sheet.pdf` contain a nice document which describes the key bindings.
+Thanks to the person who provided these on the Foenix Retro Systems discord server.
+
 # Other limitations
 
 - In order to spare me the pain to consider a gazillion edge and corner cases I have for the moment decided 
