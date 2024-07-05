@@ -28,7 +28,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.0.7"
+PROG_NAME .text "MOREORLESS 2.1.0"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -122,6 +122,7 @@ _newDocument
     jsr list.create
     bcs _reset
 _showMain
+    #load16BitImmediate outOfMemoryHandler, OUT_OF_MEMORY
     jsr start80x60
     jsr keyrepeat.init
     #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
@@ -176,6 +177,44 @@ jmpToDefHandler
     jmp (DEFAULT_VEC)
 
 nothing
+    rts
+
+
+NO_MEM_TEXT .text "*********** Sorry, we are out of memory ***********", $0d, $0d
+PRESS_KEY_TEXT .text "Press 's' to save current state. Any other key to return to BASIC", $0d, $0d
+SAVE_TEXT .text "Attempting to save data ... "
+SAVE_OK_TEXT .text "success", $0d, $0d
+SAVE_ERR_TEXT .text "failure", $0d, $0d
+PRESS_ANY_KEY_TEXT .text "Press any key to return to BASIC"
+EMERG_NAME .text "mless~"
+
+
+outOfMemoryHandler
+    jsr txtio.init80x60
+    jsr txtio.clear
+    jsr txtio.cursorOn
+    #printString NO_MEM_TEXT, len(NO_MEM_TEXT)
+    #printString PRESS_KEY_TEXT, len(PRESS_KEY_TEXT)
+    jsr waitForKey
+    cmp #$73
+    bne _exit
+    #memCopy EMERG_NAME, FILE_NAME, len(EMERG_NAME)
+    lda #len(EMERG_NAME)
+    sta TXT_FILE.nameLen
+    #printString SAVE_TEXT, len(SAVE_TEXT)
+    jsr editor.saveFile
+    bcs _saveError
+    #printString SAVE_OK_TEXT, len(SAVE_OK_TEXT)
+    bra _waitAgain
+_saveError
+    #printString SAVE_ERR_TEXT, len(SAVE_ERR_TEXT)
+_waitAgain
+    #printString PRESS_ANY_KEY_TEXT, len(PRESS_ANY_KEY_TEXT)
+    jsr waitForKey
+_exit
+    jsr exitToBasic
+    ; I guess we never get here ....
+    jsr sys64738
     rts
 
 

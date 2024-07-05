@@ -133,7 +133,9 @@ block number which can be written directly into the corresponding MMU register.
 
 On an unexpanded system 384 KB (48 8 KB blocks) of RAM are managed by `moreorless`. There would be an 
 additional 64 KB (eight 8 KB blocks) available which have been excluded as a reserve for future extensions.
-When a RAM expansion cartridge is present the memory available to `moreorless` is increased to 640 KB.
+When a RAM expansion cartridge is present the memory available to `moreorless` is increased to 640 KB. If
+you run out of memory (for instance during a copy or paste operation) `moreorless` is shut down orderly and
+gives you the choice to save the current state of the document in the file `mless~`.
 
 # Remarks
 
@@ -166,9 +168,6 @@ search string is set.
 
 I am in the process to extend this software to make it a better text editor. I have finished implementing the
 features which I think are a must have. This is how I plan to progress:
-
-Short term goals
-- adding a sensible out of memory handler
 
 Midterm goals
 
