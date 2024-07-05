@@ -10,29 +10,21 @@ rem "* using the 'moreorless' text editor *"
 rem "*                                    *"
 rem "**************************************"
 
-tries_left = 8
+max_tries = 8
+
+tries_left = max_tries
 num_correct = 0
 game_end = false
+was_stopped = false
 
 t = -1 * timer()
 dummy# = rnd(t)
 
 read num_words
 dim words$(num_words)
-
+dim guesses$(250)
 read_words()
-sel_len = len(selected_word$)
-dim guesses$(sel_len)
-already_guessed$ = ""
-
-prepare_guesses()
-
-print chr$(12)
-print "Guess the word I have in mind"
-print "-----------------------------"
-
-game_loop()
-eval_end()
+main()
 
 data 32
 data "banana", "computer", "foenix", "city"
@@ -47,15 +39,33 @@ data "moon", "mercury", "jupiter", "paper"
 end
 
 
+proc main()
+  repeat
+    rand_index = 1 + random(num_words)
+    selected_word$ = words$(rand_index)
+    sel_len = len(selected_word$)
+    already_guessed$ = ""
+    
+    prepare_guesses()
+    
+    print chr$(12)
+    print "Guess the word I have in mind"
+    print "-----------------------------"
+    game_loop()
+    eval_end()
+  until game_end = true
+  
+  print
+  print "Bye"
+endproc
+
+
 proc read_words()
   local rand_index, i
   
   for i = 1 to num_words
     read words$(i)
   next
-  
-  rand_index = 1 + random(num_words)
-  selected_word$ = words$(rand_index)
 endproc
 
 
@@ -68,7 +78,15 @@ proc eval_end()
     print
     print "The correct solution is: ";selected_word$
     print
-    print "Sorry you lose. Try again! 
+    print "Sorry you lose. 
+  endif
+  
+  if not(was_stopped)
+    print
+    input "Play again (yes/no)? ";p$
+    if p$ = "yes"
+      game_end = false
+    endif
   endif
 endproc
 
@@ -77,6 +95,7 @@ proc game_loop()
   local g$, c$
   
   game_end = false
+  tries_left = max_tries
   
   repeat
     print_guesses()
@@ -86,18 +105,26 @@ proc game_loop()
       input "Your guess: ";g$
     until g$ <> ""
     
-    c$ = left$(g$, 1)
-    already_guessed$ = already_guessed$ + c$
-    
-    check_guess(c$)
-    
-    if num_correct = 0
-      tries_left = tries_left - 1
+    if g$ = "stop"
+      tries_left = 0
+      was_stopped = true
     else
-      check_end()
+      c$ = left$(g$, 1)
+      already_guessed$ = already_guessed$ + c$
+      
+      check_guess(c$)
+      
+      if num_correct = 0
+        tries_left = tries_left - 1
+      else
+        check_end()
+      endif
+      print "-------------------------------"  
     endif
-    print "-------------------------------"
+    
   until (tries_left = 0) | (game_end <> false)
+
+  game_end = true
 endproc
 
 
