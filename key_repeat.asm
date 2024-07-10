@@ -8,10 +8,10 @@ COOKIE_MEASUREMENT_TIMER = $10
 COOKIE_REPEAT_TIMER = $11
 IMPOSSIBLE_KEY = 0
 
-SHIFT_LEFT_RAW = 0
-SHIFT_RIGHT_RAW = 1
-CTRL_RAW  = 2
-ALT_RAW   = 4
+SHIFT_LEFT_RAW = 0  ; The same on C64 keyboard operated on a Jr.
+SHIFT_RIGHT_RAW = 1 ; The same on C64 keyboard operated on a Jr.
+CTRL_RAW  = 2       ; The same on C64 keyboard operated on a Jr.
+ALT_RAW   = 4       ; Also Commodore key on C64 keyboard operated on a Jr.
 ALTGR_RAW = 5
 FNX_RAW   = 6
 

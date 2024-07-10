@@ -1,6 +1,7 @@
 * = $0300
 .cpu "w65c02"
 
+USE_C64_KEYBOARD = 0
 
 jmp main
 ; put some data structures in zero page
@@ -217,9 +218,9 @@ _exit
     jsr sys64738
     rts
 
-
 ; a key code is a word. The hi byte specifies the state of the meta keys
 ; and the lo byte the ascii code of the key press
+.if USE_C64_KEYBOARD == 0
 MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
@@ -269,7 +270,7 @@ EDT_CUT_LINES    .dstruct KeyEntry_t, $0478, cutFromDocument       ; FNX + x
 EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; Shift + HOME
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0882, start80x30            ; F2
 EDT_COLOUR_CYCLE .dstruct KeyEntry_t, $0884, colourCycle           ; F4
-
+.endif
 
 toEditor
     #load16BitImmediate EDITOR_COMMANDS, KEY_SEARCH_PTR
