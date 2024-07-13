@@ -163,7 +163,7 @@ you want to use.
 It is important to note that the entries following the label `EDITOR_COMMANDS` have to be **sorted in ascending
 order** with respect to the value of the key code. If they are not sorted correctly the binary search in this list
 for a command will fail and `moreorless` will not function properly. The current alternate key bindings define
-a set of values which allow the use a Commodore 64 keyboard attached to an F256 Jr.
+a set of values which allow using a Commodore 64 keyboard attached to an F256 Jr.
 
 After defining the key bindings as described above you can rebuild  `moreorless` by executing `make`.
 
