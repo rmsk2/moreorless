@@ -1,7 +1,7 @@
 * = $0300
 .cpu "w65c02"
 
-USE_C64_KEYBOARD = 0
+USE_ALTERNATE_KEYBOARD = 0
 
 jmp main
 ; put some data structures in zero page
@@ -29,7 +29,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.1.0"
+PROG_NAME .text "MOREORLESS 2.1.1"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -220,7 +220,7 @@ _exit
 
 ; a key code is a word. The hi byte specifies the state of the meta keys
 ; and the lo byte the ascii code of the key press
-.if USE_C64_KEYBOARD == 0
+.if USE_ALTERNATE_KEYBOARD == 0
 MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
@@ -271,6 +271,60 @@ EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; Shift + HOM
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0882, start80x30            ; F2
 EDT_COLOUR_CYCLE .dstruct KeyEntry_t, $0884, colourCycle           ; F4
 .endif
+
+.if USE_ALTERNATE_KEYBOARD != 0
+; Commodore == ALT on a F256K keyboard
+MEM_EXIT         .dstruct KeyEntry_t, $02F1, endProg               ; Commodore + q
+
+
+; There can be up to 64 commands at the moment
+NUM_EDITOR_COMMANDS = 41
+EDITOR_COMMANDS
+; Non search commands. These have to be sorted by ascending key codes otherwise
+; the binary search fails.
+EDT_LINE_START   .dstruct KeyEntry_t, $0001, toLineStart           ; HOME
+EDT_CRSR_RIGHT   .dstruct KeyEntry_t, $0006, procCrsrRight2        ; CrsrRight
+EDT_DELETE       .dstruct KeyEntry_t, $0008, deleteChar            ; delete
+EDT_LINE_SPLIT   .dstruct KeyEntry_t, $000D, splitLines            ; Return
+EDT_CRSR_DOWN    .dstruct KeyEntry_t, $000E, procCrsrDown2         ; CrsrDown
+EDT_HOME_60_ROW  .dstruct KeyEntry_t, $0081, start80x60            ; F1
+MEM_SEARCH_DOWN  .dstruct KeyEntry_t, $0083, searchDown            ; F3
+EDT_REPLACE      .dstruct KeyEntry_t, $0085, replaceString         ; F5
+MEM_SEARCH_UP    .dstruct KeyEntry_t, $0087, searchUp              ; F7
+EDT_COPY_TXT     .dstruct KeyEntry_t, $0103, copyInLine            ; CTRL + c
+EDT_WORD_RIGHT   .dstruct KeyEntry_t, $0106, toNextWord            ; CTRL + CrsrRight
+EDT_MV_SCR_DOWN  .dstruct KeyEntry_t, $010E, moveWindowDown        ; CTRL + CrsrDown
+EDT_TAB          .dstruct KeyEntry_t, $0111, insertTab             ; CTRL + 1
+EDT_LONG_TAB     .dstruct KeyEntry_t, $0112, insertTabTab          ; CTRL + 2
+EDT_SAVE_DOC_AS  .dstruct KeyEntry_t, $0113, saveDocumentAs        ; CTRL + s
+EDT_PASTE_TXT    .dstruct KeyEntry_t, $0116, pasteInLine           ; CTRL + v
+EDT_CUT_TXT      .dstruct KeyEntry_t, $0118, cutInLine             ; CTRL + x
+EDT_PAGE_UP      .dstruct KeyEntry_t, $020E, pageDown              ; Commodore + CrsrDown
+EDT_SET_MARK2    .dstruct KeyEntry_t, $02A0, setMark               ; Commodore + Space
+EDT_UNDENT_LINES .dstruct KeyEntry_t, $02B1, unIndentLines         ; Commodore + 1
+EDT_INDENT_LINES .dstruct KeyEntry_t, $02B2, indentLines           ; Commodore + 2
+EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; Commodore + b
+EDT_COPY_LINE    .dstruct KeyEntry_t, $02E3, copyLines             ; Commodore + c
+MEM_SET_SEARCH   .dstruct KeyEntry_t, $02E6, setSearchString       ; Commodore + f
+EDT_GOTO_LINE    .dstruct KeyEntry_t, $02E7, gotoLine              ; Commodore + g
+EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02EB, clearClip             ; Commodore + k
+EDT_SET_MARK     .dstruct KeyEntry_t, $02ED, setMark               ; Commodore + m
+EDT_SET_REPL     .dstruct KeyEntry_t, $02F2, setReplaceString      ; Commodore + r
+EDT_SAVE_DOC     .dstruct KeyEntry_t, $02F3, saveFile              ; Commodore + s
+EDT_SAVE_TRANSFR .dstruct KeyEntry_t, $02F4, transferClip2Srch     ; Commodore + t
+EDT_UNSET_SEACRH .dstruct KeyEntry_t, $02F5, unsetSearch           ; Commodore + u
+EDT_PASTE_LINES  .dstruct KeyEntry_t, $02F6, pasteIntoDocument     ; Commodore + v
+EDT_CUT_LINES    .dstruct KeyEntry_t, $02F8, cutFromDocument       ; Commodore + x
+EDT_CRSR_LEFT    .dstruct KeyEntry_t, $0802, procCrsrLeft2         ; CrsrLeft = Shift + CrsrRight
+EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; Shift + HOME
+EDT_CRSR_UP      .dstruct KeyEntry_t, $0810, procCrsrUp2           ; CrsrUp = Shift + CrsrDown
+EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0882, start80x30            ; F2
+EDT_COLOUR_CYCLE .dstruct KeyEntry_t, $0884, colourCycle           ; F4
+EDT_WORD_LEFT    .dstruct KeyEntry_t, $0902, toPrevWord            ; CTRL + CrsrLeft = CTRL + Shift + CrsrRight
+EDT_MV_SCR_UP    .dstruct KeyEntry_t, $0910, moveWindowUp          ; CTRL + CrsrUp = CTRL + Shift + CrsrDown
+EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0A10, pageUp                ; Commodore + CrsrUp = Commodore + Shift + CrsrDown
+.endif
+
 
 toEditor
     #load16BitImmediate EDITOR_COMMANDS, KEY_SEARCH_PTR
