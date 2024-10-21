@@ -188,11 +188,11 @@ in a much more comfortable way. Additonally you can add your own indentation whe
 ## Search and replace
 
 If you want to perform a search and replace operation with `moreorless` you have to set a search string via 
-`Foenix+f`. If the cursor is placed at the beginning of an occurance of the search string you can replace
-that occurance with the replace string by pressing `F5`. You can then search for the next occrance via `F3` or
-`F7`. The default replace string is the empty string but you can change that via `Foenix+r`. You can set the replace
-string before setting a search string but you will not be able to actually perform the replace operation before a
-search string is set.
+`Foenix+f` (or `Foenix+t`). If the cursor is placed at the beginning of an occurance of the search string you 
+can replace that occurance with the replace string by pressing `F5`. You can then search for the next occrance via 
+`F3` or `F7`. The default replace string is the empty string but you can change that via `Foenix+r`. You can set 
+the replace string before setting a search string but you will not be able to actually perform the replace operation 
+before a search string is set.
 
 ## Some plans
 
