@@ -201,6 +201,7 @@ features which I think are a must have. This is how I plan to progress:
 
 Midterm goals
 
+- Add some kind of word wrap when you reach the end of the line while typing
 - use a beep to signal to the user that a command excecution is not possible
 
 After that possibly
