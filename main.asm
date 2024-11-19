@@ -29,7 +29,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.1.2"
+PROG_NAME .text "MOREORLESS 2.2.0"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -225,7 +225,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 41
+NUM_EDITOR_COMMANDS = 42
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -270,6 +270,7 @@ EDT_CUT_LINES    .dstruct KeyEntry_t, $0478, cutFromDocument       ; FNX + x
 EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; Shift + HOME
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0882, start80x30            ; F2
 EDT_COLOUR_CYCLE .dstruct KeyEntry_t, $0884, colourCycle           ; F4
+EDT_XSAVE        .dstruct KeyEntry_t, $0888, basicXsave            ; F8
 .endif
 
 .if USE_ALTERNATE_KEYBOARD != 0
@@ -278,7 +279,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F1, endProg               ; Commodore +
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 41
+NUM_EDITOR_COMMANDS = 42
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -320,6 +321,7 @@ EDT_LINE_END     .dstruct KeyEntry_t, $0805, toLineEnd             ; Shift + HOM
 EDT_CRSR_UP      .dstruct KeyEntry_t, $0810, procCrsrUp2           ; CrsrUp = Shift + CrsrDown
 EDT_HOME_30_ROW  .dstruct KeyEntry_t, $0882, start80x30            ; F2
 EDT_COLOUR_CYCLE .dstruct KeyEntry_t, $0884, colourCycle           ; F4
+EDT_XSAVE        .dstruct KeyEntry_t, $0888, basic.xsave           ; F8
 EDT_WORD_LEFT    .dstruct KeyEntry_t, $0902, toPrevWord            ; CTRL + CrsrLeft = CTRL + Shift + CrsrRight
 EDT_MV_SCR_UP    .dstruct KeyEntry_t, $0910, moveWindowUp          ; CTRL + CrsrUp = CTRL + Shift + CrsrDown
 EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0A10, pageUp                ; Commodore + CrsrUp = Commodore + Shift + CrsrDown
@@ -1626,6 +1628,13 @@ _updateColour
     beq _done
     jsr procCrsrLeft2
 _done
+    rts
+
+
+basicXsave
+    jsr signalStartSearch
+    jsr basic.xsave
+    jsr signalEndSearch
     rts
 
 

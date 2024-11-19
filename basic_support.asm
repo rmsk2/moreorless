@@ -113,6 +113,85 @@ _errorDuringOpen
     rts
 
 
+; yes this is slow, but it is easy to understand and it is
+; fast enough
+BYTE_TO_WRITE .byte 0
+writeBasicByte
+    sta (BASIC_PTR)
+    #inc16Bit BASIC_PTR
+    ; did the pointer wrap around?
+    #cmp16BitImmediate $A000, BASIC_PTR
+    bne _done
+    ; yes wrap around occurred
+    ; switch to next RAM block
+    inc 12
+    ; reset address to $8000
+    #load16BitImmediate $8000, BASIC_PTR
+_done
+    rts
+
+
+RAM_BLOCK_XLOAD = 20
+MMU_STATE .byte 0
+BASIC_LINE_LENGTH .byte 0
+xsave
+    jsr resetLineNr
+    ; save current list pointer
+    #copyMem2Mem list.LIST.current, editor.STATE.ptrScratch
+    ; goto start of document
+    #changeLine list.rewind
+
+    ; bank in RAM page 20 to location $8000, i.e. bank in RAM page which starts
+    ; at $028000
+    lda 12
+    sta MMU_STATE
+    lda #RAM_BLOCK_XLOAD
+    sta 12
+
+    #load16BitImmediate $8000, BASIC_PTR
+
+_lineLoop
+    jsr generateLineNr
+    ; append line ending character to LINE_BUFFER.buffer
+    ldy LINE_BUFFER.len
+    lda LINE_END_CHAR
+    sta LINE_BUFFER.buffer, y
+
+    ; determine number of bytes to write
+    lda LINE_BUFFER.len
+    ; add line ending character
+    ina
+    ; add line number length
+    clc
+    adc #6
+    sta BASIC_LINE_LENGTH
+
+    ; write line with BASIC line number to memory
+
+    ldx #0
+_lineCopy
+    lda BASIC_LINE_NR, x
+    jsr writeBasicByte
+    inx
+    cpx BASIC_LINE_LENGTH
+    bne _lineCopy
+
+    ; goto next line
+    #changeLine list.next
+    bcc _lineLoop
+
+    ; write end of program character
+    lda #128
+    jsr writeBasicByte
+
+    ; restore MMU state
+    lda MMU_STATE
+    sta 12
+
+    ; restore list pointer to the value it had at start
+    #copyMem2Mem editor.STATE.ptrScratch, list.LIST.current
+    jsr list.readCurrentLine
+    rts
 
 
 init

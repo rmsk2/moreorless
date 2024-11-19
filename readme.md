@@ -77,6 +77,9 @@ last mark and the line where `Alt+Tab` was pressed
 you have to press `Shift+F4` to achieve the same effect
 - Pressing `Foenix+t` transfers the value previously copied by `Ctrl+x` or `Ctrl+c` to the search string, i.e. 
 this lets you search for a value that was copied from the document without typing that value again 
+- Pressing `F8` (or `Shift+F8` on a PS/2 keyboard) instructs moreoreless to generate a BASIC program from the current 
+document contents and to store the resulting source code at $028000. This allows to use the BASIC statements `xload` to
+load and/or start the BASIC program from RAM.
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 When selecting a block of lines the line where the mark was set and the line where the corresponding command
@@ -173,8 +176,11 @@ After defining the key bindings as described above you can rebuild  `moreorless`
 
 `moreorless` allows you to create BASIC programs in a more or less usable (pun intended) editor. When you press 
 `Alt+b` you can write the current contents of the file to the selected drive while `moreorless` adds the line 
-numbers automatically. If you refrain from using `goto` and `gosub` you can therefore write SuperBASIC programs 
-without using the built in screen editor.
+numbers automatically. If you press `F8` and exit `moreorless` you can use `xload` and `xgo` to load and/or
+start a BASIC program generated from the document contents without saving it to disk first. 
+
+If you refrain from using `goto` and `gosub` you can therefore write SuperBASIC programs without using the built 
+in screen editor.
 
 It is also possible to load existing SuperBASIC programs with `moreorless` (i.e. files including the file numbers). 
 SuperBASIC can cope with either LF or CR as a line ending character and CR seems to be the default. So if you 
