@@ -78,8 +78,8 @@ you have to press `Shift+F4` to achieve the same effect
 - Pressing `Foenix+t` transfers the value previously copied by `Ctrl+x` or `Ctrl+c` to the search string, i.e. 
 this lets you search for a value that was copied from the document without typing that value again 
 - Pressing `F8` (or `Shift+F8` on a PS/2 keyboard) instructs moreoreless to generate a BASIC program from the current 
-document contents and to store the resulting source code at $028000. This allows to use the BASIC statements `xload` to
-load and/or start the BASIC program from RAM.
+document contents and to store the resulting source code at $028000. This allows to use the BASIC statements `xload` 
+and `xgo` to load and/or start the BASIC program from RAM.
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 When selecting a block of lines the line where the mark was set and the line where the corresponding command
