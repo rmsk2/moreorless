@@ -395,25 +395,36 @@ _done
 
 
 initPageBytes
-    ; page bytes (16-63) for memory from $020000 - $07FFFF
-    lda #16
+    ; page bytes (8-19) for memory from $010000 - $027FFF
+    lda #8
     ldy #0
 _loop1
     sta MEM_STATE.pages, y
     ina
     iny
-    cpy #48
+    cpy #12
     bne _loop1
 
-    ; page bytes (128-159) for memory from $100000 - $13FFFF
-    ; i.e. the RAM expansion cartridge
-    lda #128
+    ; $028000 - $02FFFF is unused
+
+    ; page bytes (28-63) for memory from $030000-$07FFFF
+    lda #28
 _loop2
     sta MEM_STATE.pages, y
     ina
     iny
-    cpy #NUM_PAGES_RAM_EXP
+    cpy #NUM_PAGES_SIMPLE
     bne _loop2
+
+    ; page bytes (128-159) for memory from $100000 - $13FFFF
+    ; i.e. the RAM expansion cartridge
+    lda #128
+_loop3
+    sta MEM_STATE.pages, y
+    ina
+    iny
+    cpy #NUM_PAGES_RAM_EXP
+    bne _loop3
 
     rts
 

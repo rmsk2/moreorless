@@ -8,9 +8,10 @@ BLOCKS_PER_PAGE = PAGE_SIZE / BLOCK_SIZE
 BYTES_PER_PAGE_IN_MAP = BLOCKS_PER_PAGE / 8
 
 -- block numbers of 8K blocks which should be managed by memory.asm. Currently these represent
--- 384 K of base memory (beginning at $20000) and optionally 256K of expanded memory
+-- 384 K of base memory (beginning at $10000, but leaving a 64 K hole starting with $28000) and optionally 256K of 
+-- expanded memory
 reference_pages = {
-    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 
+    8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 
     38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 
     60, 61, 62, 63, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 
     142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159
