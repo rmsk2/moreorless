@@ -203,7 +203,7 @@ Midterm goals
 
 - Add some kind of word wrap when you reach the end of the line while typing
 - Create the additional possibility to generate a BASIC program at address $028000 to allow for an XLOAD after
-the editir has stopped 
+the editor has stopped 
 - use a beep to signal to the user that a command excecution is not possible
 
 After that possibly
