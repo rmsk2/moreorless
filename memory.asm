@@ -9,6 +9,9 @@ BLOCKS_PER_PAGE = PAGE_SIZE / BLOCK_SIZE
 BYTES_PER_PAGE = BLOCKS_PER_PAGE / 8
 PAGE_MAP_LEN = NUM_PAGES_RAM_EXP * BYTES_PER_PAGE
 
+FIRST_PAGE_MEM_FREE = 20
+LAST_PAGE_MEM_FREE = 27
+
 PAGE_WINDOW = $A000
 MMU_REG = (PAGE_WINDOW / PAGE_SIZE) + 8
 
@@ -408,7 +411,7 @@ _loop1
     ; $028000 - $02FFFF is unused
 
     ; page bytes (28-63) for memory from $030000-$07FFFF
-    lda #28
+    lda #LAST_PAGE_MEM_FREE + 1
 _loop2
     sta MEM_STATE.pages, y
     ina

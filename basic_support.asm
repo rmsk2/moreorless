@@ -114,7 +114,7 @@ _errorDuringOpen
 
 
 ; yes this is slow, but it is easy to understand and it is
-; fast enough
+; fast enough. Carry is set if a new page was mapped.
 BYTE_TO_WRITE .byte 0
 writeBasicByte
     sta (BASIC_PTR)
@@ -127,13 +127,16 @@ writeBasicByte
     inc 12
     ; reset address to $8000
     #load16BitImmediate $8000, BASIC_PTR
+    sec
+    rts
 _done
+    clc
     rts
 
 
-RAM_BLOCK_XLOAD = 20
 MMU_STATE .byte 0
 BASIC_LINE_LENGTH .byte 0
+; store a numbered version of the document text at $028000 in order to use xload or xgo.
 xsave
     jsr resetLineNr
     ; save current list pointer
@@ -141,11 +144,11 @@ xsave
     ; goto start of document
     #changeLine list.rewind
 
-    ; bank in RAM page 20 to location $8000, i.e. bank in RAM page which starts
+    ; bank in RAM page FIRST_PAGE_MEM_FREE to location $8000, i.e. bank in RAM page which starts
     ; at $028000
     lda 12
     sta MMU_STATE
-    lda #RAM_BLOCK_XLOAD
+    lda #FIRST_PAGE_MEM_FREE
     sta 12
 
     #load16BitImmediate $8000, BASIC_PTR
@@ -172,6 +175,11 @@ _lineLoop
 _lineCopy
     lda BASIC_LINE_NR, x
     jsr writeBasicByte
+    bcc _next
+    lda 12
+    cmp #LAST_PAGE_MEM_FREE                              ; we have reached the last block
+    beq _cutOff                                          ; Only use that for eof byte
+_next
     inx
     cpx BASIC_LINE_LENGTH
     bne _lineCopy
@@ -180,6 +188,7 @@ _lineCopy
     #changeLine list.next
     bcc _lineLoop
 
+_cutOff
     ; write end of program character
     lda #128
     jsr writeBasicByte
