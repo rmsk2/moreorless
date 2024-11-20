@@ -177,7 +177,9 @@ After defining the key bindings as described above you can rebuild  `moreorless`
 `moreorless` allows you to create BASIC programs in a more or less usable (pun intended) editor. When you press 
 `Alt+b` you can write the current contents of the file to the selected drive while `moreorless` adds the line 
 numbers automatically. If you press `F8` and exit `moreorless` you can use `xload` and `xgo` to load and/or
-start a BASIC program generated from the document contents without saving it to disk first. 
+start a BASIC program generated from the document contents. In this case the program is only stored in RAM at 
+the address $028000. The generated BASIC program must not be bigger than 56K (= 224 blocks), if it is larger 
+then the part beyond that limit is not written to memory.
 
 If you refrain from using `goto` and `gosub` you can therefore write SuperBASIC programs without using the built 
 in screen editor.
@@ -207,7 +209,8 @@ features which I think are a must have. This is how I plan to progress:
 
 Midterm goals
 
-- Add some kind of word wrap when you reach the end of the line while typing
+- Add the possibility to reformat a marked region of the document in order to make modifying documents which 
+are simple text files (but not source code in some form or another) easier
 - use a beep to signal to the user that a command excecution is not possible
 
 After that possibly
