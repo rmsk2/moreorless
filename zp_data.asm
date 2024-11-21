@@ -17,8 +17,10 @@ TimerHelp_t .struct
 ;
 ; * = $40
 .virtual $40
+.if KEY_VAL == 0
 ; length 6 bytes
 BIN_STATE  .dstruct BinState_t
+.endif
 ; length 6 bytes
 TRACKING   .dstruct KeyTracking_t
 ; length 2 bytes

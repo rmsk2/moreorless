@@ -2,6 +2,7 @@
 .cpu "w65c02"
 
 USE_ALTERNATE_KEYBOARD = 0
+KEY_VAL = 0
 
 jmp main
 ; put some data structures in zero page

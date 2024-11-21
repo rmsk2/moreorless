@@ -887,7 +887,7 @@ _nextChar
 _done
     rts
 
-
+.if KEY_VAL == 0
 ; --------------------------------------------------
 ; printStrClipped prints the string to which TXT_PTR3 points assuming
 ; that the number of characters to print is contained in the accu. This
@@ -983,6 +983,7 @@ _done
     sta CURSOR_STATE.scrollOn
     rts
 
+.endif
 
 printSpace_t .struct
     temp_x    .byte 0

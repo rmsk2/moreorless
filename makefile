@@ -22,6 +22,8 @@ $(BINARY): *.asm
 clean: 
 	$(RM) $(FORCE) $(BINARY)
 	$(RM) $(FORCE) $(BINARY).pgz
+	$(RM) $(FORCE) keyval.pgz
+	$(RM) $(FORCE) keyval.bin
 	$(RM) $(FORCE) tests/bin/*.bin
 
 upload: $(BINARY).pgz
@@ -33,3 +35,9 @@ $(BINARY).pgz: $(BINARY)
 
 test:
 	6502profiler verifyall -c config_768.json -trapaddr 0x07FF
+
+keyval: keyval.pgz
+
+keyval.pgz: *.asm
+	64tass --nostart -o keyval keyval.asm
+	python3 make_pgz.py keyval
