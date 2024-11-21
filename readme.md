@@ -161,7 +161,7 @@ meta key is pressed. As an example the key code for an `A` would by  $0841 (08 =
 `a` would be $0061 (No meta keys pressed). 
 
 You can use the program `keyval.pgz`, which is part of this repo, to determine the key codes of the key combinations 
-you want to use. 
+you want to use. Please use `make keyval` to build this tool.
 
 It is important to note that the entries following the label `EDITOR_COMMANDS` have to be **sorted in ascending
 order** with respect to the value of the key code. If they are not sorted correctly the binary search in this list
