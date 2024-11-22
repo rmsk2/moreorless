@@ -6,6 +6,8 @@ BLACK_ON_WHITE = 2
 WHITE_ON_BLACK = 3
 AMBER_ON_BLACK = 4
 
+RESTART_INVALID = 2
+
 MarkState_t .struct 
     line    .word 0
     xPos    .byte 0
@@ -29,6 +31,7 @@ EditState_t .struct
     colorIndex       .byte WHITE_ON_BLUE
     maxCol           .byte 0
     indentLevel      .byte INDENT_SIZE
+    restartFlag      .byte BOOL_FALSE
 .endstruct
 
 MAX_FILE_LENGTH = 100
@@ -192,6 +195,8 @@ init
     stz STATE.dirty
     stz STATE.mark.isValid
     stz STATE.fileNameSet
+    lda #BOOL_FALSE
+    sta STATE.restartFlag
     rts
 
 .endnamespace

@@ -130,6 +130,11 @@ _showMain
     #load16bitImmediate processKeyEvent, keyrepeat.FOCUS_VECTOR
     jsr keyrepeat.keyEventLoop
 
+    lda editor.STATE.restartFlag
+    beq _exit
+    jmp main
+
+_exit
     jsr txtio.init80x60
     jsr txtio.clear
     #printString DONE_TXT, len(DONE_TXT)
@@ -161,6 +166,12 @@ _checkCommands
     lda (KEY_SEARCH_PTR), y
     sta CMD_VEC + 1
     jsr jmpToHandler
+    lda editor.STATE.restartFlag
+    cmp #BOOL_TRUE
+    bne _continue
+    clc
+    rts
+_continue
     sec
     rts
 _default
@@ -226,7 +237,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 42
+NUM_EDITOR_COMMANDS = 43
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -253,6 +264,7 @@ EDT_CUT_TXT      .dstruct KeyEntry_t, $0118, cutInLine             ; CTRL + x
 EDT_UNDENT_LINES .dstruct KeyEntry_t, $0209, unIndentLines         ; Alt + Tab
 EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
 EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02EB, clearClip             ; ALT + k
+EDT_RESTART      .dstruct KeyEntry_t, $02F2, causeRestart          ; ALT + r
 EDT_SAVE_DOC_AS  .dstruct KeyEntry_t, $02F3, saveDocumentAs        ; ALT + s
 EDT_INDENT_LINES .dstruct KeyEntry_t, $0409, indentLines           ; FNX + Tab
 EDT_PAGE_UP      .dstruct KeyEntry_t, $040E, pageDown              ; FNX + down
@@ -280,7 +292,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F1, endProg               ; Commodore +
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 42
+NUM_EDITOR_COMMANDS = 43
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -310,6 +322,7 @@ EDT_COPY_LINE    .dstruct KeyEntry_t, $02E3, copyLines             ; Commodore +
 MEM_SET_SEARCH   .dstruct KeyEntry_t, $02E6, setSearchString       ; Commodore + f
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $02E7, gotoLine              ; Commodore + g
 EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02EB, clearClip             ; Commodore + k
+EDT_RESTART      .dstruct KeyEntry_t, $02EC, causeRestart          ; Commodore + l
 EDT_SET_MARK     .dstruct KeyEntry_t, $02ED, setMark               ; Commodore + m
 EDT_SET_REPL     .dstruct KeyEntry_t, $02F2, setReplaceString      ; Commodore + r
 EDT_SAVE_DOC     .dstruct KeyEntry_t, $02F3, saveFile              ; Commodore + s
@@ -327,6 +340,13 @@ EDT_WORD_LEFT    .dstruct KeyEntry_t, $0902, toPrevWord            ; CTRL + Crsr
 EDT_MV_SCR_UP    .dstruct KeyEntry_t, $0910, moveWindowUp          ; CTRL + CrsrUp = CTRL + Shift + CrsrDown
 EDT_PAGE_DOWN    .dstruct KeyEntry_t, $0A10, pageUp                ; Commodore + CrsrUp = Commodore + Shift + CrsrDown
 .endif
+
+
+causeRestart
+    lda #BOOL_TRUE
+    ora #RESTART_INVALID
+    sta editor.STATE.restartFlag
+    jmp endProg
 
 
 toEditor
@@ -944,6 +964,9 @@ endProg
     sec
     rts
 _doneAndLeave
+    lda editor.STATE.restartFlag
+    and #BOOL_TRUE
+    sta editor.STATE.restartFlag
     clc
     rts
 
@@ -962,12 +985,15 @@ _procEnd
     lda DUMMY_LEN
     beq _doNothing
 
-    jsr exitToBasic
-    ; I guess we never get here ....
-    jsr sys64738
+    ; ends key event loop upon return
+    clc
     rts
 
 _doNothing
+    ; user wants to continue => reset restartFlag
+    lda #BOOL_FALSE
+    sta editor.STATE.restartFlag
+    ; cleanup and return
     jsr toData
     jsr updateProgData
     #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
