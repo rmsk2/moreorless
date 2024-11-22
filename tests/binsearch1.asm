@@ -1,6 +1,7 @@
 
 * = $0800
 .cpu "w65c02"
+KEY_VAL = 0
 
 jmp main
 

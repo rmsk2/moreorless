@@ -1,43 +1,57 @@
 RM=rm
 PORT=/dev/ttyUSB0
 SUDO=
-
-BINARY=mless
 FORCE=-f
+PYTHON=python3
 
 ifdef WIN
 RM=del
 PORT=COM3
 SUDO=
 FORCE=
+PYTHON=python
 endif
 
+BINARY=mless
+KEYVAL=keyval
 
-all: pgz
-pgz: $(BINARY).pgz
+.PHONY: all
+all: editor validator
+
+.PHONY: validator
+validator: $(KEYVAL).pgz
+
+.PHONY: editor
+editor: $(BINARY).pgz
+
+.PHONY: clean
+clean: 
+	$(RM) $(FORCE) $(BINARY)
+	$(RM) $(FORCE) $(BINARY).pgz
+	$(RM) $(FORCE) $(KEYVAL)
+	$(RM) $(FORCE) $(KEYVAL).pgz
+	$(RM) $(FORCE) tests/bin/*.bin
+
+.PHONY: upload
+upload: $(BINARY).pgz
+	$(SUDO) $(PYTHON) fnxmgr.zip --port $(PORT) --run-pgz $(BINARY).pgz
+
+.PHONY: validate
+validate: $(KEYVAL).pgz
+	$(SUDO) $(PYTHON) fnxmgr.zip --port $(PORT) --run-pgz $(KEYVAL).pgz
+
+.PHONY: test
+test:
+	6502profiler verifyall -c config_768.json -trapaddr 0x07FF
 
 $(BINARY): *.asm
 	64tass --nostart -o $(BINARY) main.asm
 
-clean: 
-	$(RM) $(FORCE) $(BINARY)
-	$(RM) $(FORCE) $(BINARY).pgz
-	$(RM) $(FORCE) keyval.pgz
-	$(RM) $(FORCE) keyval.bin
-	$(RM) $(FORCE) tests/bin/*.bin
-
-upload: $(BINARY).pgz
-	$(SUDO) python fnxmgr.zip --port $(PORT) --run-pgz $(BINARY).pgz
-
-
 $(BINARY).pgz: $(BINARY)
-	python3 make_pgz.py $(BINARY)
+	$(PYTHON) make_pgz.py $(BINARY)
 
-test:
-	6502profiler verifyall -c config_768.json -trapaddr 0x07FF
+$(KEYVAL): api.asm zeropage.asm setup.asm clut.asm arith16.asm txtio.asm khelp.asm key_repeat.asm keyval.asm
+	64tass --nostart -o $(KEYVAL) keyval.asm
 
-keyval: keyval.pgz
-
-keyval.pgz: *.asm
-	64tass --nostart -o keyval keyval.asm
-	python3 make_pgz.py keyval
+$(KEYVAL).pgz: $(KEYVAL)
+	$(PYTHON) make_pgz.py $(KEYVAL)
