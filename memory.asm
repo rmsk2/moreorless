@@ -109,6 +109,28 @@ copyMem2Ptr .macro source, ptr, index
     sta (\ptr), y
 .endmacro
 
+
+; yes this is slow, but it is easy to understand and it is
+; fast enough. Carry is set if a new page was mapped.
+storeByteLinear .macro windowStart, zpPtr
+    sta (\zpPtr)
+    #inc16Bit \zpPtr
+    ; did the pointer wrap around?
+    #cmp16BitImmediate \windowStart+$2000, \zpPtr
+    bne _done
+    ; yes wrap around occurred
+    ; switch to next RAM block
+    inc 8 + (\windowStart / $2000)
+    ; reset address to windowStart
+    #load16BitImmediate \windowStart, \zpPtr
+    sec
+    rts
+_done
+    clc
+    rts
+.endmacro
+
+
 memCopy .macro src, target, length 
     #load16BitImmediate \src, memory.MEM_CPY.startAddress
     #load16BitImmediate \target, memory.MEM_CPY.targetAddress

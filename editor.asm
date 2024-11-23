@@ -113,6 +113,10 @@ _errorDuringOpen
 ; carry is set if loading file failed
 ; ToDo: Expand tab characters to four blanks
 loadFile
+    ; set mode to read
+    lda #MODE_READ
+    sta TXT_FILE.mode
+
     jsr list.create
     bcc _created
     rts

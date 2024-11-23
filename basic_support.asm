@@ -113,25 +113,8 @@ _errorDuringOpen
     rts
 
 
-; yes this is slow, but it is easy to understand and it is
-; fast enough. Carry is set if a new page was mapped.
-BYTE_TO_WRITE .byte 0
 writeBasicByte
-    sta (BASIC_PTR)
-    #inc16Bit BASIC_PTR
-    ; did the pointer wrap around?
-    #cmp16BitImmediate $A000, BASIC_PTR
-    bne _done
-    ; yes wrap around occurred
-    ; switch to next RAM block
-    inc 12
-    ; reset address to $8000
-    #load16BitImmediate $8000, BASIC_PTR
-    sec
-    rts
-_done
-    clc
-    rts
+#storeByteLinear $8000, BASIC_PTR
 
 
 MMU_STATE .byte 0
