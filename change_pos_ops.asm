@@ -646,6 +646,32 @@ _outOfMemory
     jmp (OUT_OF_MEMORY)
 
 
+reformatRegion
+    lda editor.STATE.mark.isValid
+    bne _isValid
+    jmp _done
+_isValid
+
+    ; sets start element and length of segment in CPCT_PARMS 
+    ; CRSR_AT_START can be queried if the mark was set in normal (= 0) or reverse order (!= 0)
+    jsr determineLineParams
+
+    ; formats segment and sets current line to last line of the newly formatted segment
+    ; if carry is set upon return then an out of memory situation occurred. This can happen if 
+    ; lines longer than 80 characters are part of the segment.
+    ; Length of reformatted section is returned in CPCT_PARAMS.reformatLen
+    jsr clip.reformatSegment
+    bcs _outOfMemory
+    ; this also invalidates the mark
+    jsr markDocumentAsDirty
+    ; if     
+
+_done
+    rts
+_outOfMemory
+    jmp (OUT_OF_MEMORY)
+
+
 moveWindowUp
     #move16Bit editor.STATE.curLine, CUR_LINE
     lda CURSOR_STATE.xPos

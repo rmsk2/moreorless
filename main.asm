@@ -540,6 +540,8 @@ _done
     rts
 
 
+; CRSR_AT_START is false (= 0) if the line number of the mark is smaller than the current line number. This is the "normal" case.
+; CRSR_AT_START is true (!= 0)if the line number of the mark is larger or equal to the current line number. This is the reverse case.
 CRSR_AT_START .byte 0
 LINE_HELP     .word 0
 determineLineParams

@@ -43,10 +43,11 @@ toDocument
 
 
 CopyCutParam_t .struct
-    old       .dstruct FarPtr_t 
-    start     .dstruct FarPtr_t
-    len       .word 0
-    ctr       .word 0
+    old         .dstruct FarPtr_t 
+    start       .dstruct FarPtr_t
+    len         .word 0
+    ctr         .word 0
+    reformatLen .word 0
 .endstruct
 
 CPCT_PARMS .dstruct CopyCutParam_t
@@ -235,6 +236,14 @@ _oneMoreLine
 _doneOK
     clc
 _doneError
+    rts
+
+
+; carry is set if this fails. Currently does no reformatting
+reformatSegment
+    lda CPCT_PARMS.len
+    sta CPCT_PARMS.reformatLen
+    clc
     rts
 
 
