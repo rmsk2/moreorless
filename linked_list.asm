@@ -8,7 +8,7 @@ List_t .struct
 .endstruct
 
 OUT_OF_MEMORY .word panic
-; ToDo: Think about a global out of memory handler
+
 panic
     rts
 
