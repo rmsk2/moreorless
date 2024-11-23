@@ -80,8 +80,8 @@ this lets you search for a value that was copied from the document without typin
 - Pressing `F8` (or `Shift+F8` on a PS/2 keyboard) instructs moreoreless to generate a BASIC program from the current 
 document contents and to store the resulting source code at $028000. This allows to use the BASIC statements `xload` 
 and `xgo` to load and/or start the BASIC program from RAM.
-- Entering `Alt+r` allows you to load a new document without restarting `moreorless`. If the document has unsaved
-changes a warning is issued and you have the possibility to continue to edit the document.
+- Entering `Alt+r` allows you to load a new document without restarting `moreorless`. If the current document has 
+unsaved changes a warning is issued and you have the possibility to continue to edit the current document.
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 When selecting a block of lines the line where the mark was set and the line where the corresponding command
