@@ -263,6 +263,7 @@ EDT_PASTE_TXT    .dstruct KeyEntry_t, $0116, pasteInLine           ; CTRL + v
 EDT_CUT_TXT      .dstruct KeyEntry_t, $0118, cutInLine             ; CTRL + x
 EDT_UNDENT_LINES .dstruct KeyEntry_t, $0209, unIndentLines         ; Alt + Tab
 EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; ALT + b
+EDT_REFORMAT_REG .dstruct KeyEntry_t, $02E6, reformatRegion        ; ALT + f
 EDT_CLEAR_CLIP   .dstruct KeyEntry_t, $02EB, clearClip             ; ALT + k
 EDT_RESTART      .dstruct KeyEntry_t, $02F2, causeRestart          ; ALT + r
 EDT_SAVE_DOC_AS  .dstruct KeyEntry_t, $02F3, saveDocumentAs        ; ALT + s

@@ -239,14 +239,21 @@ _doneError
     rts
 
 
+HELP_OFFSET .word 0
 ; carry is set if this fails. Currently does no reformatting but implements the 
-; most basic exoected behaviour: i.e. make last line inserted the current line, 
-; set CPCT_PARMS.reformatLen and set carry of out of memory occurs
+; most basic expected behaviour: i.e. make last line inserted the current line, 
+; set CPCT_PARMS.reformatLen and set carry if out of memory occurs
 reformatSegment
     lda CPCT_PARMS.len
     sta CPCT_PARMS.reformatLen
-    #copyMem2Mem CPCT_PARMS.end, list.SET_PTR
+    #copyMem2Mem CPCT_PARMS.start, list.SET_PTR
     #changeLine list.setTo
+    #move16Bit CPCT_PARMS.len, HELP_OFFSET
+    #dec16Bit HELP_OFFSET
+    ldx HELP_OFFSET
+    lda HELP_OFFSET + 1
+    jsr list.move
+    jsr list.readCurrentLine
     clc
     rts
 
