@@ -239,10 +239,14 @@ _doneError
     rts
 
 
-; carry is set if this fails. Currently does no reformatting
+; carry is set if this fails. Currently does no reformatting but implements the 
+; most basic exoected behaviour: i.e. make last line inserted the current line, 
+; set CPCT_PARMS.reformatLen and set carry of out of memory occurs
 reformatSegment
     lda CPCT_PARMS.len
     sta CPCT_PARMS.reformatLen
+    #copyMem2Mem CPCT_PARMS.end, list.SET_PTR
+    #changeLine list.setTo
     clc
     rts
 
