@@ -239,6 +239,91 @@ _doneError
     rts
 
 
+; carry is set if length limit was reached
+cleanUpLine
+    ldx #0
+_lineCopy
+    cpx LINE_BUFFER.len
+    beq _doneOK
+    lda LINE_BUFFER, x
+    jsr basic.writeBasicByte
+    php
+    #inc16Bit COPY_RES.byteCounter
+    plp
+    bcc _next
+    lda 12
+    cmp #LAST_PAGE_MEM_FREE                              ; we have reached the last block
+    beq _doneTooLarge
+_next
+    inx
+    bra _lineCopy
+_doneOK
+    clc
+    rts
+_doneTooLarge
+    sec
+    rts
+
+
+CopyResult_t .struct 
+    lineCounter .word 0
+    copyOk      .byte 0
+    mmuState    .byte 0
+    ptrScratch  .dstruct FarPtr_t
+    byteCounter .word 0
+    ; Any subroutine has to flag an error by setting the carry upon return.
+    ; It has to write the processed byte to memory and must update byteCounter
+    processVec  .word cleanUpLine
+.endstruct
+
+procLine
+    jmp (COPY_RES.processVec)
+
+COPY_RES .dstruct CopyResult_t
+; store a cleaned up version of the selected region at $028000
+copyRegion
+    ; reset values to start configuration
+    lda #BOOL_TRUE
+    sta COPY_RES.copyOk
+    #load16BitImmediate 0, COPY_RES.lineCounter
+    #load16BitImmediate 0, COPY_RES.byteCounter
+    #load16BitImmediate $8000, BASIC_PTR
+
+    ; save current list pointer
+    #copyMem2Mem list.LIST.current, COPY_RES.ptrScratch
+    ; goto start of region
+    #copyMem2Mem CPCT_PARMS.start, list.SET_PTR
+    #changeLine list.setTo
+    ; save current MMU state
+    lda 12
+    sta COPY_RES.mmuState
+    ; bank in RAM page FIRST_PAGE_MEM_FREE to location $8000, i.e. bank in RAM page which starts
+    ; at $028000
+    lda #FIRST_PAGE_MEM_FREE
+    sta 12
+_lineLoop
+    jsr procLine
+    bcs _cutOff                                    ; region was too large
+    #changeLine list.next
+    #inc16Bit COPY_RES.lineCounter
+    #cmp16Bit CPCT_PARMS.len, COPY_RES.lineCounter ; have we processed the desired number of lines?
+    bne _lineLoop                                  ; more lines
+    bra _copySuccess                               ; we are done and we were successfull
+_cutOff
+    ; we have reached the length limit
+    lda #BOOL_FALSE
+    sta COPY_RES.copyOk
+_copySuccess
+    ; restore MMU state
+    lda COPY_RES.mmuState
+    sta 12
+    ; restore list pointer to the value it had at start
+    #copyMem2Mem COPY_RES.ptrScratch, list.LIST.current
+    jsr list.readCurrentLine
+    rts
+
+
+
 HELP_OFFSET .word 0
 ; carry is set if this fails. Currently does no reformatting but implements the 
 ; most basic expected behaviour: i.e. make last line inserted the current line, 
