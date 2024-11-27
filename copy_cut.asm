@@ -241,29 +241,96 @@ _doneError
 
 ; carry is set if length limit was reached
 cleanUpLine
-    ldx #0
-_lineCopy
-    cpx LINE_BUFFER.len
+    lda LINE_BUFFER.len
     beq _doneOK
-    lda LINE_BUFFER, x
+    ; here we know that the line has a length of at least one byte
+    ldy #0
+_wordLoop
+    cpy LINE_BUFFER.len
+    beq _doneOK
+    jsr copyNextWordFromLine
+    bcs _return
+    cpy LINE_BUFFER.len
+    beq _doneOK
+    bra _wordLoop
+_doneOK
+    clc
+_return
+    rts
+
+
+writeOneByte
     jsr basic.writeBasicByte
     php
     #inc16Bit COPY_RES.byteCounter
     plp
-    bcc _next
+    bcc _contLoop
     lda 12
-    cmp #LAST_PAGE_MEM_FREE                              ; we have reached the last block
+    cmp #LAST_PAGE_MEM_FREE
     beq _doneTooLarge
-_next
-    inx
-    bra _lineCopy
-_doneOK
     clc
     rts
 _doneTooLarge
     sec
-    rts
+    rts    
 
+
+; Precondition: There is at least one byte left in LINE_BUFFER
+copyNextWordFromLine
+    stz COPY_RES.curWord.len
+    ldx #0
+_skipWhiteSpace
+    lda LINE_BUFFER.buffer, y
+    cmp #$20
+    bne _wordFound
+    cmp #9
+    bne _wordFound
+    iny
+    cpy LINE_BUFFER.len
+    bne _skipWhiteSpace
+    bra _done
+_wordFound
+    cpx #79
+    beq _done
+    cpy LINE_BUFFER.len
+    beq _done    
+    sta COPY_RES.curWord.word, x
+    inx
+    iny
+    lda LINE_BUFFER.buffer, y
+    cmp #$20
+    beq _done
+    cmp #9
+    beq _done
+    bra _wordFound
+_done
+    cpx #0
+    beq _return 
+    stx COPY_RES.curWord.len
+    lda COPY_RES.curWord.len
+    jsr writeOneByte
+    bcs _doneTooLarge
+    ldx #0
+_loopCopy
+    lda COPY_RES.curWord.word, x
+    jsr writeOneByte
+    bcs _doneTooLarge
+_contLoop
+    inx
+    cpx COPY_RES.curWord.len
+    bne _loopCopy
+_return
+    clc
+    rts
+_doneTooLarge
+    sec
+    rts    
+
+
+WordBuffer_t .struct
+    len  .byte 0
+    word .fill 79
+.endstruct
 
 CopyResult_t .struct 
     lineCounter .word 0
@@ -274,6 +341,7 @@ CopyResult_t .struct
     ; Any subroutine has to flag an error by setting the carry upon return.
     ; It has to write the processed byte to memory and must update byteCounter
     processVec  .word cleanUpLine
+    curWord     .dstruct WordBuffer_t
 .endstruct
 
 procLine
