@@ -171,4 +171,169 @@ _loop
     bne _loop
     rts 
 
+
+; carry is set if length limit was reached
+cleanUpLine
+    lda LINE_BUFFER.len
+    beq _doneOK
+    ; here we know that the line has a length of at least one byte
+    ldy #0
+_wordLoop
+    jsr copyNextWordFromLine
+    bcs _return
+    cpy LINE_BUFFER.len
+    bne _wordLoop
+_doneOK
+    clc
+_return
+    rts
+
+
+writeByteLines
+#storeByteLinear $8000, BASIC_PTR
+
+writeOneByte
+    jsr writeByteLines
+    php
+    #inc16Bit COPY_RES.byteCounter
+    plp
+    bcc _done
+    lda 12
+    cmp #LAST_PAGE_MEM_FREE
+    beq _doneTooLarge
+_done
+    clc
+    rts
+_doneTooLarge
+    sec
+    rts    
+
+TAB_CHAR = 9
+MAX_WORD_LEN = 79
+
+braIfNotWS .macro braAddress
+    cmp #SPACE_CHAR
+    bne _checkTab
+    beq _done
+_checkTab
+    cmp #TAB_CHAR
+    bne \braAddress
+_done
+.endmacro
+
+braIfWS .macro braAddress
+    cmp #SPACE_CHAR
+    beq \braAddress
+    cmp #TAB_CHAR
+    beq \braAddress
+    ; Todo: Check Tab character
+.endmacro
+
+copyWord2Target .macro failAddr
+    ldx #0
+_loopCopy    
+    lda COPY_RES.curWord.word, x
+    jsr writeOneByte
+    bcs \failAddr
+    inx
+    cpx COPY_RES.curWord.len
+    bne _loopCopy
+.endmacro
+
+copyLengthByte2Target .macro failAddr
+    stx COPY_RES.curWord.len
+    lda COPY_RES.curWord.len
+    jsr writeOneByte
+    bcs \failAddr
+.endmacro
+
+copyNextWordFromLine
+    ; reset word buffer length and X register
+    stz COPY_RES.curWord.len
+    ldx #0
+_skipWhiteSpace
+    ; skip leading whitespace
+    cpy LINE_BUFFER.len
+    beq returnNow
+    lda LINE_BUFFER.buffer, y
+    #braIfNotWS wordFound                          ; branch to given address, if accu contains no whitespace
+    iny
+    bra _skipWhiteSpace
+wordFound
+    ; copy word data to word buffer
+    cpx #MAX_WORD_LEN
+    beq copyWord                                   ; max word length is reached
+    cpy LINE_BUFFER.len
+    beq copyWord                                   ; last byte of line was reached
+    lda LINE_BUFFER.buffer, y
+    #braIfWS copyWord                              ; branch to given address, if accu contains whitespace
+    sta COPY_RES.curWord.word, x
+    inx
+    iny
+    bra wordFound
+copyWord
+    ; copy word buffer to target memory
+    cpx #0
+    beq returnNow                                  ; no word was found => nothing to copy 
+    ; write length byte to target location
+    #copyLengthByte2Target doneTooLarge            ; copy length byte or in case of failure branch to given address
+    ; write word to target location
+    #copyWord2Target doneTooLarge                  ; copy word data or in case of failure branch to given address
+returnNow
+    clc
+    rts
+doneTooLarge
+    sec
+    rts
+
+
+WordBuffer_t .struct
+    len  .byte 0
+    word .fill 79
+.endstruct
+
+CopyResult_t .struct 
+    mmuState    .byte 0
+    byteCounter .word 0
+    ; Any subroutine has to flag an error by setting the carry upon return.
+    ; It has to write the processed byte to memory and must update byteCounter
+    processVec  .word cleanUpLine
+    curWord     .dstruct WordBuffer_t
+.endstruct
+
+procLine
+    jmp (COPY_RES.processVec)
+
+COPY_RES .dstruct CopyResult_t
+
+
+initCopyRes
+    #load16BitImmediate 0, COPY_RES.byteCounter
+    #load16BitImmediate $8000, BASIC_PTR
+    rts
+
+
+writeEndMarker
+    lda #0
+    jsr writeOneByte
+    rts
+
+
+initMMU
+    ; save current MMU state
+    lda 12
+    sta COPY_RES.mmuState
+    ; bank in RAM page FIRST_PAGE_MEM_FREE to location $8000, i.e. bank in RAM page which starts
+    ; at $028000
+    lda #FIRST_PAGE_MEM_FREE
+    sta 12
+    rts
+
+
+restoreMMU
+    ; restore MMU state
+    lda COPY_RES.mmuState
+    sta 12
+    rts
+
 .endnamespace

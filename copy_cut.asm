@@ -238,155 +238,47 @@ _doneOK
 _doneError
     rts
 
-
-; carry is set if length limit was reached
-cleanUpLine
-    lda LINE_BUFFER.len
-    beq _doneOK
-    ; here we know that the line has a length of at least one byte
-    ldy #0
-_wordLoop
-    cpy LINE_BUFFER.len
-    beq _doneOK
-    jsr copyNextWordFromLine
-    bcs _return
-    cpy LINE_BUFFER.len
-    beq _doneOK
-    bra _wordLoop
-_doneOK
-    clc
-_return
-    rts
-
-
-writeOneByte
-    jsr basic.writeBasicByte
-    php
-    #inc16Bit COPY_RES.byteCounter
-    plp
-    bcc _contLoop
-    lda 12
-    cmp #LAST_PAGE_MEM_FREE
-    beq _doneTooLarge
-    clc
-    rts
-_doneTooLarge
-    sec
-    rts    
-
-
-; Precondition: There is at least one byte left in LINE_BUFFER
-copyNextWordFromLine
-    stz COPY_RES.curWord.len
-    ldx #0
-_skipWhiteSpace
-    lda LINE_BUFFER.buffer, y
-    cmp #$20
-    bne _wordFound
-    cmp #9
-    bne _wordFound
-    iny
-    cpy LINE_BUFFER.len
-    bne _skipWhiteSpace
-    bra _done
-_wordFound
-    cpx #79
-    beq _done
-    cpy LINE_BUFFER.len
-    beq _done    
-    sta COPY_RES.curWord.word, x
-    inx
-    iny
-    lda LINE_BUFFER.buffer, y
-    cmp #$20
-    beq _done
-    cmp #9
-    beq _done
-    bra _wordFound
-_done
-    cpx #0
-    beq _return 
-    stx COPY_RES.curWord.len
-    lda COPY_RES.curWord.len
-    jsr writeOneByte
-    bcs _doneTooLarge
-    ldx #0
-_loopCopy
-    lda COPY_RES.curWord.word, x
-    jsr writeOneByte
-    bcs _doneTooLarge
-_contLoop
-    inx
-    cpx COPY_RES.curWord.len
-    bne _loopCopy
-_return
-    clc
-    rts
-_doneTooLarge
-    sec
-    rts    
-
-
-WordBuffer_t .struct
-    len  .byte 0
-    word .fill 79
-.endstruct
-
-CopyResult_t .struct 
+CopyRegion_t .struct
     lineCounter .word 0
-    copyOk      .byte 0
-    mmuState    .byte 0
     ptrScratch  .dstruct FarPtr_t
-    byteCounter .word 0
-    ; Any subroutine has to flag an error by setting the carry upon return.
-    ; It has to write the processed byte to memory and must update byteCounter
-    processVec  .word cleanUpLine
-    curWord     .dstruct WordBuffer_t
+    copyOk      .byte 0
 .endstruct
 
-procLine
-    jmp (COPY_RES.processVec)
+COPY_REGION .dstruct CopyRegion_t
 
-COPY_RES .dstruct CopyResult_t
 ; store a cleaned up version of the selected region at $028000
 copyRegion
+    jsr line.initCopyRes
     ; reset values to start configuration
     lda #BOOL_TRUE
-    sta COPY_RES.copyOk
-    #load16BitImmediate 0, COPY_RES.lineCounter
-    #load16BitImmediate 0, COPY_RES.byteCounter
-    #load16BitImmediate $8000, BASIC_PTR
+    sta COPY_REGION.copyOk
+    #load16BitImmediate 0, COPY_REGION.lineCounter
 
     ; save current list pointer
-    #copyMem2Mem list.LIST.current, COPY_RES.ptrScratch
+    #copyMem2Mem list.LIST.current, COPY_REGION.ptrScratch
     ; goto start of region
     #copyMem2Mem CPCT_PARMS.start, list.SET_PTR
     #changeLine list.setTo
-    ; save current MMU state
-    lda 12
-    sta COPY_RES.mmuState
-    ; bank in RAM page FIRST_PAGE_MEM_FREE to location $8000, i.e. bank in RAM page which starts
-    ; at $028000
-    lda #FIRST_PAGE_MEM_FREE
-    sta 12
+    jsr line.initMMU
 _lineLoop
-    jsr procLine
-    bcs _cutOff                                    ; region was too large
+    jsr line.procLine
+    bcs _cutOff                                       ; region was too large
     #changeLine list.next
-    #inc16Bit COPY_RES.lineCounter
-    #cmp16Bit CPCT_PARMS.len, COPY_RES.lineCounter ; have we processed the desired number of lines?
-    bne _lineLoop                                  ; more lines
-    bra _copySuccess                               ; we are done and we were successfull
+    #inc16Bit COPY_REGION.lineCounter
+    #cmp16Bit CPCT_PARMS.len, COPY_REGION.lineCounter ; have we processed the desired number of lines?
+    bne _lineLoop                                     ; more lines
+    ; write an entry with length zero as an end marker
+    jsr line.writeEndMarker
+    bcs _cutOff
+    bra _copySuccess                                  ; we are done and we were successfull
 _cutOff
     ; we have reached the length limit
     lda #BOOL_FALSE
-    sta COPY_RES.copyOk
+    sta COPY_REGION.copyOk
 _copySuccess
-    ; restore MMU state
-    lda COPY_RES.mmuState
-    sta 12
+    jsr line.restoreMMU
     ; restore list pointer to the value it had at start
-    #copyMem2Mem COPY_RES.ptrScratch, list.LIST.current
+    #copyMem2Mem COPY_REGION.ptrScratch, list.LIST.current
     jsr list.readCurrentLine
     rts
 
@@ -397,6 +289,8 @@ HELP_OFFSET .word 0
 ; most basic expected behaviour: i.e. make last line inserted the current line, 
 ; set CPCT_PARMS.reformatLen and set carry if out of memory occurs
 reformatSegment
+    jsr copyRegion
+_doNothing
     lda CPCT_PARMS.len
     sta CPCT_PARMS.reformatLen
     #copyMem2Mem CPCT_PARMS.start, list.SET_PTR
