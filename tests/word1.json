@@ -1,0 +1,5 @@
+{
+    "Name": "Test word separation in line 1",
+    "TestDriverSource": "word1.asm",
+    "TestScript": "word1.lua"
+}
