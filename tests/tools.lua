@@ -6,6 +6,7 @@ PAGE_SIZE = 8192
 BLOCK_SIZE = 32
 BLOCKS_PER_PAGE = PAGE_SIZE / BLOCK_SIZE
 BYTES_PER_PAGE_IN_MAP = BLOCKS_PER_PAGE / 8
+FREE_MEM_START = 0x028000
 
 -- block numbers of 8K blocks which should be managed by memory.asm. Currently these represent
 -- 384 K of base memory (beginning at $10000, but leaving a 64 K hole starting with $28000) and optionally 256K of 
@@ -45,6 +46,19 @@ function read_string(addr, len)
     end
 
     return s
+end
+
+function read_string_long(addr, len)
+    local i
+    local res
+
+    res = ""
+
+    for i = addr, addr + len - 1, 1 do
+        res = res .. string.format("%02x", read_byte_long(i))
+    end
+
+    return res
 end
 
 -- read word stored at the given address

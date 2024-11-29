@@ -646,15 +646,30 @@ _outOfMemory
     jmp (OUT_OF_MEMORY)
 
 
+REFORMAT_LINE_START .word 0
 reformatRegion
+    lda CURSOR_STATE.yPos
+    sta YPOS_HELP
+    stz YPOS_HELP + 1
+    lda CURSOR_STATE.yMaxMinus1
+    sta YMAX_HELP
+    #move16Bit editor.STATE.curLine, REFORMAT_LINE_START
+
     lda editor.STATE.mark.isValid
     bne _isValid
     jmp _done
 _isValid
-
     ; sets start element and length of segment in CPCT_PARMS 
     ; CRSR_AT_START can be queried if the mark was set in normal (= 0) or reverse order (!= 0)
     jsr determineLineParams
+    lda CRSR_AT_START
+    bne _yPosValid
+    lda editor.STATE.mark.yPos
+    sta YPOS_HELP
+    #move16Bit editor.STATE.mark.line, REFORMAT_LINE_START
+_yPosValid
+    ; here YPOS_HELP is set to the y position on the screen where the selected region started
+    ; and REFORMAT_LINE_START the corresponding line number
 
     ; formats segment and sets current line to last line of the newly formatted segment
     ; if carry is set upon return then an out of memory situation occurred. This can happen if 
@@ -664,12 +679,27 @@ _isValid
     bcs _outOfMemory
     ; this also invalidates the mark
     jsr markDocumentAsDirty
-    ; if     
-
+    
+    #dec16Bit clip.CPCT_PARMS.reformatLen
+    #add16Bit clip.CPCT_PARMS.reformatLen, REFORMAT_LINE_START
+    #move16Bit REFORMAT_LINE_START, editor.STATE.curLine
+    #add16Bit clip.CPCT_PARMS.reformatLen, YPOS_HELP
+    #cmp16Bit YPOS_HELP, YMAX_HELP
+    bcc _redrawPart
+    lda CURSOR_STATE.yMaxMinus1
+    bra _redrawPart2
+_redrawPart
+    lda YPOS_HELP
+_redrawPart2
+    pha
+    jsr calcLineEnd
+    tax
+    pla
+    jsr refreshView
 _done
     rts
 _outOfMemory
-    jmp (OUT_OF_MEMORY)
+    jmp (OUT_OF_MEMORY)    
 
 
 moveWindowUp
