@@ -258,12 +258,13 @@ copyRegion
     #copyMem2Mem list.LIST.current, COPY_REGION.ptrScratch
     ; goto start of region
     #copyMem2Mem CPCT_PARMS.start, list.SET_PTR
-    #changeLine list.setTo
+    #changeLine list.setTo                            ; ** This saves possible changes in LINE_BUFER.buffer to linked list
     jsr line.initMMU
 _lineLoop
-    jsr line.procLine
+    jsr line.procLine                                 ; copy and clean up current line
     bcs _cutOff                                       ; region was too large
-    #changeLine list.next
+    jsr list.next                                     ; No #changeLine: Here the linked list has to be current due to **
+    jsr list.readCurrentLine                          ; copy text of line into LINE_BUFFER
     #inc16Bit COPY_REGION.lineCounter
     #cmp16Bit CPCT_PARMS.len, COPY_REGION.lineCounter ; have we processed the desired number of lines?
     bne _lineLoop                                     ; more lines
@@ -279,29 +280,171 @@ _copySuccess
     jsr line.restoreMMU
     ; restore list pointer to the value it had at start
     #copyMem2Mem COPY_REGION.ptrScratch, list.LIST.current
-    jsr list.readCurrentLine
+    jsr list.readCurrentLine                           ; copy line contents from linked list to LINE_BUFFER
     rts
 
 
+readByteLines
+#readByteLinear $8000, BASIC_PTR
 
-HELP_OFFSET .word 0
-; carry is set if this fails. Currently does no reformatting but implements the 
-; most basic expected behaviour: i.e. make last line inserted the current line, 
-; set CPCT_PARMS.reformatLen and set carry if out of memory occurs
+createClipCleanUp .macro
+    jsr line.restoreMMU
+    jsr toDocument
+    jsr list.readCurrentLine
+.endmacro
+
+WORD_LEN     .byte 0
+SPACE_OFFSET .byte 0
+
+createClipFromMemory
+    jsr clear
+    jsr new
+    bcc _l1
+    jmp _outOfMemory
+_l1
+    #load16BitImmediate $8000, BASIC_PTR
+    stz SPACE_OFFSET
+    jsr toClip
+    jsr list.readCurrentLine
+    jsr line.initMMU
+_wordLoop
+    jsr readByteLines
+    cmp #0
+    beq _doneOK                                       ; end marker reached => we are done
+    sta WORD_LEN
+    ; check line length with new word
+    clc
+    adc LINE_BUFFER.len
+    adc SPACE_OFFSET
+    cmp #line.MAX_WORD_LEN
+    beq _doCopy
+    bcc _doCopy
+    ; new line is reached
+    jsr list.setCurrentLine                           ; save state of current line
+    bcs _outOfMemory
+    ; add new line
+    jsr list.insertAfter
+    bcs _outOfMemory
+    ; switch to new line
+    jsr list.next
+    jsr list.readCurrentLine
+    lda #0
+    sta SPACE_OFFSET
+_doCopy
+    ; copy word into line
+    ldy LINE_BUFFER.len
+    lda SPACE_OFFSET
+    beq _noSpace                                       ; first word in line => skip space
+    lda #line.SPACE_CHAR
+    sta LINE_BUFFER.buffer, y
+    iny
+_noSpace    
+    ldx #0
+_copyLoop
+    jsr readByteLines
+    sta LINE_BUFFER.buffer, y
+    iny
+    inx
+    cpx WORD_LEN
+    bne _copyLoop
+    ; from now on we also add a space character
+    sty LINE_BUFFER.len
+    lda #1
+    sta SPACE_OFFSET
+    bra _wordLoop
+_doneOK
+    jsr list.setCurrentLine
+    php
+    #createClipCleanUp
+    plp
+    rts
+_outOfMemory
+    #createClipCleanUp
+    sec
+    rts
+
+
+Reformat_t .struct
+    helpOffset  .word 0
+    extraLine   .dstruct FarPtr_t
+    scratchPtr  .dstruct FarPtr_t   
+.endstruct
+
+REFORMAT .dstruct Reformat_t
+
+; carry is set if this fails.
 reformatSegment
+    ; The segment must not contain the whole document
+    #cmp16Bit CPCT_PARMS.len, list.LIST.length
+    bcc _lenOk
+    jmp _doNothing
+_lenOK
     jsr copyRegion
+    lda COPY_REGION.copyOk
+    bne _copySuccess
+    jmp _doNothing
+_copySuccess
+    ; set REFORMAT.extraLine to NIL
+    #copyMem2Mem NIL, REFORMAT.extraLine
+
+    ; check if beginning of segment to reformat is the first line
+    #copyMem2Mem CPCT_PARMS.start, list.SET_PTR
+    jsr list.setTo
+    jsr list.getFlags
+    and #FLAG_IS_FIRST    
+    beq _noInsert
+    ; it is the first line => We insert a new pseudo line in order to make handling
+    ; of edge cases easier
+    jsr list.insertBefore
+    ; get address of newly inserted element and store it in REFORMAT.extraLine
+    #SET_MMU_ADDR list.LIST.current
+    #move16Bit list.LIST.current, PTR_CURRENT
+    #copyPtr2Mem PTR_CURRENT, Line_t.prev, REFORMAT.extraLine
+_noInsert
+    ; cutSegement can not fail due to the length check at the beginning of this subroutine
+    jsr cutSegement
+    ; current element is the line preceeding the segment to reformat
+    jsr createClipFromMemory
+    bcc _ok1
+    jmp _outOfMemory
+_ok1
+    jsr pasteSegment
+    bcc _ok2
+    jmp _outOfMemory
+_ok2
+    ; current element is the last line inserted
+    #move16Bit CLIP.length, CPCT_PARMS.reformatLen
+    ; clear clipboard
+    jsr clear
+    ; Do we need to remove a pseudo line?
+    #IS_NIL_ADDR REFORMAT.extraLine
+    bne _undoPseudoLine
+    jmp _doneOK 
+_undoPseudoLine    
+    ; remove inserted pseudo line    
+    #copyMem2Mem list.LIST.current, REFORMAT.scratchPtr
+    #copyMem2Mem REFORMAT.extraLine, list.SET_PTR
+    jsr list.setTo
+    jsr list.remove
+    #copyMem2Mem REFORMAT.scratchPtr, list.SET_PTR
+    jsr list.setTo
+    jmp _doneOK
 _doNothing
     lda CPCT_PARMS.len
     sta CPCT_PARMS.reformatLen
     #copyMem2Mem CPCT_PARMS.start, list.SET_PTR
     #changeLine list.setTo
-    #move16Bit CPCT_PARMS.len, HELP_OFFSET
-    #dec16Bit HELP_OFFSET
-    ldx HELP_OFFSET
-    lda HELP_OFFSET + 1
+    #move16Bit CPCT_PARMS.len, REFORMAT.helpOffset
+    #dec16Bit REFORMAT.helpOffset
+    ldx REFORMAT.helpOffset
+    lda REFORMAT.helpOffset + 1
     jsr list.move
+_doneOK
     jsr list.readCurrentLine
     clc
+    rts
+_outOfMemory
+    sec
     rts
 
 

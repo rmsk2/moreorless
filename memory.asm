@@ -131,6 +131,24 @@ _done
 .endmacro
 
 
+readByteLinear .macro windowStart, zpPtr
+    lda (\zpPtr)
+    pha
+    #inc16Bit \zpPtr
+    ; did the pointer wrap around?
+    #cmp16BitImmediate \windowStart+$2000, \zpPtr
+    bne _done
+    ; yes wrap around occurred
+    ; switch to next RAM block
+    inc 8 + (\windowStart / $2000)
+    ; reset address to windowStart
+    #load16BitImmediate \windowStart, \zpPtr
+_done
+    pla
+    rts
+.endmacro
+
+
 memCopy .macro src, target, length 
     #load16BitImmediate \src, memory.MEM_CPY.startAddress
     #load16BitImmediate \target, memory.MEM_CPY.targetAddress
