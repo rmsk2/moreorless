@@ -82,6 +82,10 @@ document contents and to store the resulting source code at $028000. This allows
 and `xgo` to load and/or start the BASIC program from RAM.
 - Entering `Alt+r` allows you to load a new document without restarting `moreorless`. If the current document has 
 unsaved changes a warning is issued and you have the possibility to continue to edit the current document.
+- `Alt+f` can be used to reformat the selected region into a form that is as justified as possible when using
+a fixed font with a fixed line length on a text screen. You should be aware that this feature uses the same
+temporary memory area as is needed for executing the `F8`-command. I.e. if you have created a BASIC program in 
+RAM via `F8` and press `Alt+f` afterwards then the BASIC program gets overwritten.
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 When selecting a block of lines the line where the mark was set and the line where the corresponding command
@@ -100,9 +104,11 @@ by a diamond shaped character.
 The software auto detects the presence of a RAM expansion cartridge and uses the extra RAM if it is
 determined that such a cartridge is in fact present.
 
-On the F256K keyboard autorepeat is implemented in software by `Moreorless`. Surprisingly enough this is
+On the F256K keyboard autorepeat is implemented in software by `moreorless`. Surprisingly enough this is
 compatible with autorepeat by a PS/2 keyboard when used on the Junior. As the repeat frequency seems
 to be slower with a real keyboard vertical scrolling appears to be slower on the Junior.
+
+Whenever you are prompted for an input you can abort the action by entering an empty text.
 
 The files `cheat_sheet.docx` and `cheat_sheet.pdf` contain nice documents which describe the key bindings.
 Thanks to the person who provided these on the Foenix Retro Systems discord server.
@@ -211,8 +217,6 @@ features which I think are a must have. This is how I plan to progress:
 
 Midterm goals
 
-- Add the possibility to reformat a marked region of the document in order to make modifying documents which 
-are simple text files (but not source code in some form or another) easier
 - use a beep to signal to the user that a command excecution is not possible
 
 After that possibly
