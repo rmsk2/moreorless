@@ -83,9 +83,10 @@ and `xgo` to load and/or start the BASIC program from RAM.
 - Entering `Alt+r` allows you to load a new document without restarting `moreorless`. If the current document has 
 unsaved changes a warning is issued and you have the possibility to continue to edit the current document.
 - `Alt+f` can be used to reformat the selected region into a form that is as justified as possible when using
-a fixed font with a fixed line length on a text screen. You should be aware that this feature uses the same
-temporary memory area as is needed for executing the `F8`-command. I.e. if you have created a BASIC program in 
-RAM via `F8` and press `Alt+f` afterwards then the BASIC program gets overwritten.
+a fixed font with a fixed line length on a text screen. `moreorless` formats lines to a maximum length of 79
+characters. You should be aware that this feature uses the same temporary memory area as is needed for executing
+the `F8`-command. I.e. if you have created a BASIC program in RAM via `F8` and press `Alt+f` afterwards then the BASIC
+program gets overwritten.
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 When selecting a block of lines the line where the mark was set and the line where the corresponding command
@@ -124,9 +125,9 @@ copy blocks of code or text which only consist of **of full lines** you can use 
 - The maximum line length is 224 characters. Any file with lines longer than that will not be loaded. All characters 
 which appear in columns 81 or higher are clipped, i.e. there is no horizontal scrolling. If `moreorless` 
 encounters a line which is longer than 80 characters, a star is printed after the value specifiying the current 
-column. Additonally `moreorless` does not allow to add characters to lines which are already longer than 80 characters 
-but they can be split via `return` and they can shortened by pressing the `delete` key. A file that was only edited 
-with `moreorless` will therefore never have lines with more than 80 characters.
+column. Additionally `moreorless` does not allow to add characters to lines which are already longer than 80 characters 
+but they can be split via `return`, they can be shortened by pressing the `delete` key and they can be reformatted
+using `Alt+f`. A file that was only edited with `moreorless` will never have lines with more than 80 characters.
 - Due to the data structure selected (see below) there is quite a bit of memory management overhead, i.e.
 in essence wasted memory. `Moreorless` uses roughly twice as much memory as would be needed to only store the 
 file contents in RAM. On the other hand the files `const.txt` (47 KB) and `macbeth.txt` (125 KB) contained 
