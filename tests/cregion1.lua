@@ -1,4 +1,5 @@
 require (test_dir.."tools")
+require (test_dir.."reformat")
 
 line_1 = "1 this is the first line"
 line_2 = "2 this is the middle line and it is longer than the others by quite a bit. it still does not stop. it goes on and on and on ..."
@@ -8,7 +9,7 @@ line_5 = "5 this is not the last line"
 line_6 = "6 this is also not the last line"
 line_7 = "7 this is the  last line"
 
-lines = {
+all_lines = {
     line_1,
     line_2,
     line_3,
@@ -28,30 +29,6 @@ test_table = {
     {0, 7, false},
 }
 
-function simple_split(inputstr)
-    local sep = "%s"
-    local t = {}
-
-    for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
-        table.insert(t, str)
-    end
-
-    return t
-end
-
-function make_word_list(start_pos, len)
-    local word_list = {}
-    local i, v
-
-    for i = start_pos + 1, start_pos + len, 1 do
-        local w = simple_split(lines[i])
-        for _,v in ipairs(w) do 
-            table.insert(word_list, v)
-        end
-    end
-        
-    return word_list
-end
 
 function num_iterations()    
     return #test_table
@@ -68,28 +45,10 @@ function arrange()
     set_word_at(addr_copy_len, test_table[iterations][2])
 end
 
-function make_reference_data(start_pos, len)
-    local word_list = make_word_list(start_pos, len)
-    local v, i
-    local ref_bytes = {}
-
-    for _,v in ipairs(word_list) do 
-        table.insert(ref_bytes, #v)
-
-        for i = 1, #v do
-            local c = v:sub(i,i)
-            table.insert(ref_bytes, string.byte(c))
-        end            
-    end
-
-    table.insert(ref_bytes, 0)
-
-    return ref_bytes
-end
 
 function assert()
     local carry_set = contains_flag("C")
-    local ref_bytes = make_reference_data(test_table[iterations][1], test_table[iterations][2])
+    local ref_bytes = make_reference_data(test_table[iterations][1], test_table[iterations][2], all_lines)
     local v, i
 
     if carry_set ~= test_table[iterations][3] then
