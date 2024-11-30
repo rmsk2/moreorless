@@ -1,0 +1,5 @@
+{
+    "Name": "Test copy region 1",
+    "TestDriverSource": "cregion1.asm",
+    "TestScript": "cregion1.lua"
+}
