@@ -172,7 +172,10 @@ _loop
     rts 
 
 
-; carry is set if length limit was reached
+; This routine splits a line into its words. For each word which was found an entry
+; is written to memory. This entry starts with a length byte which contains the length
+; of the word followed by the characters of said word.
+; carry is set if length limit for the target memory was reached.
 cleanUpLine
     lda LINE_BUFFER.len
     beq _doneOK
@@ -189,6 +192,8 @@ _return
     rts
 
 
+; This routine stores a stream of bytes (one byte per call) at consecutive addresses in
+; 21 bit address space.
 writeByteLines
 #storeByteLinear $8000, BASIC_PTR
 
@@ -247,6 +252,12 @@ copyLengthByte2Target .macro failAddr
     bcs \failAddr
 .endmacro
 
+; This routine searches for the next word in the LINE_BUFFER. It first skips
+; a whitespace prefix (if it is present). After that the characters of the
+; word are copied COPY_RES.curWord until the line ends or a whitespace character
+; is detected. Finally the contents of COPY_RES.curWord is written to target
+; memory.
+; Carry is set if the target memory has no room left for additional data.
 copyNextWordFromLine
     ; reset word buffer length and X register
     stz COPY_RES.curWord.len
@@ -313,6 +324,8 @@ initCopyRes
     rts
 
 
+; In target memory an entry with length byte of 0 signals the end of the
+; word list.
 writeEndMarker
     lda #0
     jsr writeOneByte
