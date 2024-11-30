@@ -30,7 +30,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.3.0"
+PROG_NAME .text "MOREORLESS 2.3.1"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -237,7 +237,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 43
+NUM_EDITOR_COMMANDS = 44
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -293,7 +293,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F1, endProg               ; Commodore +
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 43
+NUM_EDITOR_COMMANDS = 44
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -318,6 +318,7 @@ EDT_PAGE_UP      .dstruct KeyEntry_t, $020E, pageDown              ; Commodore +
 EDT_SET_MARK2    .dstruct KeyEntry_t, $02A0, setMark               ; Commodore + Space
 EDT_UNDENT_LINES .dstruct KeyEntry_t, $02B1, unIndentLines         ; Commodore + 1
 EDT_INDENT_LINES .dstruct KeyEntry_t, $02B2, indentLines           ; Commodore + 2
+EDT_REFORMAT_REG .dstruct KeyEntry_t, $02B3, reformatRegion        ; Commodore + 3
 EDT_BASIC_RENUM  .dstruct KeyEntry_t, $02E2, basicAutoNum          ; Commodore + b
 EDT_COPY_LINE    .dstruct KeyEntry_t, $02E3, copyLines             ; Commodore + c
 MEM_SET_SEARCH   .dstruct KeyEntry_t, $02E6, setSearchString       ; Commodore + f
