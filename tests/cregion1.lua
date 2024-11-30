@@ -1,6 +1,11 @@
 require (test_dir.."tools")
 require (test_dir.."reformat")
 
+-- This is a test for the subroutine clip.copyRegion. In each iteration a document of seven 
+-- lines is created in the assembly test driver. Then the clip.copyRegion subroutine is
+-- called for a section of this document. Finally it is checked whether the word list
+-- genereated by this subroutine matches the reference value as calculated in this script.
+
 line_1 = "1 this is the first line"
 line_2 = "2 this is the middle line and it is longer than the others by quite a bit. it still does not stop. it goes on and on and on ..."
 line_3 = "3 this is the third line and it should be bigger than 32 bytes"

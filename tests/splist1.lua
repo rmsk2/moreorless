@@ -1,5 +1,11 @@
 require (test_dir.."tools")
 
+-- This is a test for the subroutine list.split which splits a list into two pieces. The piece
+-- that is cut from the document list can then be found in clip.CLIP. In each iteration the
+-- test driver creates a list of seven lines which is then split as defined in test_table. After the
+-- call it is verified that the cut list segement has the expected length and that the used memory 
+-- matches the value given in the 3rd element of the test table.
+
 used_blocks = 19
 iterations = 0
 do_print = true
@@ -52,6 +58,7 @@ function assert()
         end
     end
 
+    -- get list heads for the document and the clipboard
     local h = parse_allocated_block(read_byte(addr_clip_head), read_byte(addr_clip_head+1), read_byte(addr_clip_head+2))
     local o = parse_allocated_block(read_byte(addr_org_list), read_byte(addr_org_list+1), read_byte(addr_org_list+2))
 
@@ -71,6 +78,7 @@ function assert()
         return false, string.format("Unexpected number of used blocks: %d instead of %d", state["numBlocks"] - state["numFreeBlocks"] , used_blocks_overall)
     end
 
+    -- check length of clipboard data
     local clip_len = read_word(load_address + 13)
     if clip_len ~=  test_table[iterations][6] then
         return false, string.format("Wrong clipboard length: %d", clip_len)

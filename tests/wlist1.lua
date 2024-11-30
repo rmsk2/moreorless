@@ -1,6 +1,11 @@
 require (test_dir.."tools")
 require (test_dir.."reformat")
 
+-- This is a text for the subroutine clip.createClipFromMemory. The assembly test driver calls
+-- this routine using word list data which is generated in the arrange() function. After the
+-- call it is checked whether the correct number of lines has been created by the subroutine. 
+-- Additionally for each created line it is verified that its length matches the expected value.
+
 line_1 = "1 this is the first line"
 line_2 = "2 this is the middle line and it is longer than the others by quite a bit. it still does not stop. it goes on and on and on ..."
 line_3 = "3 this is the third line and it should be bigger than 32 bytes"
