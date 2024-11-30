@@ -246,7 +246,7 @@ CopyRegion_t .struct
 
 COPY_REGION .dstruct CopyRegion_t
 
-; store a cleaned up version of the selected region at $028000
+; store a word list derived from the selected region at $028000
 ; Errors are signalled through COPY_REGION.copyOk.
 copyRegion
     jsr line.initCopyRes
