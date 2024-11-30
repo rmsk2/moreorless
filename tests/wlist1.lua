@@ -46,7 +46,7 @@ function assert()
     iterate_whole_list(list_head, check_func)
 
     if #reformatted_lines ~= 5 then
-        return false, string.format("Not expected number of reformatted lines %d", #reformatted_lines)
+        return false, string.format("Unexpected number of reformatted lines %d", #reformatted_lines)
     end
 
     local ref_lengths = {76, 77, 74, 79, 54}
