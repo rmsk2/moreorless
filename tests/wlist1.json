@@ -1,0 +1,5 @@
+{
+    "Name": "Test generating lines from wordlist",
+    "TestDriverSource": "wlist1.asm",
+    "TestScript": "wlist1.lua"
+}

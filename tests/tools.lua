@@ -150,8 +150,9 @@ function print_allocated_block(b)
     print("    ", b["data"])
 end
 
+
 function iterate_whole_list(b, iter)
-    done = false
+    local done = false
 
     while not done do
         iter(b)
