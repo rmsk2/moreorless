@@ -888,6 +888,7 @@ _done
     rts
 
 .if KEY_VAL == 0
+ALREADY_ON_LAST_LINE .byte 0
 ; --------------------------------------------------
 ; printStrClipped prints the string to which TXT_PTR3 points assuming
 ; that the number of characters to print is contained in the accu. This
@@ -898,6 +899,15 @@ _done
 ; --------------------------------------------------
 printStrClipped
     sta PRINT_STR.out_len
+
+    lda #BOOL_TRUE
+    sta ALREADY_ON_LAST_LINE
+    lda CURSOR_STATE.yPos
+    cmp CURSOR_STATE.yMaxMinus1
+    beq _stateOK
+    stz ALREADY_ON_LAST_LINE
+_stateOK
+
     ; save current state of scrolling "enablement"
     lda CURSOR_STATE.scrollOn
     pha
@@ -921,11 +931,11 @@ _print
     bra _printLoop 
 _doClip
     ; as clipping occurred we are at the following line, so we have to move
-    ; the cursor one line up unless we are already on the last line. On the last
-    ; line the cursor simply wraps around as we have turned of scrolling.
-    lda CURSOR_STATE.yPos
-    cmp CURSOR_STATE.yMaxMinus1
-    beq _done
+    ; the cursor one line up unless we were already on the last line when this
+    ; routine was called. On the last line the cursor simply wraps around as we have
+    ; turned of scrolling.
+    lda ALREADY_ON_LAST_LINE
+    bne _done
     dec CURSOR_STATE.yPos
     #moveCursor
 _done
@@ -940,6 +950,15 @@ _done
 ; --------------------------------------------------
 overwriteStrClipped
     sta PRINT_STR.out_len
+
+    lda #BOOL_TRUE
+    sta ALREADY_ON_LAST_LINE
+    lda CURSOR_STATE.yPos
+    cmp CURSOR_STATE.yMaxMinus1
+    beq _stateOK
+    stz ALREADY_ON_LAST_LINE
+_stateOK
+
     ; save current state of scrolling "enablement"
     lda CURSOR_STATE.scrollOn
     pha
@@ -970,11 +989,11 @@ _fillLine
     bra _fillLine
 _doClip
     ; as clipping occurred we are at the following line, so we have to move
-    ; the cursor one line up unless we are already on the last line. On the last
-    ; line the cursor simply wraps around as we have turned of scrolling.
-    lda CURSOR_STATE.yPos
-    cmp CURSOR_STATE.yMaxMinus1
-    beq _done
+    ; the cursor one line up unless we were already on the last line when this
+    ; routine was called. On the last line the cursor simply wraps around as we have
+    ; turned of scrolling.
+    lda ALREADY_ON_LAST_LINE
+    bne _done
     dec CURSOR_STATE.yPos
     #moveCursor
 _done
