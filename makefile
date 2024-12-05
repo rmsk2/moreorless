@@ -15,6 +15,8 @@ endif
 BINARY=mless
 KEYVAL=keyval
 
+FLASHBLOCKS = $(BINARY)01.bin $(BINARY)02.bin $(BINARY)03.bin
+
 .PHONY: all
 all: editor validator
 
@@ -31,6 +33,7 @@ clean:
 	$(RM) $(FORCE) $(KEYVAL)
 	$(RM) $(FORCE) $(KEYVAL).pgz
 	$(RM) $(FORCE) tests/bin/*.bin
+	$(RM) $(FORCE) *.bin
 
 .PHONY: upload
 upload: $(BINARY).pgz
@@ -55,3 +58,13 @@ $(KEYVAL): api.asm zeropage.asm setup.asm clut.asm arith16.asm txtio.asm khelp.a
 
 $(KEYVAL).pgz: $(KEYVAL)
 	$(PYTHON) make_pgz.py $(KEYVAL)
+
+.PHONY: flash
+flash: loader.bin $(FLASHBLOCKS)
+	python fnxmgr.zip --port /dev/ttyUSB0 --flash-bulk bulk.csv
+
+loader.bin: flashloader.asm
+	64tass --nostart -o loader.bin flashloader.asm
+
+$(FLASHBLOCKS): $(BINARY)
+	python3 pad_binary.py $(BINARY)
