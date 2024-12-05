@@ -62,7 +62,7 @@ $(KEYVAL).pgz: $(KEYVAL)
 
 .PHONY: flash
 flash: $(LOADER) blocks
-	$(PYTHON) fnxmgr.zip --port $(PORT) --flash-bulk bulk.csv
+	$(SUDO) $(PYTHON) fnxmgr.zip --port $(PORT) --flash-bulk bulk.csv
 
 $(LOADER): flashloader.asm
 	64tass --nostart -o $(LOADER) flashloader.asm
