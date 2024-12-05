@@ -1,6 +1,8 @@
 # Moreorless
 
 This is a simple text editor for the Foenix F256 family of modern retro computers. You can edit files in 80x60 or 80x30 text mode.
+[Here](/mless.txt) you will find a manual that that explains how to use `moreorless`. The manual itself has been created on an F256K
+using `moreorless`. If you are just interested in a command reference then here we go:
 The following commands are supported (remark: Use the `Windows` key instead of the `Foenix` key when using a PS/2 keyboard.)
 
 - Pressing `Cursor left` and `right` moves the cursor horizontally
