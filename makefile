@@ -14,6 +14,7 @@ endif
 
 BINARY=mless
 KEYVAL=keyval
+LOADER=loader.bin
 
 FLASHBLOCKS = $(BINARY)01.bin $(BINARY)02.bin $(BINARY)03.bin
 
@@ -60,11 +61,14 @@ $(KEYVAL).pgz: $(KEYVAL)
 	$(PYTHON) make_pgz.py $(KEYVAL)
 
 .PHONY: flash
-flash: loader.bin $(FLASHBLOCKS)
-	python fnxmgr.zip --port /dev/ttyUSB0 --flash-bulk bulk.csv
+flash: $(LOADER) blocks
+	$(PYTHON) fnxmgr.zip --port $(PORT) --flash-bulk bulk.csv
 
-loader.bin: flashloader.asm
-	64tass --nostart -o loader.bin flashloader.asm
+$(LOADER): flashloader.asm
+	64tass --nostart -o $(LOADER) flashloader.asm
 
-$(FLASHBLOCKS): $(BINARY)
-	python3 pad_binary.py $(BINARY)
+.PHONY: blocks
+blocks: $(FLASHBLOCKS)
+
+$(FLASHBLOCKS) &: $(BINARY)
+	$(PYTHON) pad_binary.py $(BINARY)

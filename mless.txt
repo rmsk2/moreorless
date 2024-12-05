@@ -1,0 +1,413 @@
+# About moreorless
+==================
+
+moreorless is a text viewer and editor for the Foenix F256K and F256 Jr. modern
+retro computers. It was written by Martin Grap (@mgr42 on the Foenix Discord
+server) in 2024. Its source code can be found on my github page at
+https://github.com/rmsk2/moreorless
+
+moreorless allows to view and edit files which are much larger than the 64K
+base memory of the Foenix machines, because it dynamically manages all of the
+RAM of the computers. The largest file I have successfully loaded had a size of
+286KB. But be aware that in order to edit files of that size a RAM expansion is
+needed. On an unexpanded machine the largest file I have tested had a size
+of 124KB.
+
+Apart from writing text files like this one, moreorless also offers some
+features for the BASIC programmer: If you refrain from using goto and gosub you
+can create SuperBASIC programs without using the screen editor. moreorless
+allows you to write your programs without line numbers and adds these either
+when you save the program or when you write the program to RAM from where it
+can be loaded by xload or run by xgo.
+
+moreorless can either be used in 80x60 or in 80x30 characters text mode and it
+provides four different colour schemes which in addition to the usual Foenix
+white on blue aim to emulate monochrome monitors of the 80's and 90's, i.e.
+green on black, white on black and amber on black. For good measure there is
+also a black on white mode.
+
+moreorless began as a simple text viewer and developed into an editor later.
+The name moreorless has its roots in that time. I also hope that it turned out
+to be a more or less usable editor.
+
+This document has been created using moreorless.
+
+# Starting moreorless
+=====================
+
+moreorless is primarily distributed as a .pgz file (mless.pgz) which can be
+executed from the BASIC screen or from DOS by typing '/- mless' after you have
+saved it to the internal SD card. Alternatively it is possible to store
+moreorless in the non volatile flash memory of your Fonix machine. More
+information about how to do that can be found on my github page. In this case
+you can omit the '-' from the command, i.e. you can use '/mless' to start the
+program from flash.
+
+After starting the program you have to select the drive number(0, 1 or 2),
+which will be used to load and save the current document.
+
+After that you can select the line ending character which is to be used when
+loading or saving a file. The default is a single line feed (LF) character but
+you can change that to a single carriage return (CR) character. In my
+experience there are some SuperBASIC programs which use CR as their line ending
+character. So if a file can not be loaded with LF as a line ending character
+try to use CR and vice versa.
+
+Finally you have to enter the name of a file to load. If you want to create a
+new document, leave the file name empty and simply press return. You will be
+prompted for a file name when you save the new document for the first time.
+
+
+# Issuing commands, entering and deleting characters
+====================================================
+
+moreorless currently offers 44 commands, which range from simply moving the
+cursor on the screen to stuff like search and replace. All commands are bound
+to certain key combinations and knowing these combinations is unfortunately
+neccessary to use moreorless, but one could say this is in line with the retro
+theme of the Foenix F256 platform ;-). If you press a key which is not bound to
+a command then the character representing this key on the Foenix is printed to
+the screen even if it is a graphics character.
+
+'inst del' or 'left arrow' always delete the character left of the cursor. This
+leads to an edge case in lines with 80 (or more) characters as the last charac-
+ter can not be deleted directly using these keys. In lines with 79 characters
+or less the cursor can be placed one column beyond the last character in order
+to make deletion of this character possible.
+
+
+# Inserting and deleting lines
+==============================
+
+In order to insert a new line simply press return. This command splits the
+current line at the column in which return was pressed and creates a new line.
+This line contains the text that was under and to the right of the cursor when
+return was pressed. This command preserves the current indentation level, i.e.
+if the line that is split is indented n characters the new line will also be
+indented to the same level.
+
+A line can be merged with the line above when 'inst del' or 'left arrow' is
+pressed in the first column of a line. This command does nothing if the merged
+line would contain more than 80 characters. Due to the merging of two lines the
+overall number of lines in the document decreases, so in essence this command
+can be used to delete one line at a time. Blocks of lines can also be cut from
+the document as explained below.
+
+
+# Navigation in your document
+=============================
+
+When editing text moving the cursor in all four directions is the most basic
+function of an editor. As one would expect these commands are bound to the
+cursor keys. The movement of the cursor in the document is limited by the
+length of the current line and the overall size of the document. This means you
+can not move the cursor beyond the last line of the document and the cursor is
+moved to the next line if you press 'crsr-right' at the end of the current
+line. The current line and column number are shown on the bottom left of the
+screen.
+
+As one would expect pressing 'crsr up' or 'crsr down' at the top or the bottom
+of the screen scrolls the contents of the currently visible section up or down.
+
+When moving the cursor vertically moreorless attempts to keep the column number
+constant. This may not be possible if the line above or below the current line
+has fewer characters than the current line but moreorless remembers this column
+number and places the cursor on that column again if a line is reached which
+has enough characters. This feature allows to keep the cursor on a certain
+indentation level when navigating the document even if there are lines which
+are shorter than this indentation level.
+
+When pressing 'clr home' the cursor is placed at the beginning of the current
+line and if you press 'Shift+clr home' it is moved to the end of the current
+line. 
+
+Another possibility to move the cursor is to use 'Ctrl+crsr left' and
+'Ctrl+crsr right'. The commands bound to these keys move the cursor one word to
+the left or the right, where a word is defined to be any string which does not
+contain a space character.
+
+The cursor can be moved a whole screen width up or down by pressing
+'Foenix+crsr up' or 'Foenix+crsr down'.
+
+Finally the cursor can be moved to a specific line number by pressing
+'Foenix+g'. The user is then prompted for a line number and after pressing
+return the cursor is moved to the entered line number in such a way that this
+line appears in the first line on the screen. This command can be aborted by
+pressing return without entering a number or by entering an invalid line
+number.
+
+There are two other commands which do not move the cursor in the document but
+the section of text which is visible on the screen. 'Ctrl+crsr up' changes the
+view in such a way that the current line is moved one line up in the visible
+section. Correspondingly 'Ctrl+crsr down' changes the view in such a way that
+the current line is moved one line down. These commands do nothing if changing
+the view would move the current line out of the visible section or if the view
+already displays the first (in case of 'Ctrl+crsr down') or the last (in case
+of 'Ctrl+crsr up') line of the document.
+
+
+# Saving a document, restarting and exiting moreorless
+======================================================
+
+If you want to save your document to SD card or an IEC drive press 'Foenix+s'.
+If this is the first time you save a new document you are prompted for a file
+name. If you want to abort this command simply press return. If the document
+has been saved before or has been loaded at program start 'Foenix+s' simply
+saves the document without any further interaction by the user using the
+previously established name.
+
+If you want to save a document under a new name press 'Alt+s'. You will then
+be prompted for a new name. As described above you can abort this command by
+entering an empty string.
+
+moreorless can be exited by pressing 'Alt+x'. If the document has unsaved
+changes the user is prompted for a confirmation. Please enter a non empty
+string to confirm quitting without saving or an empty string to continue to
+edit the dcocument. The fact that the document has unsaved changes is
+visualized by a '*' in the top right corner.
+
+If you want to stop editing a document and load or create a new one you can use
+'Alt+r'. If it is detected that the current document has unsaved changes you
+are prompted to confirm that these will be lost by this action in the same
+fashion as described above.
+
+
+# Features for SuperBASIC programmers
+=====================================
+
+If you refrain from using goto and gosub moreorless can be used to make crea-
+ting SuperBASIC programs more convenient. The idea is that you write your BASIC
+program and format it to your liking, for instance using proper identation in
+if, while, repeat or other blocks but without using line numbers. moreorless
+then auto generates the line numbers for you when you instruct it to either
+save a BASIC program to disk or to RAM (at location $028000).
+
+The command 'Alt+b' can be used to save a version of your document as a BASIC
+program with auto generated line numbers. After issuing the command you are
+prompted for a file name. If you want to abort the command you can enter an
+empty string by simply pressing return.
+
+While you can load and edit the created BASIC program in moreorless it is
+recommended that you treat the document without line numbers as the source code
+of the program and the generated BASIC program as a sort of .exe file which
+can be recreated from the source code at any time.
+
+Another way to create a SuperBASIC program from a document in moreorless is the
+command 'F8'. When pressing this key moreorless creates an auto generated BASIC
+program in RAM from where it can be "loaded" via the BASIC statement xload or
+started via the statement xgo after moreorless has been exited.
+
+
+# Using moreorless with a PS/2 keyboard
+=======================================
+
+This document assumes that you use moreorless on a F256K which has a builtin
+keyboard, but moreorless also runs on the F256 Jr. which has to be used with a
+PS/2 keyboard. If your Foenix is used with a PS/2 keyboard the key bindings
+are subtely different.
+
+The first reason is obvious: A standard keyboard has no Foenix key. The
+solution to this problem is simple: Use the Windows key instead of the Foenix
+key.
+
+Another problem arises with all command keys that require you to press the
+shift key on the F256K but not on a PS/2 keyboard. These are
+
+- 'F2', i.e. 'Shift+F1' on F256K but simply 'F2' on a PS/2 keyboard 
+- 'F4', i.e. 'Shift+F3' on F256K but simply 'F4' on a PS/2 keyboard
+- 'F8', i.e. 'Shift+F7' on F256K but simply 'F8' on a PS/2 keyboard
+- 'Shift+clr home' on F256K but simply 'Pos1' on a PS/2 keyboard
+
+One solution to this problem would be to build a version of moreorless which
+detects if it is running on a Jr. and modifies its key bindings accordingly.
+This would only put F256K users with PS/2 keyboards at a disadvantage. The
+other solution would be to build a version with PS/2 specific key bindings. But
+this would make distribution somewhat confusing.
+
+As a maybe temporary workaround you should use the 'Shift' key with the above
+key bindings when using a PS/2 keyboard. I.e. you should use 'Shift+F2',
+'Shift+F4', 'Shift+F8' and 'Shift+Pos1' instead of simply pressing the
+corresponding keys.
+
+
+# Changing the appearance of moreorless
+=======================================
+
+When you press 'F4' you can change the colour scheme used by moreorless by
+cycling through five alternatives:
+
+- White on blue
+- Green on black
+- Black on white
+- White on black
+- Amber on black
+
+Pressing F1 or F2 redraws the whole screen in either 80x60 (F1) or 80x30 (F2)
+text mode and returns the view to the start of the document. You can also use
+these commands to put the screen state management of moreorless in a known good
+state when you are experiencing corresponding problems due to potential bugs in
+the pogram.
+
+
+# Add indentation
+=================
+
+If you press the 'Tab' key two spaces are inserted and if you press 'Ctrl+Tab'
+four spaces are inserted. In many cases it is not neccessary to indent lines
+manually as moreorless supports auto indentation, i.e. if a new line is
+inserted it is indented to the same level as the preceeding line.
+
+
+# Copying, cutting and pasting simple text data
+===============================================
+
+As a (mental) cost saving measure (for its programmer) moreorless differenti-
+ates between a clipboard for simple text strings and a clipboard for blocks of
+full lines. The clipboard for simple strings can be controlled via the key
+bindings 'Ctrl+c', 'Ctrl+x' and 'Ctrl+v'. 
+
+These commands make use of a so called mark which can be set by 'Foenix+space'
+or 'Foenix+m'. If a mark is set this is visualized in the top right corner by
+an 'M' character. A mark is invalidated by any change to the document or at the
+end of an operation which made use of that mark.
+
+In order to copy or cut a simple string you first have to set a mark at the
+first character you want to select. You then move the cursor to the last
+character you want to copy or cut and either press 'Ctrl+c' or 'Ctrl+x'. Both
+of these characters have to be in the same line and are part of the selection.
+This allows for copying or cutting a single character.
+
+In lines which are shorter than 80 characters you can move the cursor beyond
+the last character. It has to be noted that this position is not a valid
+position for copying and cutting of simple strings. After setting the mark it
+is possibe to move the cursor either left or right to determine the last
+character of the selection.
+
+'Ctrl+v' can be used to insert a previously copied or cut text string into
+the current line. It has to be noted that this command will do nothing if the
+string which is currently in the clipboard would make the line longer than 80
+characters.
+
+
+# Copying, cutting, pasting blocks of full lines
+================================================
+
+Copying and pasting simple strings is one way to make use of a mark. The second
+way is to cut, copy and paste blocks of full lines. In order to select a block
+of lines you have to set a mark as described above in the first line which you
+want to select. After that you move the cursor to the last line of the block
+which you intend to select and press either 'Foenix+c' or 'Foenix+x' to copy or
+cut the block. The block includes the line where the mark has been set and the
+line where 'Foenix+c' or 'Foenix+x' was pressed. It is therefore possible to
+select a single line.
+
+In order to paste the previously copied or cut part of the document you have to
+press 'Foenix+v' at a position of your choice. The current contents of the
+clipboard is then inserted after the current line.
+
+In contrast to the selection of simple strings any column in a line is valid
+when copying or cutting blocks. It is not allowed to cut all lines in a
+document as a document has to contain at least one line even if that line has a
+length of zero characters.
+
+When you copy a block the selected part of the document is copied, which uses
+up additional memory. When you cut a part of the document no additional memory
+is used but no memory is freed either even though the corresponding lines have
+vanished from the document. The memory used for storing the clipboard contents
+is freed when the clipboard contents is either replaced by a different block or
+explicitly cleared by pressing 'Alt+k'.
+
+When copying or pasting a block it is possible that the additonal memory needed
+exceeds the amount of memory still available. moreoreless detects this
+situation and if it is detected allows you to save the current file contents in
+a file called 'mless~'.
+
+
+# Transforming blocks of full lines
+===================================
+
+You also can use a mark for selecting a block of full lines which you want to
+transform in some way. moreorless currently implements three types of transfor-
+mations:
+
+- Indent a block by two space characters (Press 'Foenix+Tab')
+- Unindent a block by two space characters (Press 'Alt+Tab')
+- reformat a block (Press 'Alt+f')
+
+In order to apply these transformations to a block of full lines you first set
+a mark in one line and then press one of the key combinations shown above on
+another line. After that all lines which are are part of the selection are
+indented one level, unindented a level or transformed to be justified as far as
+is possible on a fixed width text screen using a fixed width font. 
+
+The reformat transformation is especially useful for writing texts like this
+one (in contrast to writing source code). It allows to reformat a section in
+such a way that it appears as justified as possible. This simplifies working on
+documents which have been formatted to be justified but have to be changed
+afterwards in such a way that the justification is destroyed. 'Alt+f' can then
+be used to automatically reformat the document again. Lines created by the
+reformatting transformation are at most 79 characters long.
+
+
+# Search ...
+============
+
+In order to search in a document a search string has to be defined. This can be
+done in two ways. Either by presing 'Foenix+f' or by pressing 'Foenix+t'. In
+the first case the user is prompted for a string and in the second case the
+current contents of the simple string clipboard is set as a search string. That
+a search string has been defined is visualized in the bottom right corner by
+the text 'SRCH'.
+
+After setting a search string, pressing 'F3' searches for the previous
+occurrance of the search string in the text and 'F7' searches for the next
+occurrance. I.e. 'F3' searches in backwards direction and 'F7' in forwards
+direction.
+
+While a search is in progress a * character is shown in the upper left corner.
+If the search string is found then the text view is updated in such a way that
+the line where the string was found is the first line shown and the cursor is
+placed at the beginning of that occurance.
+
+If the search string is not found, then the text view is left unchanged after
+the * character disappears. The search string can be cleared by entering an
+empty string after typing 'Foenix+f' or by typing 'Foenix+u'. If the search
+string is cleared the text 'SRCH' in the bottom right corner disappears.
+
+
+# ... and replace
+=================
+
+The command bound to 'F5' first checks if the search string is found at the
+current cursor position and if it is found it replaces it with the value of the
+replace string. The replace string can be set by pressing 'Foenix+r'. As usual
+this command can be aborted by entering an empty string when prompted. As the
+default replace string is the empty string you should make sure that a proper
+replace string is set before using the 'F5' command. The command does nothing
+when no search string is set.
+
+To sum it up: In case you want to perform a search and replace operation you
+should first set the search string and after that the replace string. You then
+can then use 'F3' and 'F7' to search and if you want to replace a found
+occurrance you press 'F5'.
+
+
+# Lines longer than 80 characters
+=================================
+
+I have stated above that moreorless will not create lines which are longer than
+80 characters, so why is this section here? The answer is that even though
+moreorless does not allow to create new lines which are longer than 80 charac-
+ters it allows to load documents prepared by other means, maybe on your PC,
+which have lines that are longer than that limit. In fact it can load documents
+which have lines with a maximum length of up to 224 characters.
+
+If you browse such a document lines which are longer than 80 characters are
+visualized by a * after the 'Col xxx' text in the bottom line. Such lines can
+only be edited in limited ways. To be more precise such lines can be
+reformatted using 'Alt+f', they can be split by pressing 'return' and they can
+be shortened by pressing 'Inst del'.
+
+All other edit operations are not allowed. On top of that search operations
+will not find strings in those parts of the text which are not visible in
+moreorless.

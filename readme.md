@@ -233,7 +233,23 @@ the memory managment, linked list functionality and any other piece of the softw
 
 # Building the software
 
-You will need `64tass`, GNU `make` and a Python3 interpreter in order to build the software. Configure the
-port in the makefile in order to use the target `upload` which, after bulding the software, uploads it to
-your F256 via the USB debug port and executes it. Build the target `test` in order to run all test cases
-(this requires `6502profiler`).
+You will need `64tass`, GNU `make` (4.3 or later) and a Python3 interpreter in order to build the software. 
+Configure the port in the makefile in order to use the target `upload` which, after bulding the software, uploads 
+it to your F256 via the USB debug port and executes it. Build the target `test` in order to run all test cases
+(this requires `6502profiler`). Run `make clean` to clean all temporary files from the project directory. If you are
+under Windows you have to set the variable `WIN` to any value when invoking `make`, i.e. for instance 
+`make WIN=1 upload`.
+
+## Building `mless.pgz`
+
+If you want to build `moreorless` as a PGZ simply call `make` or (`make WIN=1`). This will build `mless.pgz` 
+and `keyval.pgz` and store these binaries in the project directory. 
+
+## Building `mless` and uploading it to flash
+
+`moreorless` can be built in conjunction with a loader which makes it possible to run the program from flash
+memory. In order to do that connect your development machine to the USB debug port of your Foenix, check that
+the `PORT` variable in the `makefile` matches the COM port you use and then call `make flash` (or `make WIN=1 flash`). 
+The `makefile` will build all binaries and write the loader as well as the progam binary to flash blocks 
+$17, $18, $19 and $1a. If this works you can now start `moreorless` from flash memory using the command 
+`/mless` at the BASIC or DOS prompt.
