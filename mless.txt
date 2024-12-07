@@ -353,11 +353,13 @@ reformatting transformation are at most 79 characters long.
 ============
 
 In order to search in a document a search string has to be defined. This can be
-done in two ways. Either by presing 'Foenix+f' or by pressing 'Foenix+t'. In
+done in two ways. Either by pressing 'Foenix+f' or by pressing 'Foenix+t'. In
 the first case the user is prompted for a string and in the second case the
 current contents of the simple string clipboard is set as a search string. That
 a search string has been defined is visualized in the bottom right corner by
-the text 'SRCH'.
+the text 'SRCH'. When 'Foenix+f' is used to enter a search string then a search
+for this string in forward direction is immediately started after the user has
+entered return. Searching is always performed in a case insensitive fashion.
 
 After setting a search string, pressing 'F3' searches for the previous
 occurrance of the search string in the text and 'F7' searches for the next
