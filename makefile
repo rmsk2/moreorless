@@ -36,6 +36,10 @@ clean:
 	$(RM) $(FORCE) tests/bin/*.bin
 	$(RM) $(FORCE) *.bin
 
+.PHONY: scrub
+scrub: zeroes.dat
+	$(SUDO) $(PYTHON) fnxmgr.zip --port $(PORT) --flash-bulk bulk_scrub.csv
+
 .PHONY: upload
 upload: $(BINARY).pgz
 	$(SUDO) $(PYTHON) fnxmgr.zip --port $(PORT) --run-pgz $(BINARY).pgz
