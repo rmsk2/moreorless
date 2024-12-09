@@ -30,7 +30,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.3.2"
+PROG_NAME .text "MOREORLESS 2.3.3"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "

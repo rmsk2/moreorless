@@ -170,8 +170,15 @@ _next
     ; goto next line
     #changeLine list.next
     bcc _lineLoop
+    bra _copyDone
 
 _cutOff
+    ; set BASIC_PTR and MMU to last byte of page LAST_PAGE_MEM_FREE-1.
+    ; This prevents that the last byte is written to page LAST_PAGE_MEM_FREE.
+    dec 12
+    #load16BitImmediate $8000+$1FFF, BASIC_PTR
+
+_copyDone
     ; write end of program character
     lda #128
     jsr writeBasicByte
