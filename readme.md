@@ -226,9 +226,9 @@ After that possibly
 - adding an undo feature (I have no clear plan on how to achieve this, yet)
 - adding some sort of mouse support
 
-I am at the moment optimistic that I can keep the overall length of the assmebled program below 32KB which
-would allow to continue to use the 8K block starting at $8000 as a window to map in RAM for the `xsave` feature
-or executable code of future extensions.
+I am trying to keep the overall length of the assmebled program below 32KB which would allow to continue to use 
+the 8K block starting at $8000 as a window to map in RAM for the `xsave` feature, a block of flash memory for 
+executable code or RAM for executable code which has been copied from a flash block.
 
 My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
 the memory managment, linked list functionality and any other piece of the software which is not part of the UI.
