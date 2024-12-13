@@ -30,7 +30,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.3.3"
+PROG_NAME .text "MOREORLESS 2.3.4"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -86,13 +86,7 @@ main
     ; initialize key handling code
     jsr toEditor
 
-    #printString TXT_STARS, len(TXT_STARS)
-    lda #$20
-    jsr txtio.charOut
-    #printString PROG_NAME, len(PROG_NAME)
-    lda #$20
-    jsr txtio.charOut
-    #printString TXT_STARS, len(TXT_STARS)
+    jsr titleBar
     jsr txtio.newLine
     jsr txtio.newLine
     #printString AUTHOR_TEXT, len(AUTHOR_TEXT)
@@ -1168,6 +1162,25 @@ toLeftLastLine
     lda CURSOR_STATE.yMaxMinus1
     sta CURSOR_STATE.yPos
     jsr txtio.cursorSet
+    rts
+
+
+titleBar
+    jsr txtio.reverseColor
+    #printString BLANKS_80, len(BLANKS_80)
+    lda #30
+    sta CURSOR_STATE.xPos
+    stz CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString PROG_NAME, len(PROG_NAME)
+    #printString SPACER, len(SPACER)
+    stz CURSOR_STATE.xPos
+    lda #58
+    sta CURSOR_STATE.yPos
+    jsr txtio.cursorSet
+    #printString BLANKS_80, len(BLANKS_80)
+    jsr txtio.reverseColor
+    jsr txtio.home
     rts
 
 
