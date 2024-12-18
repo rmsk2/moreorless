@@ -30,7 +30,7 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.3.4"
+PROG_NAME .text "MOREORLESS 2.3.5"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -58,8 +58,8 @@ TXT_ERROR .text "error"
 TXT_EXIT_WARN .text "There are unsaved changes. Enter a non empty string to exit anyway: "
 
 ; these have to remain in this sequence
-FILE_ALLOWED .text "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 0123456789_-./:#+~()!&@[]"
-TXT_ALLOWED  .text "=$%^\|*';?,{}<>"""
+FILE_ALLOWED .text "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 0123456789_-./:#+~()!&@[]*"
+TXT_ALLOWED  .text "=$%^\|';?,{}<>"""
 
 ENTER_REPLACE_STR .text "Replace string: "
 
