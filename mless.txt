@@ -151,10 +151,12 @@ of 'Ctrl+crsr up') line of the document.
 
 If you want to save your document to SD card or an IEC drive press 'Foenix+s'.
 If this is the first time you save a new document you are prompted for a file
-name. If you want to abort this command simply press return. If the document
-has been saved before or has been loaded at program start 'Foenix+s' simply
-saves the document without any further interaction by the user using the
-previously established name.
+name. The input routine is "drive aware", i.e. if the file name you entered
+starts with 0:, 1: or 2: then the digit is used as the drive number. If you
+want to abort this command simply press return. If the document has been saved
+before or has been loaded at program start 'Foenix+s' simply saves the document
+without any further interaction by the user using the previously established
+name and drive.
 
 If you want to save a document under a new name press 'Alt+s'. You will then
 be prompted for a new name. As described above you can abort this command by

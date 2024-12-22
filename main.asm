@@ -30,7 +30,8 @@ jmp main
 .include "copy_cut.asm"
 
 TXT_STARS .text "****************"
-PROG_NAME .text "MOREORLESS 2.3.5"
+FULL_NAME .text "MOREORLESS "
+PROG_NAME .text "v2.4.0"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -55,6 +56,7 @@ ENTER_FILE_NAME .text "File name: "
 ENTER_BASIC_NAME .text "BASIC file name: "
 SAVING_FILE .text "Saving file ... "
 TXT_ERROR .text "error"
+TXT_DRIVE_ONLY .text "Illegal file name"
 TXT_EXIT_WARN .text "There are unsaved changes. Enter a non empty string to exit anyway: "
 
 ; these have to remain in this sequence
@@ -1172,6 +1174,7 @@ titleBar
     sta CURSOR_STATE.xPos
     stz CURSOR_STATE.yPos
     jsr txtio.cursorSet
+    #printString FULL_NAME, len(FULL_NAME)
     #printString PROG_NAME, len(PROG_NAME)
     #printString SPACER, len(SPACER)
     stz CURSOR_STATE.xPos
@@ -1199,6 +1202,8 @@ printFixedProgData
     lda #len(PROG_NAME) + len(SPACER)
     clc
     adc TXT_FILE.nameLen
+    ; add drive specifier
+    adc #2
     cmp #77
     bcs _progNameOnly
     sta FIXED_TEMP
@@ -1221,6 +1226,12 @@ _centered
     lda INFO_LINE
     beq _noFileName
     #printString SPACER, len(SPACER)
+    lda TXT_FILE.drive
+    clc
+    adc #$30
+    jsr txtio.charOut
+    lda #58
+    jsr txtio.charOut
     #printStringLenMem FILE_NAME, TXT_FILE.nameLen
 _noFileName
     jsr showDocumentState
@@ -1803,10 +1814,56 @@ _procEnd
     jsr txtio.cursorOn
 
     lda NAME_LEN_TEMP
-    beq _finish
+    bne _testForDrive 
+    jmp _finish                                            ; file name given is empty => do  nothing
+_testForDrive
+    cmp #2
+    bcc _noDrivePresent                                    ; branch if NAME_LEN_TEMP < 2
+    ; Here the filename is at least 2 characters long
+    lda FILE_NAME_BUFFER + 1
+    cmp #58
+    bne _noDrivePresent                                    ; byte at index 1 is not a colon
+    lda FILE_NAME_BUFFER
+    cmp #$30
+    bcc _noDrivePresent                                    ; byte at index 0 is < '0'
+    cmp #$33
+    bcs _noDrivePresent                                    ; byre at index 0 is >= '3'
+    ; here the byte at index 1 is a colon and
+    ; for the value b of the byte at index 1 
+    ; $30 <= b <= $32 is true => we have a drive designation
+    lda NAME_LEN_TEMP
+    cmp #2
+    bne _driveAndFileNamePresent
+    ; we only have a drive designation. We do not want to allow
+    ; that
+    jsr printDriveError
+    jsr printFixedProgData
+    jsr toData    
+    bra _end
+_driveAndFileNamePresent    
+    #load16BitImmediate FILE_NAME_BUFFER + 2, memory.MEM_CPY.startAddress
+    #load16BitImmediate FILE_NAME, memory.MEM_CPY.targetAddress
+    ; set lo byte of new length
+    lda NAME_LEN_TEMP
+    sec
+    sbc #2
+    sta memory.MEM_CPY.length
+    ; This is also the file name length
+    sta TXT_FILE.nameLen
+    ; set hi byte of new length
+    stz memory.MEM_CPY.length + 1
+    jsr memory.memCpy
+    ; set new drive
+    lda FILE_NAME_BUFFER
+    sec
+    sbc #$30
+    sta TXT_FILE.drive
+    bra _fileAttributesSet
+_noDrivePresent
     #memCopyAddr FILE_NAME_BUFFER, FILE_NAME, NAME_LEN_TEMP
     lda NAME_LEN_TEMP
     sta TXT_FILE.nameLen
+_fileAttributesSet
     lda #BOOL_TRUE
     sta editor.STATE.fileNameSet
     jsr saveFileInt
@@ -1820,4 +1877,12 @@ _end
     #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
 _notDone
     sec    
+    rts
+
+
+printDriveError
+    jsr toLeftLastLine
+    jsr print80Blanks
+    jsr toLeftLastLine
+    #printString TXT_DRIVE_ONLY, len(TXT_DRIVE_ONLY)
     rts

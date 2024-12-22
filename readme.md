@@ -64,7 +64,8 @@ position where `Ctrl+x` was pressed into the clipboard and then deletes them fro
 - Pressing `Ctrl+v` inserts the contents of the clipboard (filled by `Ctrl+c` or `Ctrl+x`) at the current
 cursor position
 - Pressing `Alt+k` clears the clipboard and frees the associated memory
-- Pressing `Alt+s` allows you to save the dcoument under a new name
+- Pressing `Alt+s` allows you to save the dcoument under a new name. By prefixing the filename with 0:, 1: or 2:
+you can explicitly choose a drive
 - Pressing the `Tab` key inserts two spaces. `Ctrl+Tab` inserts four space characters
 - Pressing `Foenix+r` allows you to set a replace string. This string is used when performing a replace operation
 - Pressing `F5` tests whether the cursor is placed at the beginning of an occurance of the search string. If
