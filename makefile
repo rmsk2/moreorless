@@ -17,6 +17,7 @@ KEYVAL=keyval
 LOADER=loader.bin
 
 FLASHBLOCKS = $(BINARY)01.bin $(BINARY)02.bin $(BINARY)03.bin
+ZIP = mless_flash.zip
 
 .PHONY: all
 all: editor validator
@@ -35,6 +36,7 @@ clean:
 	$(RM) $(FORCE) $(KEYVAL).pgz
 	$(RM) $(FORCE) tests/bin/*.bin
 	$(RM) $(FORCE) *.bin
+	$(RM) $(FORCE) $(ZIP)
 
 .PHONY: scrub
 scrub: zeroes.dat
@@ -76,3 +78,7 @@ blocks: $(FLASHBLOCKS)
 
 $(FLASHBLOCKS) &: $(BINARY)
 	$(PYTHON) pad_binary.py $(BINARY)
+
+.PHONY: dist
+dist: $(LOADER) $(FLASHBLOCKS) $(BINARY).pgz
+	zip $(ZIP) $(LOADER) $(FLASHBLOCKS) bulk.csv
