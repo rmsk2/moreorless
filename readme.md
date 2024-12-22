@@ -256,4 +256,10 @@ memory. In order to do that connect your development machine to the USB debug po
 the `PORT` variable in the `makefile` matches the COM port you use and then call `make flash` (or `make WIN=1 flash`). 
 The `makefile` will build all binaries and write the loader as well as the progam binary to flash blocks 
 $17, $18, $19 and $1a. If this works you can now start `moreorless` from flash memory using the command 
-`/mless` at the BASIC or DOS prompt.
+`/mless` at the BASIC or DOS prompt. 
+
+# Binary distribution
+
+Alternatively all the files you need to write `moreorless` to the flash memory of your Foenix via FoenixMgr
+can be found in the file `mless_flash.zip` in the current release at: https://github.com/rmsk2/moreorless/releases.
+At the same location you will find a prebuilt binary `mless.pgz` which can be loaded via `pexec`.
