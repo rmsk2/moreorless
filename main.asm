@@ -28,10 +28,11 @@ jmp main
 .include "conv.asm"
 .include "basic_support.asm"
 .include "copy_cut.asm"
+.include "cli_parms.asm"
 
 TXT_STARS .text "****************"
 FULL_NAME .text "MOREORLESS "
-PROG_NAME .text "v2.4.0"
+PROG_NAME .text "v2.5.0"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -58,6 +59,8 @@ SAVING_FILE .text "Saving file ... "
 TXT_ERROR .text "error"
 TXT_DRIVE_ONLY .text "Illegal file name"
 TXT_EXIT_WARN .text "There are unsaved changes. Enter a non empty string to exit anyway: "
+TXT_INVALID_CLI .text "File name supplied on CLI is invalid", $0d, $0d
+TXT_FROM_CLI .text "Filename from CLI: "
 
 ; these have to remain in this sequence
 FILE_ALLOWED .text "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 0123456789_-./:#+~()!&@[]*"
@@ -71,6 +74,21 @@ main
     jsr setup.mmu
     jsr clut.init
     jsr initEvents
+    ; Check if we are in the process of a restart
+    lda editor.STATE.restartFlag
+    ; We have a restart. Skip evaluation of command line parameters
+    bne _isRestart
+    ; No restart => eval command line parameters
+    jsr commandline.evalCliParms
+    bra _continueStartUp
+_isRestart
+    ; User requested a restart. We make sure that the presence
+    ; of CLI paramters is not assumed by moreorless
+    lda #BOOL_FALSE
+    sta commandline.CLI_DATA.fileNamePresent
+_continueStartUp
+    ; startup stuff which has to be done independent
+    ; of the presence of CLI parameters
     jsr txtio.init80x60
     jsr txtio.cursorOn
 
@@ -85,6 +103,7 @@ main
     sta CURSOR_STATE.col 
     jsr txtio.clear
 
+
     ; initialize key handling code
     jsr toEditor
 
@@ -96,6 +115,37 @@ main
     jsr txtio.newLine
     jsr txtio.newLine
 
+    ; show error message if there was an unparseable file name on the CLI
+    lda commandline.CLI_DATA.fileNamePresent
+    beq _getParameters                                      ; no file name => no error
+    lda commandline.CLI_DATA.fileNameParsed
+    bne _useParams                                          ; There was a filename on the CLI and it was parseable => we use the filename
+    #printString TXT_INVALID_CLI, len(TXT_INVALID_CLI)      ; There was an unparseable file name on the CLI => show error message
+    bra _getParameters
+_useParams
+    lda commandline.CLI_DATA.nameLen
+    sta TXT_FILE.nameLen
+    ; set drive number from parameter
+    lda commandline.CLI_DATA.driveNumber
+    sta TXT_FILE.drive
+    ; set default LF line ending char
+    lda #$0A
+    sta LINE_END_CHAR
+    lda #$0D
+    sta ALT_LINE_END_CHAR
+    ; print file info
+    #printString TXT_FROM_CLI, len(TXT_FROM_CLI)
+    lda commandline.CLI_DATA.driveNumber
+    clc
+    adc #$30
+    jsr txtio.charOut
+    lda #58
+    jsr txtio.charOut
+    #printStringLenMem FILE_NAME, TXT_FILE.nameLen
+    jsr txtio.newLine
+    jsr txtio.newLine
+    bra _doLoad
+_getParameters
     jsr enterDrive
     jsr enterLineEnding
 
@@ -107,10 +157,18 @@ _restart
 _l2
     jsr txtio.newLine
     jsr txtio.newLine
+_doLoad
     #printString LOADING_FILE_TXT, len(LOADING_FILE_TXT)
     jsr editor.loadFile
     bcc _l1
     #printString FILE_ERROR, len(FILE_ERROR)
+    lda commandline.CLI_DATA.fileNamePresent
+    and commandline.CLI_DATA.fileNameParsed
+    beq _doDefault
+    lda #BOOL_FALSE
+    sta commandline.CLI_DATA.fileNamePresent
+    jmp _getParameters
+_doDefault
     jmp _restart
 _l1
     lda #BOOL_TRUE
@@ -1065,9 +1123,15 @@ _notDone
 
 enterLineEnding
     #printString LINE_END_CHAR_TEXT, len(LINE_END_CHAR_TEXT)
+    ; set default LF
+    lda #$0A
+    sta LINE_END_CHAR
+    lda #$0D
+    sta ALT_LINE_END_CHAR
     jsr waitForKey
     cmp #99
     bne _done
+    ; set CR
     lda #$0D
     sta LINE_END_CHAR
     lda #$0A
@@ -1827,7 +1891,7 @@ _testForDrive
     cmp #$30
     bcc _noDrivePresent                                    ; byte at index 0 is < '0'
     cmp #$33
-    bcs _noDrivePresent                                    ; byre at index 0 is >= '3'
+    bcs _noDrivePresent                                    ; byte at index 0 is >= '3'
     ; here the byte at index 1 is a colon and
     ; for the value b of the byte at index 1 
     ; $30 <= b <= $32 is true => we have a drive designation
