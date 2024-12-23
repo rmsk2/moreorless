@@ -4,7 +4,7 @@
 moreorless is a text viewer and editor for the Foenix F256K and F256 Jr. modern
 retro computers. It was written by Martin Grap (@mgr42 on the Foenix Discord
 server) in 2024. Its source code can be found on my github page at
-https://github.com/rmsk2/moreorless
+https://github.com/rmsk2/moreorless. Its current version is 2.5.0. 
 
 moreorless allows to view and edit files which are much larger than the 64K
 base memory of the Foenix machines, because it dynamically manages all of the
@@ -32,6 +32,7 @@ to be a more or less usable editor.
 
 This document has been created using moreorless.
 
+
 # Starting moreorless
 =====================
 
@@ -56,6 +57,14 @@ try to use CR and vice versa.
 Finally you have to enter the name of a file to load. If you want to create a
 new document, leave the file name empty and simply press return. You will be
 prompted for a file name when you save the new document for the first time.
+
+You can also start moreorless with additional command line parameters. I.e. you
+could do '/- mless file.txt' which would then open the file 'file.txt' on drive
+0 with LF as line ending character. One can also specify a drive number in the
+file name. For instance '/- mless 1:test.txt' would load the file 'test.txt'
+from drive 1. If moreorless is stored in flash memory then the '-' character
+can be omitted. When using CLI parameters the line ending character is always
+the default, i.e. LF.
 
 
 # Issuing commands, entering and deleting characters
