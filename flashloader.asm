@@ -29,7 +29,8 @@ KUPHeader
 .byte $01, $00, $00, $00                   ; reserved. All examples I looked at had a $01 in the first position
 .text "mless"                              ; name of the program used for starting
 .byte $00                                  ; zero termination for "mless"
-.byte $00                                  ; no parameter description, i.e. an empty string
+.text "<drv:file>"                   ; parameter description
+.byte $00                                  ; zero termination for parameter description
 .text "A simple text editor"               ; Comment shown in lsf
 .byte $00                                  ; zero termination for comment
 
