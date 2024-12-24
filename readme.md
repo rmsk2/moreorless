@@ -265,7 +265,9 @@ memory. In order to do that connect your development machine to the USB debug po
 the `PORT` variable in the `makefile` matches the COM port you use and then call `make flash` (or `make WIN=1 flash`). 
 The `makefile` will build all binaries and write the loader as well as the progam binary to flash blocks 
 $17, $18, $19 and $1a. If this works you can now start `moreorless` from flash memory using the command 
-`/mless` at the BASIC or DOS prompt. 
+`/mless` at the BASIC or DOS prompt. If you only want to create the binaries for flashing then build the
+target `dist`, i.e. call `make dist`. This will create a zip file called `mless_flash.zip` which contains the
+8K blocks and a `bulk.csv` for FoenixMgr.
 
 # Binary distribution
 
