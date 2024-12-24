@@ -27,7 +27,7 @@ evalCliParms
     stz BYTE_COUNT
 _loop
     ldy BYTE_COUNT
-    cpy LEN_PARMS_IN_BYTES
+    cpy #4
     beq _doneParams
     lda (CLI_PTR1), y
     sta CLI_PTR2

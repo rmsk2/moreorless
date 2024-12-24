@@ -64,7 +64,8 @@ could do '/- mless file.txt' which would then open the file 'file.txt' on drive
 file name. For instance '/- mless 1:test.txt' would load the file 'test.txt'
 from drive 1. If moreorless is stored in flash memory then the '-' character
 can be omitted. When using CLI parameters the line ending character is always
-the default, i.e. LF.
+the default, i.e. LF. When more than one parameter is specified only the first
+one is used.
 
 
 # Issuing commands, entering and deleting characters
