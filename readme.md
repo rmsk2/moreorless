@@ -224,10 +224,6 @@ before a search string is set.
 I am in the process to extend this software to make it a better text editor. I have finished implementing the
 features which I think are a must have. This is how I plan to progress:
 
-Short term goals
-
-- Support CLI parameters
-
 Midterm goals
 
 - use a beep to signal to the user that a command excecution is not possible
