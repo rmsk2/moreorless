@@ -241,12 +241,11 @@ the memory managment, linked list functionality and any other piece of the softw
 
 # Building the software
 
-You will need `64tass`, GNU `make` (4.3 or later) and a Python3 interpreter in order to build the software. 
-Configure the port in the `makefile` in order to use the target `upload` which, after bulding the software, uploads 
-it to your F256 via the USB debug port and executes it. Build the target `test` in order to run all test cases
-(this requires `6502profiler`). Run `make clean` to clean all temporary files from the project directory. If you are
-under Windows you have to set the variable `WIN` to any value when invoking `make`, i.e. for instance 
-`make WIN=1 upload`.
+You will need `64tass`, GNU `make` and a Python3 interpreter in order to build the software. Configure the port in the 
+`makefile` in order to use the target `upload` which, after bulding the software, uploads it to your F256 via the USB 
+debug port and executes it. Build the target `test` in order to run all test cases (this requires `6502profiler`). Run 
+`make clean` to clean all temporary files from the project directory. If you are under Windows you have to set the 
+variable `WIN` to any value when invoking `make`, i.e. for instance `make WIN=1 upload`.
 
 ## Building `mless.pgz`
 
