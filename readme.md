@@ -271,6 +271,5 @@ target `dist`, i.e. call `make dist`. This will create a zip file called `mless_
 
 # Binary distribution
 
-Alternatively all the files you need to write `moreorless` to the flash memory of your Foenix via FoenixMgr
-can be found in the file `mless_flash.zip` in the current release at: https://github.com/rmsk2/moreorless/releases.
-At the same location you will find a prebuilt binary `mless.pgz` which can be loaded via `pexec`.
+Alternatively `mless_flash.zip` and `mless.pgz` can be found as prebuilt binaries in the current release at: 
+https://github.com/rmsk2/moreorless/releases.
