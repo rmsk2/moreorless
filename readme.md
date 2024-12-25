@@ -95,6 +95,7 @@ a fixed font with a fixed line length on a text screen. `moreorless` formats lin
 characters. You should be aware that this feature uses the same temporary memory area as is needed for executing
 the `F8`-command. I.e. if you have created a BASIC program in RAM via `F8` and press `Alt+f` afterwards then the BASIC
 program gets overwritten.
+- Pressing `Foenix+l` moves the cursor to the end of the document
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
 When selecting a block of lines the line where the mark was set and the line where the corresponding command

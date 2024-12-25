@@ -67,9 +67,10 @@ PAYLOAD_START = $0300
 NUM_8K_BLOCKS = 3
 
 ; Please add an entry for each 8K data block which you want to copy from flash
-BLOCK1 .dstruct BlockSpec_t, $18, 0, 3, 32  ; copy flash block $18 (block number 64 + $18) to RAM block 0. Start at offset $0300
-BLOCK2 .dstruct BlockSpec_t, $19, 1, 0, 32  ; copy flash block $19 (block number 64 + $19) to RAM block 1. Start at offset $0000
-BLOCK3 .dstruct BlockSpec_t, $1a, 2, 0, 32  ; copy flash block $1A (block number 64 + $1A) to RAM block 2. Start at offset $0000
+BLOCK1 .dstruct BlockSpec_t, $17, 0, 3, 32  ; copy flash block $17 (block number 64 + $17) to RAM block 0. Start at offset $0300
+BLOCK2 .dstruct BlockSpec_t, $18, 1, 0, 32  ; copy flash block $18 (block number 64 + $18) to RAM block 1. Start at offset $0000
+BLOCK3 .dstruct BlockSpec_t, $19, 2, 0, 32  ; copy flash block $19 (block number 64 + $19) to RAM block 2. Start at offset $0000
+BLOCK4 .dstruct BlockSpec_t, $1a, 3, 0, 32  ; copy flash block $1A (block number 64 + $1A) to RAM block 3. Start at offset $0000
 
 
 loader
@@ -144,7 +145,7 @@ _copyPage
     sta MMU_SOURCE
     jmp PAYLOAD_START
 
-; pad the binary out to 8K
+; pad the binary out to $0300 bytes
 END_PROG
-    .fill LOAD_ADDRESS + $2000 - END_PROG - 1
+    .fill LOAD_ADDRESS + PAYLOAD_START - END_PROG - 1
     .byte 0

@@ -16,7 +16,7 @@ BINARY=mless
 KEYVAL=keyval
 LOADER=loader.bin
 
-FLASHBLOCKS = $(BINARY)01.bin $(BINARY)02.bin $(BINARY)03.bin
+FLASHBLOCKS = $(BINARY)01.bin $(BINARY)02.bin $(BINARY)03.bin $(BINARY)04.bin
 ZIP = mless_flash.zip
 
 .PHONY: all
@@ -67,7 +67,7 @@ $(KEYVAL).pgz: $(KEYVAL)
 	$(PYTHON) make_pgz.py $(KEYVAL)
 
 .PHONY: flash
-flash: $(LOADER) blocks
+flash: blocks
 	$(SUDO) $(PYTHON) fnxmgr.zip --port $(PORT) --flash-bulk bulk.csv
 
 $(LOADER): flashloader.asm
@@ -76,9 +76,9 @@ $(LOADER): flashloader.asm
 .PHONY: blocks
 blocks: $(FLASHBLOCKS)
 
-$(FLASHBLOCKS) &: $(BINARY)
-	$(PYTHON) pad_binary.py $(BINARY)
+$(FLASHBLOCKS) &: $(BINARY) $(LOADER)
+	$(PYTHON) pad_binary.py $(BINARY) $(LOADER)
 
 .PHONY: dist
 dist: $(LOADER) $(FLASHBLOCKS) $(BINARY).pgz
-	zip $(ZIP) $(LOADER) $(FLASHBLOCKS) bulk.csv
+	zip $(ZIP) $(FLASHBLOCKS) bulk.csv

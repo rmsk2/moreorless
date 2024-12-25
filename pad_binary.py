@@ -2,13 +2,15 @@ import sys
 
 BLOCK_LEN = 8192
 
-start_offset = 0x0300
-num_blocks = 3
+num_blocks = 4
 
 with open(sys.argv[1], "rb") as f:
     data = f.read()
 
-bytes_left = (num_blocks * BLOCK_LEN) - (len(data) + start_offset)
+with open(sys.argv[2], "rb") as f:
+    loader = f.read()
+
+bytes_left = (num_blocks * BLOCK_LEN) - (len(data) + len(loader))
 
 if bytes_left < 0:
     print("Binary is too large. We need another 8K block. Adapt this program, the loader, the makefile and bulk.csv")
@@ -16,7 +18,7 @@ if bytes_left < 0:
 
 print(f"Bytes left in last 8K block: {bytes_left}")
 
-data = bytearray(start_offset) + data
+data = loader + data
 end_pad = bytearray(BLOCK_LEN)
 data = data + end_pad[0:(num_blocks * BLOCK_LEN) - len(data)]
 

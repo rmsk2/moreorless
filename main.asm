@@ -32,7 +32,7 @@ jmp main
 
 TXT_STARS .text "****************"
 FULL_NAME .text "MOREORLESS "
-PROG_NAME .text "v2.5.2"
+PROG_NAME .text "v2.6.0"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -312,7 +312,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F8, endProg               ; ALT + x
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 44
+NUM_EDITOR_COMMANDS = 45
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -349,6 +349,7 @@ EDT_SET_MARK2    .dstruct KeyEntry_t, $0420, setMark               ; FNX + Space
 EDT_COPY_LINE    .dstruct KeyEntry_t, $0463, copyLines             ; FNX + c
 MEM_SET_SEARCH   .dstruct KeyEntry_t, $0466, setSearchString       ; FNX + f
 EDT_GOTO_LINE    .dstruct KeyEntry_t, $0467, gotoLine              ; FNX + g
+EDT_GOTO_END     .dstruct KeyEntry_t, $046C, gotoEnd               ; FNX + l
 EDT_SET_MARK     .dstruct KeyEntry_t, $046D, setMark               ; FNX + m
 EDT_SET_REPL     .dstruct KeyEntry_t, $0472, setReplaceString      ; FNX + r
 EDT_SAVE_DOC     .dstruct KeyEntry_t, $0473, saveFile              ; FNX + s
@@ -368,7 +369,7 @@ MEM_EXIT         .dstruct KeyEntry_t, $02F1, endProg               ; Commodore +
 
 
 ; There can be up to 64 commands at the moment
-NUM_EDITOR_COMMANDS = 44
+NUM_EDITOR_COMMANDS = 45
 EDITOR_COMMANDS
 ; Non search commands. These have to be sorted by ascending key codes otherwise
 ; the binary search fails.
@@ -383,6 +384,7 @@ EDT_REPLACE      .dstruct KeyEntry_t, $0085, replaceString         ; F5
 MEM_SEARCH_UP    .dstruct KeyEntry_t, $0087, searchUp              ; F7
 EDT_COPY_TXT     .dstruct KeyEntry_t, $0103, copyInLine            ; CTRL + c
 EDT_WORD_RIGHT   .dstruct KeyEntry_t, $0106, toNextWord            ; CTRL + CrsrRight
+EDT_GOTO_END     .dstruct KeyEntry_t, $010C, gotoEnd               ; CTRL + l
 EDT_MV_SCR_DOWN  .dstruct KeyEntry_t, $010E, moveWindowDown        ; CTRL + CrsrDown
 EDT_TAB          .dstruct KeyEntry_t, $0111, insertTab             ; CTRL + 1
 EDT_LONG_TAB     .dstruct KeyEntry_t, $0112, insertTabTab          ; CTRL + 2
@@ -1078,6 +1080,15 @@ _doNothing
     #move16Bit editor.STATE.inputVector, keyrepeat.FOCUS_VECTOR
 _notDone
     sec    
+    rts
+
+
+gotoEnd
+    #move16Bit list.LIST.Length, MOVE_OFFSET
+    #sub16Bit editor.STATE.curLine, MOVE_OFFSET
+    jsr moveOffset
+    jsr updateProgData
+    jsr printScreen
     rts
 
 
