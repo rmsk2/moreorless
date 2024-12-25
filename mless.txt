@@ -4,7 +4,7 @@
 moreorless is a text viewer and editor for the Foenix F256K and F256 Jr. modern
 retro computers. It was written by Martin Grap (@mgr42 on the Foenix Discord
 server) in 2024. Its source code can be found on my github page at
-https://github.com/rmsk2/moreorless. Its current version is 2.5.0. 
+https://github.com/rmsk2/moreorless. Its current version is 2.5.2. 
 
 moreorless allows to view and edit files which are much larger than the 64K
 base memory of the Foenix machines, because it dynamically manages all of the
