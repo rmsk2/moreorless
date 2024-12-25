@@ -7,6 +7,9 @@ WHITE_ON_BLACK = 3
 AMBER_ON_BLACK = 4
 
 RESTART_INVALID = 2
+FILE_OPEN_ERR  = 1
+FILE_LINE_TOO_LONG_ERROR = 2
+FILE_LIST_ERROR = 3
 
 MarkState_t .struct 
     line    .word 0
@@ -32,6 +35,7 @@ EditState_t .struct
     maxCol           .byte 0
     indentLevel      .byte INDENT_SIZE
     restartFlag      .byte BOOL_FALSE
+    lastFileReadErr  .byte 0
 .endstruct
 
 MAX_FILE_LENGTH = 100
@@ -113,6 +117,8 @@ _errorDuringOpen
 ; carry is set if loading file failed
 ; ToDo: Expand tab characters to four blanks
 loadFile
+    ; reset error variable
+    stz STATE.lastFileReadErr
     ; set mode to read
     lda #MODE_READ
     sta TXT_FILE.mode
@@ -125,7 +131,11 @@ _created
     sta ALREADY_CREATED
     load16BitImmediate TXT_FILE, FILEIO_PTR1
     jsr disk.waitOpen
-    bcs _error    
+    bcc _doBegin
+    lda #FILE_OPEN_ERR
+    sta STATE.lastFileReadErr
+    bra _error
+_doBegin
     jsr iohelp.begin
     bcs _error
 _lineLoop
@@ -133,11 +143,15 @@ _lineLoop
     bcc _process
     jsr iohelp.isSuccessfullyFinished
     bcs _doneOK
+    lda #FILE_LINE_TOO_LONG_ERROR
+    sta STATE.lastFileReadErr
     jmp _errorClose
 _process
     jsr addLine
-    bcs _errorClose
-    bra _lineLoop
+    bcc _lineLoop
+    lda #FILE_LIST_ERROR
+    sta STATE.lastFileReadErr
+    bra _errorClose
 _doneOK
     jsr disk.waitClose
     jsr list.rewind

@@ -32,13 +32,16 @@ jmp main
 
 TXT_STARS .text "****************"
 FULL_NAME .text "MOREORLESS "
-PROG_NAME .text "v2.5.1"
+PROG_NAME .text "v2.5.2"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
 SPACER .text " - "
-FILE_ERROR .text "File read error. Please try again!", $0d, $0d
-DONE_TXT .text $0d, "moreoreless has stopped. Please reset your machine if you see this", $0d
+TXT_FILE_OPEN_ERROR .text "File not found. "
+TXT_LINE_TOO_LONG_ERROR .text "Error. A line is longer than 224 bytes. "
+TXT_FILE_LIST_ERROR .text "Internal error. "
+TXT_TRY_AGAIN .text "Please try again!", $0d, $0d
+DONE_TXT .text $0d, "moreoreless has stopped. All is well. Please reset your machine.", $0d
 LINES_TXT    .text " Lines | "
 OF_TEXT .text " of "
 BLOCK_FREE_TXT    .text " KB free | "
@@ -161,7 +164,7 @@ _doLoad
     #printString LOADING_FILE_TXT, len(LOADING_FILE_TXT)
     jsr editor.loadFile
     bcc _l1
-    #printString FILE_ERROR, len(FILE_ERROR)
+    jsr printFileReadError
     lda commandline.CLI_DATA.fileNamePresent
     and commandline.CLI_DATA.fileNameParsed
     beq _doDefault
@@ -196,6 +199,24 @@ _reset
     jsr exitToBasic
     ; I guess we never get here ....
     jsr sys64738
+    rts
+
+
+printFileReadError
+    lda editor.STATE.lastFileReadErr
+    cmp #FILE_OPEN_ERR
+    bne _checkLineTooLOng
+    #printString TXT_FILE_OPEN_ERROR, len(TXT_FILE_OPEN_ERROR)
+    bra _tryAgain
+_checkLineTooLOng
+    cmp #FILE_LINE_TOO_LONG_ERROR
+    bne _default
+    #printString TXT_LINE_TOO_LONG_ERROR, len(TXT_LINE_TOO_LONG_ERROR)
+    bra _tryAgain
+_default
+    #printString TXT_FILE_LIST_ERROR, len(TXT_FILE_LIST_ERROR)
+_tryAgain
+    #printString TXT_TRY_AGAIN, len(TXT_TRY_AGAIN)
     rts
 
 
