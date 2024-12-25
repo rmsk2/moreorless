@@ -233,9 +233,9 @@ After that possibly
 - adding some sort of mouse support
 
 I am trying to keep the overall length of the assembled main program below 32KB which would allow to continue 
-to use the 8K block starting at $8000 as a window to map in RAM for the `xsave` feature, a block of flash memory for
-executable code or RAM for executable code which has been copied from a flash block. The RAM block mentioned in the
-last sentence could be the block 27 which is currently not used for `xsave` and `Alt-f`.
+to use the 8K block starting at $8000 as a window to map in RAM, a block of flash memory for executable code or RAM 
+for executable code which has been copied from a flash block. The RAM block mentioned in the last sentence could be the 
+block 27 which is currently not used for `xsave` and `Alt-f`.
 
 My 6502 simulator [`6502profiler`](https://github.com/rmsk2/6502profiler) has been eminently useful in testing
 the memory managment, linked list functionality and any other piece of the software which is not part of the UI.
