@@ -64,7 +64,7 @@ load16BitImmediate .macro  val, addr
 ; Start address of your program
 PAYLOAD_START = $0300
 ; Number of 8K blocks to copy from flash
-NUM_8K_BLOCKS = 3
+NUM_8K_BLOCKS = 4
 
 ; Please add an entry for each 8K data block which you want to copy from flash
 BLOCK1 .dstruct BlockSpec_t, $17, 0, 3, 32  ; copy flash block $17 (block number 64 + $17) to RAM block 0. Start at offset $0300
@@ -138,11 +138,19 @@ _copyPage
     lda COUNT_BLOCK
     cmp #NUM_8K_BLOCKS
     bne _loop8K
-    ; restore MMU
-    lda #MMU_TARGET - 8
-    sta MMU_TARGET
-    lda #MMU_SOURCE - 8
-    sta MMU_SOURCE
+
+    ; set MMU to expected values for RAM blocks 0-4. We don't touch block 5
+    ; because this is where this program currently executes. The RAM block 5
+    ; is set by the main program.
+    #load16BitImmediate $0008, PTR_TARGET
+    ldy #0
+_loopMMU
+    tya
+    sta (PTR_TARGET), y
+    iny
+    cpy #5
+    bne _loopMMU
+
     jmp PAYLOAD_START
 
 ; pad the binary out to $0300 bytes
