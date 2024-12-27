@@ -69,46 +69,17 @@ _done
 
 parseName
     stz CLI_DATA.fileNameParsed
+    #load16BitImmediate FILE_NAME, PATH_PTR
     lda CLI_DATA.nameLen
-    beq _done                                        ; a zero length name is not OK
-    cmp #2
-    bcs _atLeastTwo
-    bra _success                                     ; file name has length one => This is OK
-_atLeastTwo
-    lda FILE_NAME + 1
-    cmp #58
-    bne _success                                    ; byte at index 1 is not a colon
-    lda FILE_NAME
-    cmp #$30
-    bcc _success                                    ; byte at index 0 is < '0'
-    cmp #$33
-    bcs _success                                    ; byte at index 0 is >= '3'
-    ; we have a valid drive number and a colon
-    lda CLI_DATA.nameLen
-    cmp #2
-    beq _done                                       ; we only have a drive designation => this is not OK
-    ; convert drive number
-    lda FILE_NAME
-    sec
-    sbc #$30
-    sta CLI_DATA.driveNumber
-    ; remove drive designation from file name
-    #load16BitImmediate FILE_NAME, MEM_PTR1
-    ldy CLI_DATA.nameLen
-    lda #0
-    jsr memory.vecShiftleft
-    dec CLI_DATA.nameLen
-    ldy CLI_DATA.nameLen
-    lda #0
-    jsr memory.vecShiftleft
-    dec CLI_DATA.nameLen
-    bra _setSuccess
-_success
-    stz CLI_DATA.driveNumber                         ; set drive number 0
-_setSuccess
+    ; default drive is zero
+    ldx #0
+    jsr iohelp.parseFileName
+    bcs _error
+    sta CLI_DATA.nameLen
+    stx CLI_DATA.driveNumber
     lda #BOOL_TRUE
     sta CLI_DATA.fileNameParsed
-_done
+_error
     rts
 
 .endnamespace

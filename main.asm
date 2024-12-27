@@ -1790,6 +1790,8 @@ basicXsave
 
 
 basicAutoNum
+    lda editor.STATE.fileNameSet
+    beq _doNothing
     jsr toProg
 
     ; clear last line
@@ -1804,6 +1806,7 @@ basicAutoNum
     #inputStringNonBlocking basic.BASIC_NAME, 78 - len(ENTER_BASIC_NAME), FILE_ALLOWED, len(FILE_ALLOWED)
     #move16Bit keyrepeat.FOCUS_VECTOR, editor.STATE.inputVector
     #load16BitImmediate doAutoNum, keyrepeat.FOCUS_VECTOR
+_doNothing
     rts
 
 
@@ -1824,6 +1827,19 @@ _procEnd
     lda basic.BASIC_FILE.nameLen
     beq _doNothing
 
+    #load16BitImmediate basic.BASIC_NAME, PATH_PTR
+    lda basic.BASIC_FILE.nameLen
+    ldx TXT_FILE.drive
+    jsr iohelp.parseFileName
+    bcc _fileNameOK
+    ; file name was invalid
+    jsr toLeftLastLine
+    #printString TXT_DRIVE_ONLY, len(TXT_DRIVE_ONLY)
+    jsr toData
+    bra _finished
+_fileNameOK
+    sta basic.BASIC_FILE.nameLen
+    stx basic.BASIC_FILE.drive
     ; print saving file message
     jsr toLeftLastLine
     #printString SAVING_FILE, len(SAVING_FILE)

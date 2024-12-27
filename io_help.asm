@@ -194,4 +194,65 @@ _notFound
     clc
     rts
 
+Path_t .struct 
+    drive    .byte 0
+    len      .byte 0
+.endstruct
+
+PATH_HELP .dstruct Path_t
+
+; In: Pointer to raw file name in PATH_PTR
+; In: Length of raw file name in accu
+; In: Default drive number in X-reg
+; Out: Modified path pointer without drive specification
+; Out: Length of potentially modified file name in accu
+; Out: Drive number in x-reg
+; carry is set if file name is invalid, i.e. only contains a drive specification
+parseFileName
+    sta PATH_HELP.len
+    stx PATH_HELP.drive
+
+    lda PATH_HELP.len
+    beq _doneErr                                     ; a zero length name is not OK
+    cmp #2
+    bcs _atLeastTwo
+    bra _success                                     ; file name has length one => This is OK
+_atLeastTwo
+    ldy #1
+    lda (PATH_PTR), y
+    cmp #58
+    bne _success                                    ; byte at index 1 is not a colon
+    lda (PATH_PTR)
+    cmp #$30
+    bcc _success                                    ; byte at index 0 is < '0'
+    cmp #$33
+    bcs _success                                    ; byte at index 0 is >= '3'
+    ; we have a valid drive number and a colon
+    lda PATH_HELP.len
+    cmp #2
+    beq _doneErr                                    ; we only have a drive designation => this is not OK
+    ; convert drive number
+    lda (PATH_PTR)
+    sec
+    sbc #$30
+    sta PATH_HELP.drive
+    ; remove drive designation from file name
+    #move16Bit PATH_PTR, MEM_PTR1
+    ldy PATH_HELP.len
+    lda #0
+    jsr memory.vecShiftleft
+    dec PATH_HELP.len
+    ldy PATH_HELP.len
+    lda #0
+    jsr memory.vecShiftleft
+    dec PATH_HELP.len
+_success
+    lda PATH_HELP.len
+    ldx PATH_HELP.drive
+    clc
+    rts
+_doneErr
+    sec
+    rts
+
 .endnamespace

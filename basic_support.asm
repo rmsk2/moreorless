@@ -53,9 +53,6 @@ autoRenumber
     load16BitImmediate BASIC_FILE, FILEIO_PTR1
     ; initialize FileState struct
 
-    lda TXT_FILE.drive
-    sta BASIC_FILE.drive
-
     ; resest EOF state
     lda #EOF_NOT_REACHED
     sta BASIC_FILE.eofReached
