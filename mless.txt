@@ -4,7 +4,7 @@
 moreorless is a text viewer and editor for the Foenix F256K and F256 Jr. modern
 retro computers. It was written by Martin Grap (@mgr42 on the Foenix Discord
 server) in 2024. Its source code can be found on my github page at
-https://github.com/rmsk2/moreorless. Its current version is 2.6.1.
+https://github.com/rmsk2/moreorless. Its current version is 2.6.2. 
 
 moreorless allows to view and edit files which are much larger than the 64K
 base memory of the Foenix machines, because it dynamically manages all of the
@@ -163,11 +163,13 @@ of 'Ctrl+crsr up') line of the document.
 If you want to save your document to SD card or an IEC drive press 'Foenix+s'.
 If this is the first time you save a new document you are prompted for a file
 name. The input routine is "drive aware", i.e. if the file name you entered
-starts with 0:, 1: or 2: then the digit is used as the drive number. If you
-want to abort this command simply press return. If the document has been saved
-before or has been loaded at program start 'Foenix+s' simply saves the document
-without any further interaction by the user using the previously established
-name and drive.
+starts with 0:, 1: or 2: then the digit is used as the drive number. The
+default drive number is the one displayed in the title bar.
+
+If you want to abort a save command simply press return. If the document has
+been saved before or has been loaded at program start 'Foenix+s' simply saves
+the document without any further interaction by the user using the previously
+established name and drive.
 
 If you want to save a document under a new name press 'Alt+s'. You will then
 be prompted for a new name. As described above you can abort this command by
@@ -198,7 +200,10 @@ save a BASIC program to disk or to RAM (at location $028000).
 The command 'Alt+b' can be used to save a version of your document as a BASIC
 program with auto generated line numbers. After issuing the command you are
 prompted for a file name. If you want to abort the command you can enter an
-empty string by simply pressing return.
+empty string by simply pressing return. The file name can contain a drive
+specifier in the form of a drive number (0, 1 or 2) followed by a colon. When
+the drive specifier is omitted the generated BASIC program is stored on the
+same drive as the source file.
 
 While you can load and edit the created BASIC program in moreorless it is
 recommended that you treat the document without line numbers as the source code
