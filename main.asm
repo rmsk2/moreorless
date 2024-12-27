@@ -32,7 +32,7 @@ jmp main
 
 TXT_STARS .text "****************"
 FULL_NAME .text "MOREORLESS "
-PROG_NAME .text "v2.6.1"
+PROG_NAME .text "v2.6.2"
 AUTHOR_TEXT .text "Written by Martin Grap (@mgr42) in 2024", $0D
 GITHUB_URL .text "See also https://github.com/rmsk2/moreorless", $0D, $0D
 SPACER_COL .text ", Col "
@@ -1920,62 +1920,29 @@ saveDocumentAs
 processSaveFile
     jsr txtio.getStringFocusFunc
     bcc _procEnd
-    jmp _notDone
+    bra _notDone
 _procEnd
     sta NAME_LEN_TEMP
     jsr txtio.cursorOn
 
     lda NAME_LEN_TEMP
-    bne _testForDrive 
-    jmp _finish                                            ; file name given is empty => do  nothing
-_testForDrive
-    cmp #2
-    bcc _noDrivePresent                                    ; branch if NAME_LEN_TEMP < 2
-    ; Here the filename is at least 2 characters long
-    lda FILE_NAME_BUFFER + 1
-    cmp #58
-    bne _noDrivePresent                                    ; byte at index 1 is not a colon
-    lda FILE_NAME_BUFFER
-    cmp #$30
-    bcc _noDrivePresent                                    ; byte at index 0 is < '0'
-    cmp #$33
-    bcs _noDrivePresent                                    ; byte at index 0 is >= '3'
-    ; here the byte at index 1 is a colon and
-    ; for the value b of the byte at index 1 
-    ; $30 <= b <= $32 is true => we have a drive designation
+    bne _parseFileName
+    bra _finish                                            ; file name given is empty => do  nothing
+_parseFileName
+    #load16BitImmediate FILE_NAME_BUFFER, PATH_PTR
     lda NAME_LEN_TEMP
-    cmp #2
-    bne _driveAndFileNamePresent
-    ; we only have a drive designation. We do not want to allow
-    ; that
+    ldx TXT_FILE.drive
+    jsr iohelp.parseFileName
+    bcc _fileNameParsed
     jsr printDriveError
     jsr printFixedProgData
     jsr toData    
     bra _end
-_driveAndFileNamePresent    
-    #load16BitImmediate FILE_NAME_BUFFER + 2, memory.MEM_CPY.startAddress
-    #load16BitImmediate FILE_NAME, memory.MEM_CPY.targetAddress
-    ; set lo byte of new length
-    lda NAME_LEN_TEMP
-    sec
-    sbc #2
-    sta memory.MEM_CPY.length
-    ; This is also the file name length
+_fileNameParsed
+    sta NAME_LEN_TEMP
     sta TXT_FILE.nameLen
-    ; set hi byte of new length
-    stz memory.MEM_CPY.length + 1
-    jsr memory.memCpy
-    ; set new drive
-    lda FILE_NAME_BUFFER
-    sec
-    sbc #$30
-    sta TXT_FILE.drive
-    bra _fileAttributesSet
-_noDrivePresent
+    stx TXT_FILE.drive
     #memCopyAddr FILE_NAME_BUFFER, FILE_NAME, NAME_LEN_TEMP
-    lda NAME_LEN_TEMP
-    sta TXT_FILE.nameLen
-_fileAttributesSet
     lda #BOOL_TRUE
     sta editor.STATE.fileNameSet
     jsr saveFileInt

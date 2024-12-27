@@ -130,12 +130,16 @@ _doProc
     bcs simpleKeyEventLoop
     rts
 
-
+XDEV .text "xdev"
+.byte 0
 exitToBasic
     jsr txtio.init80x60
-    lda #65
-    sta kernel.args.run.block_id
-    jsr kernel.RunBlock
+
+    lda #<XDEV
+    sta kernel.args.buf
+    lda #>XDEV
+    sta kernel.args.buf+1
+    jsr kernel.RunNamed
     rts
 
 
