@@ -150,7 +150,9 @@ _useParams
     bra _doLoad
 _getParameters
     jsr enterDrive
+    bcs _exit
     jsr enterLineEnding
+    bcs _exit
 
 _restart
     jsr keyrepeat.init
@@ -1153,6 +1155,8 @@ _notDone
     rts 
 
 
+RUN_STOP = $03
+
 enterLineEnding
     #printString LINE_END_CHAR_TEXT, len(LINE_END_CHAR_TEXT)
     ; set default LF
@@ -1161,6 +1165,8 @@ enterLineEnding
     lda #$0D
     sta ALT_LINE_END_CHAR
     jsr waitForKey
+    cmp #RUN_STOP
+    beq _break
     cmp #99
     bne _done
     ; set CR
@@ -1176,8 +1182,11 @@ _out
     jsr txtio.charOut
     jsr txtio.newLine
     jsr txtio.newLine
+    clc
     rts
-
+_break
+    sec
+    rts
 
 enterDrive
     #printString ENTER_DRIVE, len(ENTER_DRIVE)
@@ -1192,6 +1201,8 @@ _c31
 _c32
     cmp #$32
     beq _selected
+    cmp #RUN_STOP
+    beq _break
     jsr txtio.newLine
     jsr txtio.newLine
     jmp enterDrive
@@ -1203,6 +1214,10 @@ _selected
     sta TXT_FILE.drive
     jsr txtio.newLine
     jsr txtio.newLine
+    clc
+    rts
+_break
+    sec
     rts
 
 
