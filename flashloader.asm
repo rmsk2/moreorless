@@ -15,6 +15,10 @@ SOURCE_ADDRESS = $8000
 TARGET_ADDRESS = $6000
 MMU_SOURCE     = (SOURCE_ADDRESS / $2000) + 8
 MMU_TARGET     = (TARGET_ADDRESS / $2000) + 8
+; Start address of your program
+PAYLOAD_START = $0300
+; Number of 8K blocks to copy from flash
+NUM_8K_BLOCKS = 4
 
 * = LOAD_ADDRESS
 .cpu "w65c02"
@@ -23,7 +27,7 @@ MMU_TARGET     = (TARGET_ADDRESS / $2000) + 8
 KUPHeader
 .byte $F2                                  ; signature
 .byte $56                                  ; signature
-.byte $04                                  ; length of program in consecutive 8K flash blocks
+.byte NUM_8K_BLOCKS                        ; length of program in consecutive 8K flash blocks
 .byte LOAD_ADDRESS / $2000                 ; block in 16 bit address space to which the first block is mapped
 .word loader                               ; start address of program
 .byte $01, $00, $00, $00                   ; reserved. All examples I looked at had a $01 in the first position
@@ -61,10 +65,6 @@ load16BitImmediate .macro  val, addr
     sta \addr+1
 .endmacro
 
-; Start address of your program
-PAYLOAD_START = $0300
-; Number of 8K blocks to copy from flash
-NUM_8K_BLOCKS = 4
 
 ; Please add an entry for each 8K data block which you want to copy from flash
 BLOCK1 .dstruct BlockSpec_t, $17, 0, 3, 32  ; copy flash block $17 (block number 64 + $17) to RAM block 0. Start at offset $0300
