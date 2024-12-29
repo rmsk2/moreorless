@@ -23,7 +23,7 @@ MMU_TARGET     = (TARGET_ADDRESS / $2000) + 8
 KUPHeader
 .byte $F2                                  ; signature
 .byte $56                                  ; signature
-.byte $01                                  ; length of program in consecutive 8K flash blocks
+.byte $04                                  ; length of program in consecutive 8K flash blocks
 .byte LOAD_ADDRESS / $2000                 ; block in 16 bit address space to which the first block is mapped
 .word loader                               ; start address of program
 .byte $01, $00, $00, $00                   ; reserved. All examples I looked at had a $01 in the first position
