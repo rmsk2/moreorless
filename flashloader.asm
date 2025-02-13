@@ -15,13 +15,14 @@ SOURCE_ADDRESS = $8000
 TARGET_ADDRESS = $6000
 MMU_SOURCE     = (SOURCE_ADDRESS / $2000) + 8
 MMU_TARGET     = (TARGET_ADDRESS / $2000) + 8
+
+* = LOAD_ADDRESS
+.cpu "w65c02"
+
 ; Start address of your program
 PAYLOAD_START = $0300
 ; Number of 8K blocks to copy from flash
 NUM_8K_BLOCKS = 4
-
-* = LOAD_ADDRESS
-.cpu "w65c02"
 
 ; This is the kernel header. It must begin at LOAD_ADDRESS
 KUPHeader
@@ -47,12 +48,10 @@ COUNT_PAGE = TXT_PTR1 + 1
 END_PAGE = TXT_PTR2
 COUNT_BLOCK = TXT_PTR2 + 1
 
-PTR_SOURCE = MEM_PTR1
-PTR_TARGET = MEM_PTR2
 PTR_STRUCT = MEM_PTR3
 
 BlockSpec_t .struct s, t, sp, ep
-    sourceBlock .byte 64 + \s          ; source of block to copy, i.e. a block number (>= 64) in flash memory
+    sourceBlock .byte \s               ; source of block to copy, i.e. a block number (>= 64) in flash memory
     targetBlock .byte \t               ; target of block to copy, i.e. a block in RAM (0 <= block <= 7)
     startPage   .byte \sp              ; the page number (one page = 256 bytes) where the copy operation should be copied 
     endPage     .byte \ep              ; the page number where the copy operation should stop. There are 32 pages in an 8K block
@@ -67,11 +66,10 @@ load16BitImmediate .macro  val, addr
 
 
 ; Please add an entry for each 8K data block which you want to copy from flash
-BLOCK1 .dstruct BlockSpec_t, $17, 0, 3, 32  ; copy flash block $17 (block number 64 + $17) to RAM block 0. Start at offset $0300
-BLOCK2 .dstruct BlockSpec_t, $18, 1, 0, 32  ; copy flash block $18 (block number 64 + $18) to RAM block 1. Start at offset $0000
-BLOCK3 .dstruct BlockSpec_t, $19, 2, 0, 32  ; copy flash block $19 (block number 64 + $19) to RAM block 2. Start at offset $0000
-BLOCK4 .dstruct BlockSpec_t, $1a, 3, 0, 32  ; copy flash block $1A (block number 64 + $1A) to RAM block 3. Start at offset $0000
-
+BLOCK1 .dstruct BlockSpec_t, $00, 0, 3, 32  ; copy flash block $17 (block number 64 + $17) to RAM block 0. Start at offset $0300
+BLOCK2 .dstruct BlockSpec_t, $00, 1, 0, 32  ; copy flash block $18 (block number 64 + $18) to RAM block 1. Start at offset $0000
+BLOCK3 .dstruct BlockSpec_t, $00, 2, 0, 32  ; copy flash block $19 (block number 64 + $19) to RAM block 2. Start at offset $0000
+BLOCK4 .dstruct BlockSpec_t, $00, 3, 0, 32  ; copy flash block $1A (block number 64 + $1A) to RAM block 3. Start at offset $0000
 
 loader
     ; setup MMU
@@ -79,8 +77,11 @@ loader
     sta 0
     lda #%00000000                         ; enable io pages and set active page to 0
     sta 1
+
+    jsr relocate
+
     ; set struct base address
-    #load16BitImmediate BLOCK1, PTR_STRUCT
+    #load16BitImmediate COPY_TAB, PTR_STRUCT
     stz STRUCT_INDEX
     stz COUNT_BLOCK
 _loop8K
@@ -138,22 +139,55 @@ _copyPage
     lda COUNT_BLOCK
     cmp #NUM_8K_BLOCKS
     bne _loop8K
-
-    ; set MMU to expected values for RAM blocks 0-4. We don't touch block 5
-    ; because this is where this program currently executes. The RAM block 5
-    ; is set by the main program.
-    #load16BitImmediate $0008, PTR_TARGET
-    ldy #0
-_loopMMU
-    tya
-    sta (PTR_TARGET), y
-    iny
-    cpy #5
-    bne _loopMMU
-
+    ; restore MMU
+    lda #MMU_TARGET - 8
+    sta MMU_TARGET
+    lda #MMU_SOURCE - 8
+    sta MMU_SOURCE
     jmp PAYLOAD_START
 
-; pad the binary out to $0300 bytes
+
+copyStruct
+    lda #NUM_8K_BLOCKS
+    asl
+    asl
+    sta NUM_BYTES
+    ldy #0
+_loop
+    lda BLOCK1, y
+    sta COPY_TAB, y
+    iny
+    cpy NUM_BYTES
+    bne _loop
+    rts
+
+
+updateBlocks
+    lda #NUM_8K_BLOCKS
+    asl
+    asl
+    sta NUM_BYTES
+    ldy #0
+    lda 13
+_loop
+    sta COPY_TAB, y
+    iny
+    iny
+    iny
+    iny
+    cpy NUM_BYTES
+    beq _end
+    ina
+    bra _loop
+_end
+    rts
+
+relocate
+    jsr copyStruct
+    jsr updateBlocks
+    rts
+
+; pad the binary out to 768 = $0300 bytes
 END_PROG
     .fill LOAD_ADDRESS + PAYLOAD_START - END_PROG - 1
     .byte 0

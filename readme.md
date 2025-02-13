@@ -264,7 +264,8 @@ The `makefile` will build all binaries and write the loader as well as the proga
 $17, $18, $19 and $1a. If this works you can now start `moreorless` from flash memory using the command 
 `/mless` at the BASIC or DOS prompt. If you only want to create the binaries for flashing then build the
 target `dist`, i.e. call `make dist`. This will create a zip file called `mless_flash.zip` which contains the
-8K blocks and a `bulk.csv` for FoenixMgr.
+8K blocks and a `bulk.csv` for FoenixMgr. `moreorless` is relocatable in flash memory, i.e. can be written to 
+arbitrary consecutive flash blocks.
 
 # Binary distribution
 

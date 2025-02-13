@@ -1,3 +1,5 @@
+; 24 bytes for data structure
+COPY_TAB = $70;-$88
 TXT_PTR1 = $92;$93
 TXT_PTR2 = $94;$95
 TXT_PTR3 = $96;$97
@@ -25,3 +27,6 @@ BASIC_PTR = $BC;/$BD
 CLI_PTR1 = $BE;/$BF
 CLI_PTR2 = $C0;/$C1
 PATH_PTR = $C2;/$C3
+NUM_BYTES = $C4
+PTR_SOURCE = $C5;/$C6
+PTR_TARGET = $C7;/$C8
