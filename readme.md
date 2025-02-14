@@ -259,15 +259,16 @@ and `keyval.pgz` and store these binaries in the project directory.
 
 `moreorless` can be built in conjunction with a loader which makes it possible to run the program from flash
 memory. In order to do that connect your development machine to the USB debug port of your Foenix, check that
-the `PORT` variable in the `makefile` matches the COM port you use and then call `make flash` (or `make WIN=1 flash`). 
+the `PORT` variable in the `makefile` matches the COM port you use and then call `make flash` (or `make WIN=1 flash`).
 The `makefile` will build all binaries and write the loader as well as the progam binary to flash blocks 
 $17, $18, $19 and $1a. If this works you can now start `moreorless` from flash memory using the command 
 `/mless` at the BASIC or DOS prompt. If you only want to create the binaries for flashing then build the
-target `dist`, i.e. call `make dist`. This will create a zip file called `mless_flash.zip` which contains the
-8K blocks and a `bulk.csv` for FoenixMgr. `moreorless` is relocatable in flash memory, i.e. can be written to 
-arbitrary consecutive flash blocks.
+target `dist`, i.e. call `make dist`. This will create a zip file in the `dist` folder called `mless_flash.zip`,
+which contains the 8K blocks and a `bulk.csv` for FoenixMgr. Additionaly the flash cartridge image `cart_mless.bin`,
+which can be written to a flash expansion cartridge is built. `moreorless` is relocatable in flash memory, i.e.
+it can be written to arbitrary consecutive blocks in onboard flash or a flash cartridge.
 
 # Binary distribution
 
-Alternatively `mless_flash.zip` and `mless.pgz` can be found as prebuilt binaries in the current release at: 
-https://github.com/rmsk2/moreorless/releases.
+Alternatively `mless_flash.zip`, `mless.pgz` and `cart_mless.bin` can be found as prebuilt binaries in the current
+release at: https://github.com/rmsk2/moreorless/releases.

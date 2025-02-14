@@ -3,6 +3,7 @@ PORT=/dev/ttyUSB0
 SUDO=
 FORCE=-f
 PYTHON=python3
+CP=cp
 
 ifdef WIN
 RM=del
@@ -18,6 +19,8 @@ LOADER=loader.bin
 
 FLASHBLOCKS = $(BINARY)01.bin $(BINARY)02.bin $(BINARY)03.bin $(BINARY)04.bin
 ZIP = mless_flash.zip
+DIST=dist
+CARTIMAGE=cart_mless.bin
 
 .PHONY: all
 all: editor validator
@@ -37,6 +40,8 @@ clean:
 	$(RM) $(FORCE) tests/bin/*.bin
 	$(RM) $(FORCE) *.bin
 	$(RM) $(FORCE) $(ZIP)
+	$(RM) $(FORCE) $(CARTIMAGE)
+	$(RM) $(FORCE) $(DIST)/*
 
 .PHONY: scrub
 scrub: zeroes.dat
@@ -79,6 +84,12 @@ blocks: $(FLASHBLOCKS)
 $(FLASHBLOCKS) &: $(BINARY) $(LOADER)
 	$(PYTHON) pad_binary.py $(BINARY) $(LOADER)
 
+$(CARTIMAGE): $(FLASHBLOCKS)
+	cat $(FLASHBLOCKS) > $(CARTIMAGE)
+
 .PHONY: dist
-dist: $(LOADER) $(FLASHBLOCKS) $(BINARY).pgz
+dist: $(LOADER) $(FLASHBLOCKS) $(BINARY).pgz $(CARTIMAGE)
 	zip $(ZIP) $(FLASHBLOCKS) bulk.csv
+	$(CP) $(ZIP) $(DIST)/
+	$(CP) $(CARTIMAGE) $(DIST)/
+	$(CP) $(BINARY).pgz $(DIST)/
