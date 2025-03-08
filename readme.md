@@ -98,6 +98,8 @@ program gets overwritten.
 - Pressing `Foenix+l` moves the cursor to the end of the document
 - When any other key is pressed the corresponding character is inserted at the current cursor position
 
+![](/moreorless.png?raw=true "Screenshot of moreorless")
+
 When selecting a block of lines the line where the mark was set and the line where the corresponding command
 sequence was typed are part of the selection. The same applies to selecting a string within a line: The character
 where the mark was set and the character where the command was typed are part of the selection. It is valid to
